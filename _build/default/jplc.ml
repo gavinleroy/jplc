@@ -1,2 +1,2 @@
 let () =
-  print_endline "Hallo, Welt!"
+  ANSITerminal.printf [ANSITerminal.cyan] "Hallo, Welt!\n"

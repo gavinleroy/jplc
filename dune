@@ -1,2 +1,5 @@
 (executable
- (name jplc))
+ (name jplc)
+ (libraries core ANSITerminal ocamllex)
+ (preprocess (pps ppx_jane)))
+
