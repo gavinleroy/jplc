@@ -32,8 +32,7 @@ module String_id = struct
 end
 
 module Varname : IDENTIFIER = String_id
-
-type filename = string
+module Filename : IDENTIFIER = String_id
 
 type rank = int
 

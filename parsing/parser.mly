@@ -82,10 +82,10 @@ prog:
 | cmds=separated_list(NEWLINE,cmd) { cmds }
 
 cmd:
-| READ; IMAGE; s=STRING; TO; a=arg { ReadimgC($startpos,s,a)  }
-| READ; VIDEO; s=STRING; TO; a=arg { ReadvidC($startpos,s,a)  }
-| WRITE; IMAGE; e=expr; TO; s=STRING { WriteimgC($startpos,e,s) }
-| WRITE; VIDEO; e=expr; TO; s=STRING { WritevidC($startpos,e,s) }
+| READ; IMAGE; s=STRING; TO; a=arg { ReadimgC($startpos,Filename.of_string s,a)  }
+| READ; VIDEO; s=STRING; TO; a=arg { ReadvidC($startpos,Filename.of_string s,a)  }
+| WRITE; IMAGE; e=expr; TO; s=STRING { WriteimgC($startpos,e,Filename.of_string s) }
+| WRITE; VIDEO; e=expr; TO; s=STRING { WritevidC($startpos,e,Filename.of_string s) }
 | PRINT; s=STRING { PrintC($startpos,s) }
 | SHOW; e=expr { ShowC($startpos,e) }
 | TIME; c=cmd { TimeC($startpos,c) }

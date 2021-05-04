@@ -24,8 +24,7 @@ module type IDENTIFIER = sig
 end
 
 module Varname : IDENTIFIER
-
-type filename = string
+module Filename : IDENTIFIER
 
 type rank = int
 

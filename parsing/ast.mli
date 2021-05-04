@@ -41,10 +41,10 @@ type stmt =
   | ReturnS of loc * expr
 
 type cmd =
-  | ReadimgC of loc * filename * arg
-  | ReadvidC of loc * filename * arg
-  | WriteimgC of loc * expr * filename
-  | WritevidC of loc * expr * filename
+  | ReadimgC of loc * Filename.t * arg
+  | ReadvidC of loc * Filename.t * arg
+  | WriteimgC of loc * expr * Filename.t
+  | WritevidC of loc * expr * Filename.t
   | PrintC of loc * string
   | ShowC of loc * expr
   | TimeC of loc * cmd
