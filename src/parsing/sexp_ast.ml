@@ -119,6 +119,5 @@ let rec sexp_of_cmd = function
   | StmtC (_,s) -> 
     Sexp.(List[Atom "StmtCmd"; sexp_of_stmt s])
 
-let sexp_of_prog p = 
-  List.sexp_of_t sexp_of_cmd p
-
+let sexp_of_prog p =
+  Sexp.(List[Atom "Prog"; List.sexp_of_t sexp_of_cmd p])

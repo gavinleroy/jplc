@@ -1,5 +1,0 @@
-(executable
- (name jplc)
- (libraries core ANSITerminal)
- (preprocess (pps ppx_jane)))
-

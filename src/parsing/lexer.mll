@@ -23,8 +23,8 @@ let whitespace = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 
 rule read_token = parse
-  | "true" { TRUE }
-  | "false" { FALSE }
+  | "true"      { TRUE }
+  | "false"     { FALSE }
   | "array"     { ARRAY }
   | "sum"       { SUM }
   | "if"        { IF }
@@ -43,7 +43,11 @@ rule read_token = parse
   | "time"      { TIME }
   | "fn"        { FN }
   (* | "attribute" { ATTRIBUTE } *)
+  | "\\"  { next_line lexbuf; read_token lexbuf }
+  | "//"  { read_single_line_comment lexbuf }
+  | "/*"  { read_multi_line_comment lexbuf }
   | ":"         { COLON }
+  | ";"         { SEMICOLON }
   | "{"         { LCURLY }
   | "}"         { RCURLY }
   | "("         { LPAREN }
@@ -66,16 +70,13 @@ rule read_token = parse
   | ">"         { GT }
   | "!"         { BANG }
   | "="         { EQ }
-  | "\\"  { next_line lexbuf; read_token lexbuf } 
-  | "//"  { read_single_line_comment lexbuf }
-  | "/*"  { read_multi_line_comment lexbuf } 
   | int   { INT (int_of_string (Lexing.lexeme lexbuf))}
   | float { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
   | str   { STRING (Lexing.lexeme lexbuf) }
   | iden  { IDEN (Lexing.lexeme lexbuf) }
   | whitespace { read_token lexbuf }
   (* | '"'      { read_string (Buffer.create 17) lexbuf } *)
-  | newline    { next_line lexbuf; NEWLINE (*read_token lexbuf*) }
+  | newline    { next_line lexbuf; read_token lexbuf }
   | eof        { EOF }
   | _          { raise (SyntaxError ("lexer ~ illegal character: " ^ Lexing.lexeme lexbuf)) }
 

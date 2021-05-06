@@ -15,6 +15,7 @@
 %token <string> IDEN
 %token <string> STRING
 %token COLON
+%token SEMICOLON
 %token LCURLY
 %token RCURLY
 %token LPAREN
@@ -45,6 +46,7 @@
 %token ARRAY
 %token SUM
 %token IF
+/* %token IN */
 %token THEN
 %token ELSE
 %token LET
@@ -79,24 +81,24 @@
 %% /* start the grammar productions */
 
 prog:
-| cmds=separated_list(NEWLINE,cmd); EOF { cmds }
+| cmds=list(cmd); EOF { cmds }
 
 cmd:
-| READ; IMAGE; s=STRING; TO; a=arg { ReadimgC($startpos,Filename.of_string s,a)  }
-| READ; VIDEO; s=STRING; TO; a=arg { ReadvidC($startpos,Filename.of_string s,a)  }
-| WRITE; IMAGE; e=expr; TO; s=STRING { WriteimgC($startpos,e,Filename.of_string s) }
-| WRITE; VIDEO; e=expr; TO; s=STRING { WritevidC($startpos,e,Filename.of_string s) }
-| PRINT; s=STRING { PrintC($startpos,s) }
-| SHOW; e=expr { ShowC($startpos,e) }
-| TIME; c=cmd { TimeC($startpos,c) }
+| READ; IMAGE; s=STRING; TO; a=arg; SEMICOLON { ReadimgC($startpos,Filename.of_string s,a)  }
+| READ; VIDEO; s=STRING; TO; a=arg; SEMICOLON { ReadvidC($startpos,Filename.of_string s,a)  }
+| WRITE; IMAGE; e=expr; TO; s=STRING; SEMICOLON { WriteimgC($startpos,e,Filename.of_string s) }
+| WRITE; VIDEO; e=expr; TO; s=STRING; SEMICOLON { WritevidC($startpos,e,Filename.of_string s) }
+| PRINT; s=STRING; SEMICOLON { PrintC($startpos,s) }
+| SHOW; e=expr; SEMICOLON { ShowC($startpos,e) }
+| TIME; c=cmd; SEMICOLON { TimeC($startpos,c) }
 | FN; fn=IDEN; LPAREN; ps=separated_list(COMMA,binding); RPAREN; COLON; t=typee; LCURLY; 
   NEWLINE; ss=separated_list(NEWLINE,stmt); RCURLY { FnC($startpos,Varname.of_string fn,ps,t,ss) }
 | s=stmt { StmtC($startpos,s) }
 
 stmt:
-| LET; lv=lvalue; EQ; e=expr { LetS($startpos,lv,e) }
-| ASSERT; e=expr; COMMA; s=STRING { AssertS($startpos,e,s) }
-| RETURN; e=expr { ReturnS($startpos,e) }
+| LET; lv=lvalue; EQ; e=expr; SEMICOLON { LetS($startpos,lv,e) }
+| ASSERT; e=expr; COMMA; s=STRING; SEMICOLON { AssertS($startpos,e,s) }
+| RETURN; e=expr; SEMICOLON { ReturnS($startpos,e) }
 
 binding:
 | LCURLY; bs=separated_list(COMMA,binding); RCURLY; { CrossbindB($startpos, bs) }
@@ -118,16 +120,16 @@ expr:
 | TRUE { TrueE $startpos }
 | FALSE { FalseE $startpos }
 | vn=IDEN { VarE($startpos,Varname.of_string vn) }
-| uop=un_op; e=expr { UnopE($startpos,uop,e) }
-| lhs=expr; bop=bin_op; rhs=expr { BinopE($startpos,lhs,bop,rhs) }
-| e=expr; LCURLY; i=INT; RCURLY { CrossIdxE($startpos,e,i) }
-| e=expr; LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayIdxE($startpos,e,es) }
-| LCURLY; es=separated_list(COMMA,expr); RCURLY { CrossE($startpos,es) }
-| LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayCE($startpos,es) }
-| IF; cnd=expr; THEN; ife=expr; ELSE; elsee=expr { IteE($startpos,cnd,ife,elsee) }
-| ARRAY; LSQUARE; ps=separated_list(COMMA,arr_bounds_e); RSQUARE; b=expr { ArrayLE($startpos,ps,b) }
-| SUM; LSQUARE; ps=separated_list(COMMA,arr_bounds_e); RSQUARE; b=expr { SumLE($startpos,ps,b) }
-| v=IDEN; LPAREN; ps=separated_list(COMMA,expr); RPAREN { AppE($startpos,Varname.of_string v,ps) }
+/* | uop=un_op; e=expr { UnopE($startpos,uop,e) } */
+/* | lhs=expr; bop=bin_op; rhs=expr { BinopE($startpos,lhs,bop,rhs) } */
+/* | e=expr; LCURLY; i=INT; RCURLY { CrossIdxE($startpos,e,i) } */
+/* | e=expr; LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayIdxE($startpos,e,es) } */
+/* | LCURLY; es=separated_list(COMMA,expr); RCURLY { CrossE($startpos,es) } */
+/* | LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayCE($startpos,es) } */
+/* | IF; cnd=expr; THEN; ife=expr; ELSE; elsee=expr { IteE($startpos,cnd,ife,elsee) } */
+/* | ARRAY; LSQUARE; ps=separated_list(COMMA,arr_bounds_e); RSQUARE; b=expr { ArrayLE($startpos,ps,b) } */
+/* | SUM; LSQUARE; ps=separated_list(COMMA,arr_bounds_e); RSQUARE; b=expr { SumLE($startpos,ps,b) } */
+/* | v=IDEN; LPAREN; ps=separated_list(COMMA,expr); RPAREN { AppE($startpos,Varname.of_string v,ps) } */
 
 /* helper method for parsing array/sum exprs */
 arr_bounds_e:

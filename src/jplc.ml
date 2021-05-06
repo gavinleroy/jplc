@@ -65,6 +65,8 @@ let command =
                             |> Sexp.to_string in
               print_endline ast_str
             | Result.Error m ->
-              Printf.printf "ERROR : '%s'" (Error.to_string_hum m)))
+              ANSITerminal.(printf [Foreground Magenta; Bold; Background Yellow;]
+                              "an error occurred ~> %s" (Error.to_string_hum m))))
 
-let () = Command.run ~version:"1.0" ~build_info:"JPLC" command
+let () =
+  Command.run ~version:"1.0" ~build_info:"JPLC" command
