@@ -32,8 +32,6 @@ type type_expr =
   | IntT
   | BoolT
   | FloatT
-  | Float3T
-  | Float4T
   | ArrayT of type_expr * rank
   | CrossT of type_expr list
 

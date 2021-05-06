@@ -42,7 +42,7 @@ rule read_token = parse
   | "show"      { SHOW }
   | "time"      { TIME }
   | "fn"        { FN }
-  | "attribute" { ATTRIBUTE }
+  (* | "attribute" { ATTRIBUTE } *)
   | ":"         { COLON }
   | "{"         { LCURLY }
   | "}"         { RCURLY }

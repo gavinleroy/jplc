@@ -59,7 +59,7 @@
 %token FN
 %token IMAGE
 %token VIDEO
-%token ATTRIBUTE
+/* %token ATTRIBUTE */
 %token NEWLINE 
 %token ERROR
 %token EOF
@@ -79,7 +79,7 @@
 %% /* start the grammar productions */
 
 prog:
-| cmds=separated_list(NEWLINE,cmd) { cmds }
+| cmds=separated_list(NEWLINE,cmd); EOF { cmds }
 
 cmd:
 | READ; IMAGE; s=STRING; TO; a=arg { ReadimgC($startpos,Filename.of_string s,a)  }
@@ -134,14 +134,14 @@ arr_bounds_e:
 | v=IDEN; COLON; e=expr { Varname.of_string v, e }
 
 typee:
-| LCURLY; ts=separated_list(COMMA,typee); RCURLY { CrossT(ts) }
+| LCURLY; ts=separated_list(COMMA,typee); RCURLY { CrossT ts }
 | t=typee; LSQUARE; cs=list(COMMA); RSQUARE { ArrayT(t, List.length cs + 1) }
 | i=IDEN {
   if i="int" then IntT
   else if i="bool" then BoolT
   else if i="float" then FloatT
-  else if i="float3" then Float3T
-  else Float4T }
+  else if i="float3" then CrossT [FloatT;FloatT;FloatT]
+  else CrossT [FloatT;FloatT;FloatT;FloatT] }
 
 %inline bin_op:
 | PLUS { Plus }
