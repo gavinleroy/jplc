@@ -1,6 +1,2 @@
 
-fn iden( x : int ) : int {
-   return x;
-}
-
-time show iden(100);
+print "Hallo, Welt!";

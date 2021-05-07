@@ -35,6 +35,12 @@ let jpl_file =
         else error_not_file filename
       | `No | `Unknown -> error_not_file filename)
 
+let print_sexp ?(channel = stdout) sexp =
+   let formatter = Format.formatter_of_out_channel channel in
+   Sexp.pp_hum formatter sexp;
+   Format.pp_print_flush formatter ();
+   Out_channel.flush channel
+
 let command =
   Command.basic ~summary:"compile jpl programs"
     ~readme:(fun () -> "~~ TODO ~~")
@@ -61,11 +67,9 @@ let command =
             let lexbuf = Lexing.from_channel file_ic in
             match Lex_parse.parse_prog lexbuf with
             | Result.Ok p ->
-              let ast_str = Sexp_ast.sexp_of_prog p
-                            |> Sexp.to_string in
-              print_endline ast_str
+              Sexp_ast.sexp_of_prog p |> print_sexp
             | Result.Error m ->
-              ANSITerminal.(printf [Foreground Magenta; Bold; Background Yellow;]
+              ANSITerminal.(printf [cyan; Bold]
                               "an error occurred ~> %s" (Error.to_string_hum m))))
 
 let () =
