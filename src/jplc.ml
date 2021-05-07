@@ -4,7 +4,6 @@
 (************************)
 
 open Core
-open Parsing
 
 let get_file_extension filename =
   String.split_on_chars filename ~on:['.']
@@ -35,12 +34,6 @@ let jpl_file =
         else error_not_file filename
       | `No | `Unknown -> error_not_file filename)
 
-let print_sexp ?(channel = stdout) sexp =
-   let formatter = Format.formatter_of_out_channel channel in
-   Sexp.pp_hum formatter sexp;
-   Format.pp_print_flush formatter ();
-   Out_channel.flush channel
-
 let command =
   Command.basic ~summary:"compile jpl programs"
     ~readme:(fun () -> "~~ TODO ~~")
@@ -65,12 +58,14 @@ let command =
       fun () ->
         In_channel.with_file filename ~f:(fun file_ic ->
             let lexbuf = Lexing.from_channel file_ic in
-            match Lex_parse.parse_prog lexbuf with
-            | Result.Ok p ->
-              Sexp_ast.sexp_of_prog p |> print_sexp
-            | Result.Error m ->
-              ANSITerminal.(printf [cyan; Bold]
-                              "an error occurred ~> %s" (Error.to_string_hum m))))
+            Compile_jpl.compile_prog lexbuf))
+
+            (* match Lex_parse.parse_prog lexbuf with
+             * | Result.Ok p ->
+             *     Sexp_ast.sexp_of_prog p |> print_sexp
+             * | Result.Error m ->
+             *   ANSITerminal.(printf [cyan; Bold]
+             *                   "an error occurred ~> %s" (Error.to_string_hum m)))) *)
 
 let () =
   Command.run ~version:"1.0" ~build_info:"JPLC" command

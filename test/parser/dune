@@ -1,0 +1,5 @@
+(library
+ (name test_parsing)
+ (libraries core compile_jpl)
+ (inline_tests)
+ (preprocess (pps ppx_jane)))

@@ -1,5 +1,11 @@
 (executable
  (name jplc)
- (libraries core parsing ANSITerminal sexp_pretty)
+ (modules jplc)
+ (libraries core parsing utils compile_jpl ANSITerminal)
  (preprocess (pps ppx_jane)))
 
+(library
+ (name compile_jpl)
+ (modules compile_jpl)
+ (libraries core parsing utils)
+ (preprocess (pps ppx_jane)))
