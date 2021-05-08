@@ -34,7 +34,7 @@ end
 module Varname : IDENTIFIER = String_id
 module Filename : IDENTIFIER = String_id
 
-type rank = int
+type rank = Int64.t
 
 type type_expr =
   | IntT

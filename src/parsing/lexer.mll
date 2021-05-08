@@ -69,7 +69,7 @@ rule read_token = parse
   | ">"         { GT }
   | "!"         { BANG }
   | "="         { EQ }
-  | int   { INT (int_of_string (Lexing.lexeme lexbuf))}
+  | int   { INT (Int64.of_string (Lexing.lexeme lexbuf))}
   | float { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
   | iden  { IDEN (Lexing.lexeme lexbuf) }
   | whitespace { read_token lexbuf }

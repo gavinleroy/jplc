@@ -1,2 +1,8 @@
 
-print "Hallo, Welt!";
+time time time time time time return 3;
+
+fn iden(x : int) : int { 
+let z = 5;
+return z * x; }
+
+let x = 4; let y = 3;

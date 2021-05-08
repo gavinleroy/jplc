@@ -6,7 +6,7 @@
 open Ast_utils
 
 type expr =
-   | IntE of loc * int
+   | IntE of loc * Int64.t
    | FloatE of loc * float
    | TrueE of loc
    | FalseE of loc
@@ -16,8 +16,8 @@ type expr =
    | BinopE of loc * expr * bin_op * expr
    | UnopE of loc * un_op * expr
    (* NOTE cross index must be int to support static typing *)
-   | CrossIdxE of loc * expr * int
-   | ArrayIdxE of loc * expr * expr list
+   | CrossidxE of loc * expr * Int64.t
+   | ArrayidxE of loc * expr * expr list
    | IteE of loc * expr * expr * expr
    | ArrayLE of loc * (Varname.t * expr) list * expr
    | SumLE of loc * (Varname.t * expr) list * expr

@@ -11,7 +11,7 @@ let rec sexp_of_type = function
   | IntT -> Sexp.Atom "IntType"
   | BoolT -> Sexp.Atom "BoolType"
   | FloatT -> Sexp.Atom "FloatType"
-  | ArrayT (te, r) -> Sexp.(List[Atom "ArrayType"; sexp_of_type te; Int.sexp_of_t r])
+  | ArrayT (te, r) -> Sexp.(List[Atom "ArrayType"; sexp_of_type te; Int64.sexp_of_t r])
   | CrossT tes -> Sexp.(List[Atom "CrossType"; List.sexp_of_t sexp_of_type tes])
 
 let sexp_of_binop o =
@@ -39,7 +39,7 @@ let rec sexp_of_expr e =
   let sexp_of_loopbind = fun (a,b) -> 
     Sexp.(List[Atom (Varname.to_string a); sexp_of_expr b]) in
   match e with
-  | IntE (_,i) -> Sexp.(List[Atom "IntExpr"; Int.sexp_of_t i])
+  | IntE (_,i) -> Sexp.(List[Atom "IntExpr"; Int64.sexp_of_t i])
   | FloatE (_,f) -> Sexp.(List[Atom "FloatExpr"; Float.sexp_of_t f])
   | TrueE _ -> Sexp.(List[Atom "TrueExpr"])
   | FalseE _ -> Sexp.(List[Atom "FalseExpr"])
@@ -52,8 +52,8 @@ let rec sexp_of_expr e =
               ; sexp_of_binop op
               ; sexp_of_expr rhs])
   | UnopE (_,op,e') -> Sexp.(List[Atom "UnopExpr"; sexp_of_unop op; sexp_of_expr e'])
-  | CrossIdxE (_,e',i) -> Sexp.(List[Atom "CrossidxExpr"; sexp_of_expr e'; Int.sexp_of_t i])
-  | ArrayIdxE (_,base,idxs) -> 
+  | CrossidxE (_,e',i) -> Sexp.(List[Atom "CrossidxExpr"; sexp_of_expr e'; Int64.sexp_of_t i])
+  | ArrayidxE (_,base,idxs) ->
     Sexp.(List[Atom "ArrayidxExpr"; sexp_of_expr base
               ; List.sexp_of_t sexp_of_expr idxs])
   | IteE (_,cnd,ie,ee) -> 

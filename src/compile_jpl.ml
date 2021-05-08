@@ -19,4 +19,5 @@ let compile_prog lexbuf =
   >>= maybe_exit true Pp.print_sexp Sexp_ast.sexp_of_prog
   |> function
   (* TODO *)
-  | Ok _ | Error _ -> print_endline ""
+  | Ok _ -> ()
+  | Error msg -> Error.to_string_hum msg |> printf "%s"
