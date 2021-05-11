@@ -12,13 +12,14 @@ let maybe_exit ok_exit pp cnv ast =
     (cnv ast |> pp; Error (Error.of_string ""))
   else Ok ast
 
-let compile_prog lexbuf =
+let compile_prog ?(skip_typecheck = false) lexbuf =
   let open Result in
-  Lex_parse.Mon_parser.parse_prog lexbuf
+  Lex_parse.parse_prog lexbuf
   (* turn this into a flag *)
-  >>= maybe_exit true Pp.print_sexp Sexp_ast.sexp_of_prog
+  >>= maybe_exit skip_typecheck Pp.print_sexp Sexp_ast.sexp_of_prog
   |> function
-    (* TODO *)
-  | Ok _ -> ()
-  | Error msg ->
-    Error.to_string_hum msg |> Printf.printf "%s"
+  | Ok _ -> (* TODO something *)
+    ANSITerminal.(printf [magenta; Bold] "WARNING: unimplemented\n")
+  | Error msg -> (* print the error message to the console *)
+    Error.to_string_hum msg
+    |> ANSITerminal.(eprintf [yellow; Bold] "%s")

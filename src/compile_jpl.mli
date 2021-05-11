@@ -3,4 +3,7 @@
 (*       05.2021        *)
 (************************)
 
-val compile_prog: Lexing.lexbuf -> unit
+val compile_prog:
+  ?skip_typecheck:bool
+  -> Lexing.lexbuf
+  -> unit

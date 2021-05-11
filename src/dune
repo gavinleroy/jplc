@@ -1,11 +1,11 @@
 (executable
  (name jplc)
  (modules jplc)
- (libraries core parsing utils compile_jpl ANSITerminal)
+ (libraries core parsing utils compile_jpl)
  (preprocess (pps ppx_jane)))
 
 (library
  (name compile_jpl)
  (modules compile_jpl)
- (libraries core parsing utils)
+ (libraries core parsing utils ANSITerminal)
  (preprocess (pps ppx_jane)))
