@@ -5,5 +5,9 @@
 
 open Core
 
-val parse_prog: Lexing.lexbuf -> Ast.prog Or_error.t
+module type PARSING = sig
+  val parse_prog: Lexing.lexbuf -> Ast.prog Or_error.t
+end
 
+module Inc_parser : PARSING
+module Mon_parser : PARSING

@@ -15,8 +15,8 @@
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 
-let int = '-'? digit+ 
-let float = '-'?((digit* '.' digit+) | (digit+ '.'))
+let int = digit+
+let float = ((digit* '.' digit+) | (digit+ '.'))
 let iden = (alpha) (alpha|digit|'_')*
 let whitespace = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"

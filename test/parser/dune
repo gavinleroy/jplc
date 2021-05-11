@@ -1,5 +1,7 @@
 (library
  (name test_parsing)
  (libraries core compile_jpl)
- (inline_tests)
+ (inline_tests
+  ;; (flags) add flag for parsing -p
+ )
  (preprocess (pps ppx_jane)))

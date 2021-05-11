@@ -14,10 +14,11 @@ let maybe_exit ok_exit pp cnv ast =
 
 let compile_prog lexbuf =
   let open Result in
-  Lex_parse.parse_prog lexbuf
+  Lex_parse.Mon_parser.parse_prog lexbuf
   (* turn this into a flag *)
   >>= maybe_exit true Pp.print_sexp Sexp_ast.sexp_of_prog
   |> function
-  (* TODO *)
+    (* TODO *)
   | Ok _ -> ()
-  | Error msg -> Error.to_string_hum msg |> printf "%s"
+  | Error msg ->
+    Error.to_string_hum msg |> Printf.printf "%s"

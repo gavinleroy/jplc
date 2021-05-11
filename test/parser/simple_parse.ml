@@ -52,7 +52,8 @@ let%expect_test "simple-op-1" =
           (UnopExpr -
            (UnopExpr -
             (UnopExpr -
-             (UnopExpr - (UnopExpr - (UnopExpr - (UnopExpr - (IntExpr -3)))))))))))) |}]
+             (UnopExpr -
+              (UnopExpr - (UnopExpr - (UnopExpr - (UnopExpr - (IntExpr 3))))))))))))) |}]
 
 let%expect_test "simple-op-2" =
   Ppp.ppp_ast
