@@ -5,4 +5,4 @@
 
 open Core
 
-val parse_prog: Lexing.lexbuf -> Ast.prog Or_error.t
+val cerr_msg: pos:Lexing.position -> t:string -> msg:string -> (_, Error.t) Result.t

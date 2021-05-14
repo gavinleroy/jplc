@@ -5,4 +5,4 @@
 
 open Core
 
-val parse_prog: Lexing.lexbuf -> Ast.prog Or_error.t
+val type_prog: Parsing.Ast.prog -> Ast.prog Or_error.t

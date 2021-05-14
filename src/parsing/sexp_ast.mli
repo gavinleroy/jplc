@@ -4,20 +4,18 @@
 (************************)
 
 open Core
+open Ast
 
-val sexp_of_prog: Ast.prog -> Sexp.t
+val sexp_of_prog: prog -> Sexp.t
 
-val sexp_of_cmd: Ast.cmd -> Sexp.t
+val sexp_of_cmd: cmd -> Sexp.t
 
-val sexp_of_stmt: Ast.stmt -> Sexp.t
+val sexp_of_stmt: stmt -> Sexp.t
 
-val sexp_of_arg: Ast.arg -> Sexp.t
+val sexp_of_arg: arg -> Sexp.t
 
-val sexp_of_expr: Ast.expr -> Sexp.t
+val sexp_of_expr: expr -> Sexp.t
 
-val sexp_of_binding: Ast.binding -> Sexp.t
+val sexp_of_binding: binding -> Sexp.t
 
-val sexp_of_lvalue: Ast.lvalue -> Sexp.t
-
-val sexp_of_type: Ast_utils.type_expr -> Sexp.t
-
+val sexp_of_lvalue: lvalue -> Sexp.t

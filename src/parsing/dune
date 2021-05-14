@@ -1,9 +1,17 @@
 (library
  (name parsing)
- (libraries core fmt)
+ (libraries core utils ast_utils menhirLib)
  (preprocess (pps ppx_jane)))
 
 (ocamllex lexer)
 
 (menhir
+ (flags --table)
  (modules parser))
+
+; The target for saving menhir's stdout to bnf_parser_messages.ml
+; taken from ~> https://baturin.org/blog/declarative-parse-error-reporting-with-menhir/
+(rule
+ (targets parser_messages.ml)
+ (deps parser.messages parser.mly)
+ (action  (with-stdout-to %{targets} (run menhir --compile-errors %{deps}))))  

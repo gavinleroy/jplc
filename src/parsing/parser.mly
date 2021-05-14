@@ -40,6 +40,12 @@
 %token BANG 
 %token EQ 
 
+%token INTT 
+%token FLOATT 
+%token BOOLT 
+%token FLOAT3T 
+%token FLOAT4T 
+%token AS
 %token TRUE
 %token FALSE
 %token ARRAY
@@ -63,6 +69,7 @@
 /* %token ERROR */
 %token EOF
 
+%right AS
 %right ELSE RSQUARE
 %left AND OR
 %left CMP NEQ
@@ -147,9 +154,10 @@ expr:
   | LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayCE($startpos,es) }
   | v=IDEN; LPAREN; ps=separated_list(COMMA,expr); RPAREN { AppE($startpos,Varname.of_string v,ps) }
   /* lowest precedence group */
+  | e=expr; AS; te=typee %prec AS { CastE($startpos,e,te) }
   | IF; cnd=expr; THEN; ife=expr; ELSE; elsee=expr { IteE($startpos,cnd,ife,elsee) }
-  | ARRAY; LSQUARE; ps=separated_list(COMMA,arr_bounds_e); RSQUARE; b=expr { ArrayLE($startpos,ps,b) }
-  | SUM; LSQUARE; ps=separated_list(COMMA,arr_bounds_e); RSQUARE; b=expr { SumLE($startpos,ps,b) }
+  | ARRAY; LSQUARE; ps=separated_nonempty_list(COMMA,arr_bounds_e); RSQUARE; b=expr { ArrayLE($startpos,ps,b) }
+  | SUM; LSQUARE; ps=separated_nonempty_list(COMMA,arr_bounds_e); RSQUARE; b=expr { SumLE($startpos,ps,b) }
 
 /* helper method for parsing array/sum exprs */
 arr_bounds_e:
@@ -158,12 +166,11 @@ arr_bounds_e:
 typee:
   | LCURLY; ts=separated_list(COMMA,typee); RCURLY { CrossT ts }
   | t=typee; LSQUARE; cs=list(COMMA); RSQUARE { ArrayT(t, Int64.of_int (List.length cs + 1)) }
-  | i=IDEN
-    { if i="int" then IntT
-      else if i="bool" then BoolT
-      else if i="float" then FloatT
-      else if i="float3" then CrossT [FloatT; FloatT; FloatT]
-      else CrossT [FloatT; FloatT; FloatT; FloatT] }
+  | BOOLT { BoolT }
+  | INTT { IntT }
+  | FLOATT { FloatT }
+  | FLOAT3T { CrossT [FloatT; FloatT; FloatT] }
+  | FLOAT4T { CrossT [FloatT; FloatT; FloatT; FloatT] }
 
 %inline bin_op:
   | AND { And }

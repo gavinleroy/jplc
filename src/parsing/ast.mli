@@ -6,22 +6,23 @@
 open Ast_utils
 
 type expr =
-   | IntE of loc * Int64.t
-   | FloatE of loc * float
-   | TrueE of loc
-   | FalseE of loc
-   | VarE of loc * Varname.t
-   | CrossE of loc * expr list
-   | ArrayCE of loc * expr list
-   | BinopE of loc * expr * bin_op * expr
-   | UnopE of loc * un_op * expr
-   (* NOTE cross index must be int to support static typing *)
-   | CrossidxE of loc * expr * Int64.t
-   | ArrayidxE of loc * expr * expr list
-   | IteE of loc * expr * expr * expr
-   | ArrayLE of loc * (Varname.t * expr) list * expr
-   | SumLE of loc * (Varname.t * expr) list * expr
-   | AppE of loc * Varname.t * expr list
+  | IntE of loc * Int64.t
+  | FloatE of loc * float
+  | TrueE of loc
+  | FalseE of loc
+  | VarE of loc * Varname.t
+  | CrossE of loc * expr list
+  | ArrayCE of loc * expr list
+  | BinopE of loc * expr * bin_op * expr
+  | UnopE of loc * un_op * expr
+  | CastE of loc * expr * type_expr
+  (* NOTE cross index must be int to support static typing *)
+  | CrossidxE of loc * expr * Int64.t
+  | ArrayidxE of loc * expr * expr list
+  | IteE of loc * expr * expr * expr
+  | ArrayLE of loc * (Varname.t * expr) list * expr
+  | SumLE of loc * (Varname.t * expr) list * expr
+  | AppE of loc * Varname.t * expr list
 
 type arg =
   | VarA of loc * Varname.t

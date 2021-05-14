@@ -1,11 +1,15 @@
 (executable
  (name jplc)
  (modules jplc)
- (libraries core parsing utils compile_jpl)
+ (libraries core parsing utils compiler)
  (preprocess (pps ppx_jane)))
 
 (library
- (name compile_jpl)
- (modules compile_jpl)
- (libraries core parsing utils ANSITerminal)
+ (name compiler)
+ (modules compiler)
+ (libraries
+   ;; ocaml libs
+   core ANSITerminal
+   ;; my libs
+   utils parsing typing)
  (preprocess (pps ppx_jane)))

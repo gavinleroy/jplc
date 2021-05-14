@@ -13,14 +13,14 @@ let%expect_test "simple-cmd-1" =
 
 let%expect_test "simple-cmd-2" =
   Ppp.ppp_ast
-    "return float(i + j) / float(W + H);";
+    "return (i + j as float) / (W + H as float);";
   [%expect
     {|
       (Prog
        ((StmtCmd
          (ReturnStmt
-          (BinopExpr (AppExpr float ((BinopExpr (VarExpr i) + (VarExpr j)))) /
-           (AppExpr float ((BinopExpr (VarExpr W) + (VarExpr H))))))))) |}]
+          (BinopExpr (CastExpr (BinopExpr (VarExpr i) + (VarExpr j)) FloatType) /
+           (CastExpr (BinopExpr (VarExpr W) + (VarExpr H)) FloatType)))))) |}]
 
 let%expect_test "simple-cmd-3" =
   Ppp.ppp_ast
@@ -40,8 +40,28 @@ let%expect_test "simple-cmd-4" =
           (TimeCmd
            (TimeCmd (TimeCmd (TimeCmd (StmtCmd (ReturnStmt (IntExpr 3))))))))))) |}]
 
+let%expect_test "simple-cmd-5" =
+  Ppp.ppp_ast
+    " let {a,b,c} = {1, 2, 3};";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd
+         (LetStmt
+          (CrossbindLV
+           ((ArgLValue (VarArg a)) (ArgLValue (VarArg b)) (ArgLValue (VarArg c))))
+          (CrossExpr ((IntExpr 1) (IntExpr 2) (IntExpr 3)))))))|}]
+
+(* write some test about state array initialization*)
+let%expect_test "simple-cmd-6" =
+  Ppp.ppp_ast
+    "show [1, 2, x];";
+  [%expect
+    {|
+      (Prog ((ShowCmd (ArrayConsExpr ((IntExpr 1) (IntExpr 2) (VarExpr x))))))|}]
+
 let%expect_test "simple-op-1" =
-    Ppp.ppp_ast
+  Ppp.ppp_ast
     "// OK
      let x = --------3;";
   [%expect

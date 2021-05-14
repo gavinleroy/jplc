@@ -9,3 +9,7 @@ run:
 
 parse:
 	dune exec ./jplc.exe -- -p $(TEST)
+
+type:
+	dune exec ./jplc.exe -- -t $(TEST)
+

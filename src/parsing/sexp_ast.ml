@@ -7,13 +7,6 @@ open Core
 open Ast
 open Ast_utils
 
-let rec sexp_of_type = function
-  | IntT -> Sexp.Atom "IntType"
-  | BoolT -> Sexp.Atom "BoolType"
-  | FloatT -> Sexp.Atom "FloatType"
-  | ArrayT (te, r) -> Sexp.(List[Atom "ArrayType"; sexp_of_type te; Int64.sexp_of_t r])
-  | CrossT tes -> Sexp.(List[Atom "CrossType"; List.sexp_of_t sexp_of_type tes])
-
 let sexp_of_binop o =
   Sexp.Atom (match o with
       | Lt -> "<"
@@ -52,11 +45,13 @@ let rec sexp_of_expr e =
               ; sexp_of_binop op
               ; sexp_of_expr rhs])
   | UnopE (_,op,e') -> Sexp.(List[Atom "UnopExpr"; sexp_of_unop op; sexp_of_expr e'])
+  | CastE(_,e',te) -> Sexp.(List[Atom "CastExpr"; sexp_of_expr e'; sexp_of_type te])
+  (* NOTE cross index must be int to support static typing *)
   | CrossidxE (_,e',i) -> Sexp.(List[Atom "CrossidxExpr"; sexp_of_expr e'; Int64.sexp_of_t i])
   | ArrayidxE (_,base,idxs) ->
     Sexp.(List[Atom "ArrayidxExpr"; sexp_of_expr base
               ; List.sexp_of_t sexp_of_expr idxs])
-  | IteE (_,cnd,ie,ee) -> 
+  | IteE (_,cnd,ie,ee) ->
     Sexp.(List[Atom "IteExpr"; sexp_of_expr cnd
               ; sexp_of_expr ie; sexp_of_expr ee])
   | ArrayLE (_,vnes,bdy) ->
@@ -67,7 +62,7 @@ let rec sexp_of_expr e =
     Sexp.(List[Atom "SumExpr"
               ; List.sexp_of_t sexp_of_loopbind vnes
               ; sexp_of_expr bdy])
-  | AppE (_,vn,es) -> 
+  | AppE (_,vn,es) ->
     Sexp.(List[Atom "AppExpr"
               ; Atom (Varname.to_string vn)
               ; List.sexp_of_t sexp_of_expr es])
@@ -119,5 +114,5 @@ let rec sexp_of_cmd = function
   | StmtC (_,s) -> 
     Sexp.(List[Atom "StmtCmd"; sexp_of_stmt s])
 
-let sexp_of_prog p =
+let sexp_of_prog (p : Ast.prog) =
   Sexp.(List[Atom "Prog"; List.sexp_of_t sexp_of_cmd p])

@@ -1,0 +1,2026 @@
+prog: ASSERT TRUE COMMA WRITE
+##
+## Ends in an error in state: 146.
+##
+## stmt -> ASSERT expr COMMA . STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## ASSERT expr COMMA
+##
+
+expected string but got command
+
+prog: ASSERT TRUE WRITE
+##
+## Ends in an error in state: 145.
+##
+## expr -> expr . LCURLY INT RCURLY [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## stmt -> ASSERT expr . COMMA STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## ASSERT expr
+##
+
+expected ',' but got command
+
+prog: ASSERT WRITE
+##
+## Ends in an error in state: 144.
+##
+## stmt -> ASSERT . expr COMMA STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## ASSERT
+##
+
+expected expression but got command
+
+prog: FN IDEN LPAREN IDEN COLON INTT WRITE
+##
+## Ends in an error in state: 162.
+##
+## binding -> arg COLON typee . [ RPAREN RCURLY COMMA ]
+## typee -> typee . LSQUARE list(COMMA) RSQUARE [ RPAREN RCURLY LSQUARE COMMA ]
+##
+## The known suffix of the stack is as follows:
+## arg COLON typee
+##
+
+unexpected command in arg list
+
+prog: FN IDEN LPAREN IDEN COLON WRITE
+##
+## Ends in an error in state: 161.
+##
+## binding -> arg COLON . typee [ RPAREN RCURLY COMMA ]
+##
+## The known suffix of the stack is as follows:
+## arg COLON
+##
+
+expected type expression but got command
+
+prog: FN IDEN LPAREN IDEN SEMICOLON
+##
+## Ends in an error in state: 160.
+##
+## binding -> arg . COLON typee [ RPAREN RCURLY COMMA ]
+##
+## The known suffix of the stack is as follows:
+## arg
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 117, spurious reduction of production arg -> IDEN
+##
+
+expected ':' but got ';'
+
+prog: FN IDEN LPAREN LCURLY LCURLY RCURLY RPAREN
+##
+## Ends in an error in state: 155.
+##
+## binding -> LCURLY loption(separated_nonempty_list(COMMA,binding)) . RCURLY [ RPAREN RCURLY COMMA ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY loption(separated_nonempty_list(COMMA,binding))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 157, spurious reduction of production separated_nonempty_list(COMMA,binding) -> binding
+## In state 154, spurious reduction of production loption(separated_nonempty_list(COMMA,binding)) -> separated_nonempty_list(COMMA,binding)
+##
+
+unexpected ')'
+
+prog: FN IDEN LPAREN LCURLY RCURLY COMMA WRITE
+##
+## Ends in an error in state: 158.
+##
+## separated_nonempty_list(COMMA,binding) -> binding COMMA . separated_nonempty_list(COMMA,binding) [ RPAREN RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## binding COMMA
+##
+
+expected ':' in arg binding
+
+prog: FN IDEN LPAREN LCURLY RCURLY RCURLY
+##
+## Ends in an error in state: 163.
+##
+## ocmd -> FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) . RPAREN COLON typee LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 157, spurious reduction of production separated_nonempty_list(COMMA,binding) -> binding
+## In state 154, spurious reduction of production loption(separated_nonempty_list(COMMA,binding)) -> separated_nonempty_list(COMMA,binding)
+##
+
+unexpected '}'
+
+prog: FN IDEN LPAREN LCURLY RCURLY WRITE
+##
+## Ends in an error in state: 157.
+##
+## separated_nonempty_list(COMMA,binding) -> binding . [ RPAREN RCURLY ]
+## separated_nonempty_list(COMMA,binding) -> binding . COMMA separated_nonempty_list(COMMA,binding) [ RPAREN RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## binding
+##
+
+expected ':' but got command
+
+prog: FN IDEN LPAREN LCURLY WRITE
+##
+## Ends in an error in state: 153.
+##
+## binding -> LCURLY . loption(separated_nonempty_list(COMMA,binding)) RCURLY [ RPAREN RCURLY COMMA ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+expected expression but got command
+
+prog: FN IDEN LPAREN RPAREN COLON INTT LCURLY ASSERT FALSE COMMA STRING WRITE
+##
+## Ends in an error in state: 168.
+##
+## cstmt -> stmt . SEMICOLON [ RETURN RCURLY LET ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## stmt
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: FN IDEN LPAREN RPAREN COLON INTT LCURLY RETURN FALSE SEMICOLON WRITE
+##
+## Ends in an error in state: 172.
+##
+## list(cstmt) -> cstmt . list(cstmt) [ RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## cstmt
+##
+
+unexpected command (only statements allowed in functions)
+
+prog: FN IDEN LPAREN RPAREN COLON INTT LCURLY WRITE
+##
+## Ends in an error in state: 167.
+##
+## ocmd -> FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee LCURLY . list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee LCURLY
+##
+
+unexpected command (only statements allowed in functions)
+
+prog: FN IDEN LPAREN RPAREN COLON INTT WRITE
+##
+## Ends in an error in state: 166.
+##
+## ocmd -> FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee . LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+## typee -> typee . LSQUARE list(COMMA) RSQUARE [ LSQUARE LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee
+##
+
+expected '{' but got command
+
+prog: FN IDEN LPAREN RPAREN COLON WRITE
+##
+## Ends in an error in state: 165.
+##
+## ocmd -> FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON . typee LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON
+##
+
+expected type expression but got command
+
+prog: FN IDEN LPAREN RPAREN WRITE
+##
+## Ends in an error in state: 164.
+##
+## ocmd -> FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN . COLON typee LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN
+##
+
+expected ':' but got command
+
+prog: FN IDEN LPAREN WRITE
+##
+## Ends in an error in state: 152.
+##
+## ocmd -> FN IDEN LPAREN . loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN LPAREN
+##
+
+expected arg list but got command
+
+prog: FN IDEN WRITE
+##
+## Ends in an error in state: 151.
+##
+## ocmd -> FN IDEN . LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN IDEN
+##
+
+expected '(' but got command
+
+prog: FN WRITE
+##
+## Ends in an error in state: 150.
+##
+## ocmd -> FN . IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee LCURLY list(cstmt) RCURLY [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## FN
+##
+
+expected symbol but got command
+
+prog: LET IDEN EQ TRUE WRITE
+##
+## Ends in an error in state: 143.
+##
+## expr -> expr . LCURLY INT RCURLY [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## stmt -> LET lvalue EQ expr . [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## LET lvalue EQ expr
+##
+
+unexpecte command (perhaps a missing ';')
+
+prog: LET IDEN EQ WRITE
+##
+## Ends in an error in state: 142.
+##
+## stmt -> LET lvalue EQ . expr [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## LET lvalue EQ
+##
+
+expected expression but got command
+
+prog: LET IDEN LSQUARE IDEN COMMA WRITE
+##
+## Ends in an error in state: 120.
+##
+## separated_nonempty_list(COMMA,IDEN) -> IDEN COMMA . separated_nonempty_list(COMMA,IDEN) [ RSQUARE ]
+##
+## The known suffix of the stack is as follows:
+## IDEN COMMA
+##
+
+unexpected command
+
+prog: LET IDEN LSQUARE IDEN WRITE
+##
+## Ends in an error in state: 119.
+##
+## separated_nonempty_list(COMMA,IDEN) -> IDEN . [ RSQUARE ]
+## separated_nonempty_list(COMMA,IDEN) -> IDEN . COMMA separated_nonempty_list(COMMA,IDEN) [ RSQUARE ]
+##
+## The known suffix of the stack is as follows:
+## IDEN
+##
+
+unexpected command
+
+prog: LET IDEN LSQUARE WRITE
+##
+## Ends in an error in state: 118.
+##
+## arg -> IDEN LSQUARE . loption(separated_nonempty_list(COMMA,IDEN)) RSQUARE [ SEMICOLON RCURLY EQ COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## IDEN LSQUARE
+##
+
+unexpected command
+
+prog: LET IDEN SEMICOLON
+##
+## Ends in an error in state: 141.
+##
+## stmt -> LET lvalue . EQ expr [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## LET lvalue
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 117, spurious reduction of production arg -> IDEN
+## In state 138, spurious reduction of production lvalue -> arg
+##
+
+expected '=' but got ';'
+
+prog: LET IDEN WRITE
+##
+## Ends in an error in state: 117.
+##
+## arg -> IDEN . LSQUARE loption(separated_nonempty_list(COMMA,IDEN)) RSQUARE [ SEMICOLON RCURLY EQ COMMA COLON ]
+## arg -> IDEN . [ SEMICOLON RCURLY EQ COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## IDEN
+##
+
+expected '=' but got command
+
+prog: LET LCURLY IDEN COMMA WRITE
+##
+## Ends in an error in state: 136.
+##
+## separated_nonempty_list(COMMA,lvalue) -> lvalue COMMA . separated_nonempty_list(COMMA,lvalue) [ RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## lvalue COMMA
+##
+
+unexpected command
+
+prog: LET LCURLY IDEN SEMICOLON
+##
+## Ends in an error in state: 135.
+##
+## separated_nonempty_list(COMMA,lvalue) -> lvalue . [ RCURLY ]
+## separated_nonempty_list(COMMA,lvalue) -> lvalue . COMMA separated_nonempty_list(COMMA,lvalue) [ RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## lvalue
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 117, spurious reduction of production arg -> IDEN
+## In state 138, spurious reduction of production lvalue -> arg
+##
+
+unexpected ';'
+
+prog: LET LCURLY WRITE
+##
+## Ends in an error in state: 133.
+##
+## lvalue -> LCURLY . loption(separated_nonempty_list(COMMA,lvalue)) RCURLY [ RCURLY EQ COMMA ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+unexpected command
+
+prog: LET WRITE
+##
+## Ends in an error in state: 132.
+##
+## stmt -> LET . lvalue EQ expr [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## LET
+##
+
+expected symbol but got command
+
+prog: PRINT STRING WRITE
+##
+## Ends in an error in state: 177.
+##
+## ocmd -> cmd . SEMICOLON [ WRITE TIME SHOW RETURN READ PRINT LET FN EOF ASSERT ]
+##
+## The known suffix of the stack is as follows:
+## cmd
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: PRINT WRITE
+##
+## Ends in an error in state: 130.
+##
+## cmd -> PRINT . STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## PRINT
+##
+
+expected string but got command
+
+prog: READ IMAGE STRING TO WRITE
+##
+## Ends in an error in state: 128.
+##
+## cmd -> READ IMAGE STRING TO . arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ IMAGE STRING TO
+##
+
+unexecpted command
+
+prog: READ IMAGE STRING WRITE
+##
+## Ends in an error in state: 127.
+##
+## cmd -> READ IMAGE STRING . TO arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ IMAGE STRING
+##
+
+expected 'to' but got command
+
+prog: READ IMAGE WRITE
+##
+## Ends in an error in state: 126.
+##
+## cmd -> READ IMAGE . STRING TO arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ IMAGE
+##
+
+expected string but got command
+
+prog: READ VIDEO STRING TO WRITE
+##
+## Ends in an error in state: 116.
+##
+## cmd -> READ VIDEO STRING TO . arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ VIDEO STRING TO
+##
+
+expected symbol but got command
+
+prog: READ VIDEO STRING WRITE
+##
+## Ends in an error in state: 115.
+##
+## cmd -> READ VIDEO STRING . TO arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ VIDEO STRING
+##
+
+expected 'to' but got command
+
+prog: READ VIDEO WRITE
+##
+## Ends in an error in state: 114.
+##
+## cmd -> READ VIDEO . STRING TO arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ VIDEO
+##
+
+expected string but got command
+
+prog: READ WRITE
+##
+## Ends in an error in state: 113.
+##
+## cmd -> READ . IMAGE STRING TO arg [ SEMICOLON ]
+## cmd -> READ . VIDEO STRING TO arg [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## READ
+##
+
+expected media type [ image | video ] but got command
+
+prog: RETURN TRUE WRITE
+##
+## Ends in an error in state: 112.
+##
+## expr -> expr . LCURLY INT RCURLY [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## stmt -> RETURN expr . [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## RETURN expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: RETURN WRITE
+##
+## Ends in an error in state: 111.
+##
+## stmt -> RETURN . expr [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## RETURN
+##
+
+expected expression but got command
+
+prog: SHOW ARRAY LSQUARE IDEN COLON FALSE RSQUARE TRUE WRITE
+##
+## Ends in an error in state: 23.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> ARRAY LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## ARRAY LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW ARRAY LSQUARE IDEN COLON FALSE RSQUARE WRITE
+##
+## Ends in an error in state: 22.
+##
+## expr -> ARRAY LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## ARRAY LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE
+##
+
+expected expression but got command
+
+prog: SHOW ARRAY LSQUARE WRITE
+##
+## Ends in an error in state: 20.
+##
+## expr -> ARRAY LSQUARE . separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## ARRAY LSQUARE
+##
+
+unexpected command
+
+prog: SHOW ARRAY WRITE
+##
+## Ends in an error in state: 19.
+##
+## expr -> ARRAY . LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## ARRAY
+##
+
+expected '[' but got command
+
+prog: SHOW BANG TRUE WRITE
+##
+## Ends in an error in state: 82.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> BANG expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## BANG expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW BANG WRITE
+##
+## Ends in an error in state: 18.
+##
+## expr -> BANG . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## BANG
+##
+
+expected expression but got command
+
+prog: SHOW IDEN LPAREN TRUE RCURLY
+##
+## Ends in an error in state: 83.
+##
+## expr -> IDEN LPAREN loption(separated_nonempty_list(COMMA,expr)) . RPAREN [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IDEN LPAREN loption(separated_nonempty_list(COMMA,expr))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 32, spurious reduction of production separated_nonempty_list(COMMA,expr) -> expr
+## In state 29, spurious reduction of production loption(separated_nonempty_list(COMMA,expr)) -> separated_nonempty_list(COMMA,expr)
+##
+
+unexpected '}'
+
+prog: SHOW IDEN LPAREN WRITE
+##
+## Ends in an error in state: 15.
+##
+## expr -> IDEN LPAREN . loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IDEN LPAREN
+##
+
+unexpected command
+
+prog: SHOW IDEN WRITE
+##
+## Ends in an error in state: 14.
+##
+## expr -> IDEN . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> IDEN . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IDEN
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW IF TRUE THEN TRUE ELSE TRUE WRITE
+##
+## Ends in an error in state: 89.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> IF expr THEN expr ELSE expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN expr ELSE expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW IF TRUE THEN TRUE ELSE WRITE
+##
+## Ends in an error in state: 88.
+##
+## expr -> IF expr THEN expr ELSE . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN expr ELSE
+##
+
+expected expression but got command
+
+prog: SHOW IF TRUE THEN TRUE WRITE
+##
+## Ends in an error in state: 87.
+##
+## expr -> expr . LCURLY INT RCURLY [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . AND expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . OR expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . CMP expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . LT expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . GT expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . LTE expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . GTE expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . MUL expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . DIV expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . MOD expr [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> expr . AS typee [ PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV CMP AS AND ]
+## expr -> IF expr THEN expr . ELSE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN expr
+##
+
+expected 'else' but got command
+
+prog: SHOW IF TRUE THEN WRITE
+##
+## Ends in an error in state: 86.
+##
+## expr -> IF expr THEN . expr ELSE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN
+##
+
+expected expression but got command
+
+prog: SHOW IF TRUE WRITE
+##
+## Ends in an error in state: 85.
+##
+## expr -> expr . LCURLY INT RCURLY [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ THEN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> IF expr . THEN expr ELSE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IF expr
+##
+
+expected 'then' but got command
+
+prog: SHOW IF WRITE
+##
+## Ends in an error in state: 13.
+##
+## expr -> IF . expr THEN expr ELSE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IF
+##
+
+expected expression but got command
+
+prog: SHOW LCURLY TRUE RSQUARE
+##
+## Ends in an error in state: 90.
+##
+## expr -> LCURLY loption(separated_nonempty_list(COMMA,expr)) . RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY loption(separated_nonempty_list(COMMA,expr))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 32, spurious reduction of production separated_nonempty_list(COMMA,expr) -> expr
+## In state 29, spurious reduction of production loption(separated_nonempty_list(COMMA,expr)) -> separated_nonempty_list(COMMA,expr)
+##
+
+unexpected ']'
+
+prog: SHOW LCURLY WRITE
+##
+## Ends in an error in state: 11.
+##
+## expr -> LCURLY . loption(separated_nonempty_list(COMMA,expr)) RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+unexpected command
+
+prog: SHOW LPAREN TRUE WRITE
+##
+## Ends in an error in state: 92.
+##
+## expr -> LPAREN expr . RPAREN [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LCURLY INT RCURLY [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ RPAREN PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN expr
+##
+
+unexpected command
+
+prog: SHOW LPAREN WRITE
+##
+## Ends in an error in state: 10.
+##
+## expr -> LPAREN . expr RPAREN [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+unexpected command
+
+prog: SHOW LSQUARE TRUE COMMA WRITE
+##
+## Ends in an error in state: 56.
+##
+## separated_nonempty_list(COMMA,expr) -> expr COMMA . separated_nonempty_list(COMMA,expr) [ RSQUARE RPAREN RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## expr COMMA
+##
+
+expected expression but got command
+
+prog: SHOW LSQUARE TRUE RPAREN
+##
+## Ends in an error in state: 94.
+##
+## expr -> LSQUARE loption(separated_nonempty_list(COMMA,expr)) . RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LSQUARE loption(separated_nonempty_list(COMMA,expr))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 32, spurious reduction of production separated_nonempty_list(COMMA,expr) -> expr
+## In state 29, spurious reduction of production loption(separated_nonempty_list(COMMA,expr)) -> separated_nonempty_list(COMMA,expr)
+##
+
+unexpected ')'
+
+prog: SHOW LSQUARE TRUE WRITE
+##
+## Ends in an error in state: 32.
+##
+## expr -> expr . LCURLY INT RCURLY [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## separated_nonempty_list(COMMA,expr) -> expr . [ RSQUARE RPAREN RCURLY ]
+## separated_nonempty_list(COMMA,expr) -> expr . COMMA separated_nonempty_list(COMMA,expr) [ RSQUARE RPAREN RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## expr
+##
+
+unexpected command
+
+prog: SHOW LSQUARE WRITE
+##
+## Ends in an error in state: 9.
+##
+## expr -> LSQUARE . loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LSQUARE
+##
+
+unexpected command
+
+prog: SHOW MINUS TRUE WRITE
+##
+## Ends in an error in state: 96.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> MINUS expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## MINUS expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW MINUS WRITE
+##
+## Ends in an error in state: 8.
+##
+## expr -> MINUS . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## MINUS
+##
+
+expected expression but got command
+
+prog: SHOW SUM LSQUARE IDEN COLON FALSE COMMA WRITE
+##
+## Ends in an error in state: 80.
+##
+## separated_nonempty_list(COMMA,arr_bounds_e) -> arr_bounds_e COMMA . separated_nonempty_list(COMMA,arr_bounds_e) [ RSQUARE ]
+##
+## The known suffix of the stack is as follows:
+## arr_bounds_e COMMA
+##
+
+expected arg binding but got command
+
+prog: SHOW SUM LSQUARE IDEN COLON FALSE RSQUARE TRUE WRITE
+##
+## Ends in an error in state: 100.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> SUM LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## SUM LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW SUM LSQUARE IDEN COLON FALSE RSQUARE WRITE
+##
+## Ends in an error in state: 99.
+##
+## expr -> SUM LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## SUM LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE
+##
+
+expected expression but got command
+
+prog: SHOW SUM LSQUARE IDEN COLON TRUE WRITE
+##
+## Ends in an error in state: 97.
+##
+## arr_bounds_e -> IDEN COLON expr . [ RSQUARE COMMA ]
+## expr -> expr . LCURLY INT RCURLY [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ RSQUARE PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## IDEN COLON expr
+##
+
+unexpected command
+
+prog: SHOW SUM LSQUARE IDEN COLON WRITE
+##
+## Ends in an error in state: 7.
+##
+## arr_bounds_e -> IDEN COLON . expr [ RSQUARE COMMA ]
+##
+## The known suffix of the stack is as follows:
+## IDEN COLON
+##
+
+unexpected command
+
+prog: SHOW SUM LSQUARE IDEN WRITE
+##
+## Ends in an error in state: 6.
+##
+## arr_bounds_e -> IDEN . COLON expr [ RSQUARE COMMA ]
+##
+## The known suffix of the stack is as follows:
+## IDEN
+##
+
+unexpeted command
+
+prog: SHOW SUM LSQUARE WRITE
+##
+## Ends in an error in state: 5.
+##
+## expr -> SUM LSQUARE . separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## SUM LSQUARE
+##
+
+unexpected command
+
+prog: SHOW SUM WRITE
+##
+## Ends in an error in state: 4.
+##
+## expr -> SUM . LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## SUM
+##
+
+expected '[' but got command
+
+prog: SHOW TRUE AND TRUE WRITE
+##
+## Ends in an error in state: 78.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr AND expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr AND expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE AND WRITE
+##
+## Ends in an error in state: 77.
+##
+## expr -> expr AND . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr AND
+##
+
+expected expression but got command
+
+prog: SHOW TRUE AS INTT LSQUARE COMMA WRITE
+##
+## Ends in an error in state: 67.
+##
+## list(COMMA) -> COMMA . list(COMMA) [ RSQUARE ]
+##
+## The known suffix of the stack is as follows:
+## COMMA
+##
+
+unexpected command
+
+prog: SHOW TRUE AS INTT LSQUARE WRITE
+##
+## Ends in an error in state: 66.
+##
+## typee -> typee LSQUARE . list(COMMA) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## typee LSQUARE
+##
+
+unexpected command
+
+prog: SHOW TRUE AS INTT WRITE
+##
+## Ends in an error in state: 76.
+##
+## expr -> expr AS typee . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## typee -> typee . LSQUARE list(COMMA) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr AS typee
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE AS LCURLY INTT COMMA WRITE
+##
+## Ends in an error in state: 71.
+##
+## separated_nonempty_list(COMMA,typee) -> typee COMMA . separated_nonempty_list(COMMA,typee) [ RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## typee COMMA
+##
+
+unexpected command
+
+prog: SHOW TRUE AS LCURLY INTT WRITE
+##
+## Ends in an error in state: 65.
+##
+## separated_nonempty_list(COMMA,typee) -> typee . [ RCURLY ]
+## separated_nonempty_list(COMMA,typee) -> typee . COMMA separated_nonempty_list(COMMA,typee) [ RCURLY ]
+## typee -> typee . LSQUARE list(COMMA) RSQUARE [ RCURLY LSQUARE COMMA ]
+##
+## The known suffix of the stack is as follows:
+## typee
+##
+
+unexpected command
+
+prog: SHOW TRUE AS LCURLY WRITE
+##
+## Ends in an error in state: 59.
+##
+## typee -> LCURLY . loption(separated_nonempty_list(COMMA,typee)) RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+unexpected command
+
+prog: SHOW TRUE AS WRITE
+##
+## Ends in an error in state: 58.
+##
+## expr -> expr AS . typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr AS
+##
+
+unexpected command
+
+prog: SHOW TRUE CMP TRUE WRITE
+##
+## Ends in an error in state: 55.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr CMP expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr CMP expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE CMP WRITE
+##
+## Ends in an error in state: 54.
+##
+## expr -> expr CMP . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr CMP
+##
+
+unexpected command
+
+prog: SHOW TRUE DIV TRUE WRITE
+##
+## Ends in an error in state: 45.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr DIV expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr DIV expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE DIV WRITE
+##
+## Ends in an error in state: 44.
+##
+## expr -> expr DIV . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr DIV
+##
+
+unexpected command
+
+prog: SHOW TRUE GT TRUE WRITE
+##
+## Ends in an error in state: 53.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr GT expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr GT expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE GT WRITE
+##
+## Ends in an error in state: 52.
+##
+## expr -> expr GT . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr GT
+##
+
+unexpected command
+
+prog: SHOW TRUE GTE TRUE WRITE
+##
+## Ends in an error in state: 51.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr GTE expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr GTE expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE GTE WRITE
+##
+## Ends in an error in state: 50.
+##
+## expr -> expr GTE . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr GTE
+##
+
+expected expression but got command
+
+prog: SHOW TRUE LCURLY INT WRITE
+##
+## Ends in an error in state: 40.
+##
+## expr -> expr LCURLY INT . RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LCURLY INT
+##
+
+unexpected command
+
+prog: SHOW TRUE LCURLY WRITE
+##
+## Ends in an error in state: 39.
+##
+## expr -> expr LCURLY . INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LCURLY
+##
+
+unexpected command
+
+prog: SHOW TRUE LSQUARE TRUE RPAREN
+##
+## Ends in an error in state: 30.
+##
+## expr -> expr LSQUARE loption(separated_nonempty_list(COMMA,expr)) . RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LSQUARE loption(separated_nonempty_list(COMMA,expr))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 32, spurious reduction of production separated_nonempty_list(COMMA,expr) -> expr
+## In state 29, spurious reduction of production loption(separated_nonempty_list(COMMA,expr)) -> separated_nonempty_list(COMMA,expr)
+##
+
+unexpected ')'
+
+prog: SHOW TRUE LSQUARE WRITE
+##
+## Ends in an error in state: 28.
+##
+## expr -> expr LSQUARE . loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LSQUARE
+##
+
+unexpected command
+
+prog: SHOW TRUE LT TRUE WRITE
+##
+## Ends in an error in state: 49.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr LT expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LT expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE LT WRITE
+##
+## Ends in an error in state: 48.
+##
+## expr -> expr LT . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LT
+##
+
+expected expression but got command
+
+prog: SHOW TRUE LTE TRUE WRITE
+##
+## Ends in an error in state: 47.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr LTE expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LTE expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE LTE WRITE
+##
+## Ends in an error in state: 46.
+##
+## expr -> expr LTE . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr LTE
+##
+
+unexpected command
+
+prog: SHOW TRUE MINUS TRUE WRITE
+##
+## Ends in an error in state: 43.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr MINUS expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr MINUS expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE MINUS WRITE
+##
+## Ends in an error in state: 42.
+##
+## expr -> expr MINUS . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr MINUS
+##
+
+unexpected command
+
+prog: SHOW TRUE MOD TRUE WRITE
+##
+## Ends in an error in state: 38.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr MOD expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr MOD expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE MOD WRITE
+##
+## Ends in an error in state: 37.
+##
+## expr -> expr MOD . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr MOD
+##
+
+unexpected command
+
+prog: SHOW TRUE MUL TRUE WRITE
+##
+## Ends in an error in state: 27.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr MUL expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr MUL expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE MUL WRITE
+##
+## Ends in an error in state: 26.
+##
+## expr -> expr MUL . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr MUL
+##
+
+unexpected command
+
+prog: SHOW TRUE NEQ TRUE WRITE
+##
+## Ends in an error in state: 36.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr NEQ expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr NEQ expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE NEQ WRITE
+##
+## Ends in an error in state: 35.
+##
+## expr -> expr NEQ . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr NEQ
+##
+
+unexpected command
+
+prog: SHOW TRUE OR TRUE WRITE
+##
+## Ends in an error in state: 34.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr OR expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr OR expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE OR WRITE
+##
+## Ends in an error in state: 33.
+##
+## expr -> expr OR . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr OR
+##
+
+unexpected command
+
+prog: SHOW TRUE PLUS TRUE WRITE
+##
+## Ends in an error in state: 25.
+##
+## expr -> expr . LCURLY INT RCURLY [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AND expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . OR expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . CMP expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . NEQ expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GT expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . LTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . GTE expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . PLUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr PLUS expr . [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MINUS expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MUL expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . DIV expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . MOD expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+## expr -> expr . AS typee [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr PLUS expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW TRUE PLUS WRITE
+##
+## Ends in an error in state: 24.
+##
+## expr -> expr PLUS . expr [ TO THEN SEMICOLON RSQUARE RPAREN RCURLY PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT ELSE DIV COMMA CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## expr PLUS
+##
+
+unexpected command
+
+prog: SHOW TRUE SEMICOLON VIDEO
+##
+## Ends in an error in state: 175.
+##
+## list(ocmd) -> ocmd . list(ocmd) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## ocmd
+##
+
+unexpected media type
+
+prog: SHOW TRUE WRITE
+##
+## Ends in an error in state: 110.
+##
+## cmd -> SHOW expr . [ SEMICOLON ]
+## expr -> expr . LCURLY INT RCURLY [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ SEMICOLON PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## SHOW expr
+##
+
+unexpected command (perhaps a missing ';')
+
+prog: SHOW WRITE
+##
+## Ends in an error in state: 109.
+##
+## cmd -> SHOW . expr [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## SHOW
+##
+
+unexpected command
+
+prog: TIME VIDEO
+##
+## Ends in an error in state: 108.
+##
+## cmd -> TIME . cmd [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## TIME
+##
+
+expected command but got media type
+
+prog: VIDEO
+##
+## Ends in an error in state: 0.
+##
+## prog' -> . prog [ # ]
+##
+## The known suffix of the stack is as follows:
+##
+##
+
+expected command but got media type
+
+prog: WRITE IMAGE TRUE TO WRITE
+##
+## Ends in an error in state: 106.
+##
+## cmd -> WRITE IMAGE expr TO . STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## WRITE IMAGE expr TO
+##
+
+expected string but got command
+
+prog: WRITE IMAGE TRUE WRITE
+##
+## Ends in an error in state: 105.
+##
+## cmd -> WRITE IMAGE expr . TO STRING [ SEMICOLON ]
+## expr -> expr . LCURLY INT RCURLY [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## WRITE IMAGE expr
+##
+
+expected 'to' but got command
+
+prog: WRITE IMAGE WRITE
+##
+## Ends in an error in state: 104.
+##
+## cmd -> WRITE IMAGE . expr TO STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## WRITE IMAGE
+##
+
+expected symbol but got command
+
+prog: WRITE VIDEO TRUE TO WRITE
+##
+## Ends in an error in state: 102.
+##
+## cmd -> WRITE VIDEO expr TO . STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## WRITE VIDEO expr TO
+##
+
+expected string but got command
+
+prog: WRITE VIDEO TRUE WRITE
+##
+## Ends in an error in state: 101.
+##
+## cmd -> WRITE VIDEO expr . TO STRING [ SEMICOLON ]
+## expr -> expr . LCURLY INT RCURLY [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LSQUARE loption(separated_nonempty_list(COMMA,expr)) RSQUARE [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AND expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . OR expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . CMP expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . NEQ expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LT expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GT expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . LTE expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . GTE expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . PLUS expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MINUS expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MUL expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . DIV expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . MOD expr [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+## expr -> expr . AS typee [ TO PLUS OR NEQ MUL MOD MINUS LTE LT LSQUARE LCURLY GTE GT DIV CMP AS AND ]
+##
+## The known suffix of the stack is as follows:
+## WRITE VIDEO expr
+##
+
+expected 'to' but got command
+
+prog: WRITE VIDEO WRITE
+##
+## Ends in an error in state: 2.
+##
+## cmd -> WRITE VIDEO . expr TO STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## WRITE VIDEO
+##
+
+expected symbol but got command
+
+prog: WRITE WRITE
+##
+## Ends in an error in state: 1.
+##
+## cmd -> WRITE . IMAGE expr TO STRING [ SEMICOLON ]
+## cmd -> WRITE . VIDEO expr TO STRING [ SEMICOLON ]
+##
+## The known suffix of the stack is as follows:
+## WRITE
+##
+
+expected media type [ image | video ] but got command

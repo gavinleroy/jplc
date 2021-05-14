@@ -4,7 +4,7 @@
 (************************)
 
 (* open Core *)
-open Compile_jpl
+open Compiler
 
 let ppp_ast str =
-  compile_prog (Lexing.from_string str)
+  compile_prog ~skip_typecheck:true (Lexing.from_string str)

@@ -27,6 +27,7 @@ rule read_token = parse
   | "array"     { ARRAY }
   | "sum"       { SUM }
   | "if"        { IF }
+  | "as"        { AS }
   | "then"      { THEN }
   | "else"      { ELSE }
   | "let"       { LET }
@@ -41,6 +42,11 @@ rule read_token = parse
   | "show"      { SHOW }
   | "time"      { TIME }
   | "fn"        { FN }
+  | "bool"      { BOOLT }
+  | "int"       { INTT }
+  | "float"     { FLOATT }
+  | "float3"    { FLOAT3T }
+  | "float4"    { FLOAT4T }
   (* | "attribute" { ATTRIBUTE } *)
   | "\\"  { next_line lexbuf; read_token lexbuf }
   | "//"  { read_single_line_comment lexbuf }

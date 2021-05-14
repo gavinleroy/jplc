@@ -1,6 +1,6 @@
 (library
  (name test_parsing)
- (libraries core compile_jpl)
+ (libraries core compiler)
  (inline_tests
   ;; (flags) add flag for parsing -p
  )

@@ -20,26 +20,23 @@ module type IDENTIFIER = sig
   type t
   val of_string : string -> t
   val to_string : t -> string
-  val ( = ) : t -> t -> bool
+  val (=) : t -> t -> bool
 end
 
-module String_id = struct
-  type t = string
-
-  let of_string x = x
-  let to_string x = x
-  let (=) = String.equal
-end
-
-module Varname : IDENTIFIER = String_id
-module Filename : IDENTIFIER = String_id
+module Varname : IDENTIFIER
+module Filename : IDENTIFIER
 
 type rank = Int64.t
 
 type type_expr =
+  | Unit
   | IntT
   | BoolT
   | FloatT
   | ArrayT of type_expr * rank
   | CrossT of type_expr list
+  | ArrowT of type_expr * type_expr list
 
+val sexp_of_type: type_expr -> Sexp.t
+
+val ( = ): type_expr -> type_expr -> bool

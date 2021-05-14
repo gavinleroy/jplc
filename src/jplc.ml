@@ -56,15 +56,16 @@ let command =
       let%map_open
         filename = anon (maybe_with_default "-" ("filename" %: jpl_file))
       and skip_typecheck = flag "-p" no_arg ~doc:" dump parsed AST and skip typechecking"
-      (* and skip_flatten = flag "-t" no_arg ~doc:" dump typed AST and skip flattening"
-       * and skip_codegen = flag "-f" no_arg ~doc:" dump flattened AST and skip codegen"
+      and skip_flatten = flag "-t" no_arg ~doc:" dump typed AST and skip flattening"
+      (* and skip_codegen = flag "-f" no_arg ~doc:" dump flattened AST and skip codegen"
        * and skip_assembler = flag "-s" no_arg ~doc:" dump assembly code" *)
       in
       fun () ->
         In_channel.with_file filename ~f:(fun file_ic ->
             let lexbuf = Lexing.from_channel file_ic in
-            Compile_jpl.compile_prog
+            Compiler.compile_prog
               ~skip_typecheck
+              ~_skip_flatten:skip_flatten
               lexbuf))
 
 let () =
