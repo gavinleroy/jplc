@@ -11,15 +11,24 @@ open Result
 
 module TA = Ast
 
-let unwrap f t =
-  let _, b, c = t in
-  f b c
+let unwrap
+    (f : 'b -> 'a -> ('d * 'c * 'b) Or_error.t)
+    (v : 'a)
+    (t : 'd * 'c * 'b) =
+  let _, _, e = t in
+  f e v
 
-let rec resultFold xs f x =
+let foldM (f : 'b -> 'a -> ('d * 'c * 'b) Or_error.t) env xs =
+  let ret = fun a -> a >>= fun (_,v,_) -> Ok v in
+  let rec foldM' prev xs =
+    match xs with
+    | [] -> [ret prev]
+    | y :: ys ->
+      (ret prev) :: (foldM' (prev >>= unwrap f y) ys) in
   match xs with
-  | [] -> Ok x
-  | x' :: xs' -> f x x'
-    >>= fun r -> resultFold xs' f r
+  | [] -> Ok []
+  | x :: xs ->
+    all (foldM' (f env x) xs)
 
 let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
   let t = fst3 te in
@@ -29,7 +38,6 @@ let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
               (Sexp.to_string (sexp_of_type exp))
               (Sexp.to_string (sexp_of_type t)))
   else Ok te
-
 let type_expr _env _e =
   Error (Error.of_string "unimplemented type expr")
 
@@ -69,5 +77,4 @@ let rec type_cmd env = function
     >>= fun (_, s', env') -> Ok (Unit, TA.StmtC s', env')
 
 let type_prog (p : prog) =
-  (* resultFold p (unwrap type_cmd) Env.empty *)
-  Error (Error.of_string "TYPING: unimplemented")
+  foldM type_cmd (Env.empty ()) p
