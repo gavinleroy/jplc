@@ -15,6 +15,7 @@ type expr =
   | ArrayCE of type_expr * expr list
   | BinopE of type_expr * expr * bin_op * expr
   | UnopE of type_expr * un_op * expr
+  | CastE of type_expr * expr * type_expr
   (* NOTE cross index must be int to support static typing *)
   | CrossidxE of type_expr * expr * Int64.t
   | ArrayidxE of type_expr * expr * expr list
@@ -48,7 +49,7 @@ type cmd =
   | PrintC of string
   | ShowC of expr
   | TimeC of cmd
-  | FnC of Varname.t * binding list * type_expr * stmt list
+  | FnC of type_expr * Varname.t * binding list * type_expr * stmt list
   | StmtC of stmt
 
 type prog = cmd list

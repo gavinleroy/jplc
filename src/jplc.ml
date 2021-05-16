@@ -65,7 +65,7 @@ let command =
             let lexbuf = Lexing.from_channel file_ic in
             Compiler.compile_prog
               ~skip_typecheck
-              ~_skip_flatten:skip_flatten
+              ~skip_flatten
               lexbuf))
 
 let () =

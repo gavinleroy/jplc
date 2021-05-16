@@ -38,8 +38,31 @@ let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
               (Sexp.to_string (sexp_of_type exp))
               (Sexp.to_string (sexp_of_type t)))
   else Ok te
-let type_expr _env _e =
-  Error (Error.of_string "unimplemented type expr")
+
+let lookup_err env p vn =
+  match Env.lookup env vn with
+  | None -> Err.cerr_msg ~pos:p ~t:"type"
+              ~msg:(Printf.sprintf "unbounded symbol '%s'" (Varname.to_string vn))
+  | Some te -> Ok te
+
+let type_expr env = function
+  | IntE(_,_) -> Error (Error.of_string "TODO")
+  | FloatE(_,_) -> Error (Error.of_string "TODO")
+  | TrueE _ -> Error (Error.of_string "TODO")
+  | FalseE _ -> Error (Error.of_string "TODO")
+  | VarE(l,vn) -> lookup_err env l vn
+    >>= fun t -> Ok(t, TA.VarE(t, vn), env)
+  | CrossE(_,_) -> Error (Error.of_string "TODO")
+  | ArrayCE(_,_) -> Error (Error.of_string "TODO")
+  | BinopE(_,_,_,_) -> Error (Error.of_string "TODO")
+  | UnopE(_,_,_) -> Error (Error.of_string "TODO")
+  | CastE(_,_,_) -> Error (Error.of_string "TODO")
+  | CrossidxE(_,_,_) -> Error (Error.of_string "TODO")
+  | ArrayidxE(_,_,_) -> Error (Error.of_string "TODO")
+  | IteE(_,_,_,_) -> Error (Error.of_string "TODO")
+  | ArrayLE(_,_,_) -> Error (Error.of_string "TODO")
+  | SumLE(_,_,_) -> Error (Error.of_string "TODO")
+  | AppE(_,_,_) -> Error (Error.of_string "TODO")
 
 let type_stmt _env _s =
   Error (Error.of_string "unimplemented type stmt")
@@ -47,18 +70,19 @@ let type_stmt _env _s =
 let rec type_cmd env = function
   | ReadimgC (_,fn, VarA(_,vn)) ->
     Ok (Unit, TA.ReadimgC (fn, TA.VarA(Env.img_te, vn)), Env.extend_img env vn)
-  | ReadvidC (_,_, VarA(_,_)) ->
-    Error (Error.of_string "video unsupported")
-  | ReadimgC (_,_, ArraybindA _)
-  | ReadvidC (_,_, ArraybindA _) ->
-    Error (Error.of_string "cannot pattern match in read command")
+  | ReadvidC (l,_, VarA(_,_)) ->
+    Err.cerr_msg ~pos:l ~t:"type" ~msg:"video currently unsupported"
+  | ReadimgC (l,_, ArraybindA _) ->
+    Err.cerr_msg ~pos:l ~t:"type" ~msg:"cannot pattern match within 'read' command"
+  | ReadvidC (l,_, ArraybindA _) ->
+    Err.cerr_msg ~pos:l ~t:"type" ~msg:"cannot pattern match within 'read' command"
   | WriteimgC (l,e,fn) ->
     type_expr env e
     >>= expect l Env.img_te
     >>= fun (_, e', env') -> Ok (Unit, TA.WriteimgC(e', fn), env')
-  | WritevidC (_,_,_) ->
-    Error (Error.of_string "video unsupported")
-  | PrintC (_,s) -> Ok (Unit, PrintC s, env)
+  | WritevidC (l,_,_) ->
+    Err.cerr_msg ~pos:l ~t:"type" ~msg:"video currently unsupported"
+  | PrintC (_,s) -> Ok (Unit, TA.PrintC s, env)
   | ShowC (_,e) ->
     type_expr env e
     >>= fun (_, e', env') -> Ok (Unit, TA.ShowC e', env')

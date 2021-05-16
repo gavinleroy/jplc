@@ -1,1 +1,1 @@
-let a = 1 + 2;
+read image "myimg.png" to helloimg;

@@ -13,17 +13,16 @@ let maybe_exit ok_exit pp cnv ast =
 
 let compile_prog
     ?(skip_typecheck = false)
-    ?(_skip_flatten = false)
+    ?(skip_flatten = false)
     lexbuf =
   let open Result in
   Parsing.Lex_parse.parse_prog lexbuf
-  (* turn this into a flag *)
   >>= maybe_exit skip_typecheck Pp.print_sexp Parsing.Sexp_ast.sexp_of_prog
-  (* >>= Typing.Typechecker.type_prog
-   * >>= maybe_exit skip_flatten Pp.print_sexp .... *)
+  >>= Typing.Typechecker.type_prog
+  >>= maybe_exit skip_flatten Pp.print_sexp Typing.Sexp_ast.sexp_of_prog
   |> function
   | Ok _ -> (* TODO something *)
-    ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented\n")
+    ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented codegen\n")
   | Error msg -> (* print the error message to the console *)
     Error.to_string_hum msg
     |> ANSITerminal.(eprintf [red; Bold] "%s")
