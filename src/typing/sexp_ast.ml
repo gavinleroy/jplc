@@ -45,7 +45,7 @@ let rec sexp_of_expr e =
               ; sexp_of_binop op
               ; sexp_of_expr rhs])
   | UnopE (t,op,e') -> Sexp.(List[Atom "UnopExpr"; sexp_of_type t; sexp_of_unop op; sexp_of_expr e'])
-  | CastE(t,e',te) -> Sexp.(List[Atom "CastExpr"; sexp_of_type t; sexp_of_expr e'; sexp_of_type te])
+  | CastE(t,e') -> Sexp.(List[Atom "CastExpr"; sexp_of_type t; sexp_of_expr e'; sexp_of_type t])
   | CrossidxE (t,e',i) ->
     Sexp.(List[Atom "CrossidxExpr"; sexp_of_type t; sexp_of_expr e'; Int64.sexp_of_t i])
   | ArrayidxE (t,base,idxs) ->
@@ -83,8 +83,8 @@ let rec sexp_of_lvalue = function
     Sexp.(List[Atom "CrossbindLV"; sexp_of_type t; List.sexp_of_t sexp_of_lvalue lvs])
 
 let rec sexp_of_binding = function
-  | ArgB (t,a,te) ->
-    Sexp.(List[Atom "ArgBinding"; sexp_of_type t; sexp_of_arg a; sexp_of_type te])
+  | ArgB (t,a) ->
+    Sexp.(List[Atom "ArgBinding"; sexp_of_type t; sexp_of_arg a; sexp_of_type t])
   | CrossbindB (t,bs) ->
     Sexp.(List[Atom "CrossBinding"; sexp_of_type t; List.sexp_of_t sexp_of_binding bs])
 

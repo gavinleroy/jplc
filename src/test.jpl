@@ -1,1 +1,9 @@
-read image "myimg.png" to helloimg;
+
+fn newfn(x : int
+   , {a : float, b : int, c : float4}) : float
+{
+  return (x * b as float) * a;
+}
+
+let x = newfn(10., 5, {0.,0.,0.,0.});
+show x;

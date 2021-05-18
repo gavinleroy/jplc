@@ -30,10 +30,60 @@ let%expect_test "simple-stmt-2" =
       line: 1 column: 9
       	~~ type: expected one of the following types: (IntType FloatType) but got BoolType |}]
 
-let%expect_test "simple-stmt-2" =
+let%expect_test "simple-stmt-3" =
   Ppp.ppp_ast
     "let x = !10.;";
   [%expect
     {|
       line: 1 column: 9
-      	~~ type: expected type BoolType but got FloatType |}]
+      	~~ type: expected one of the following types: (BoolType) but got FloatType |}]
+
+let%expect_test "simple-stmt-4" =
+  Ppp.ppp_ast
+    "let x = 10. + 5;";
+  [%expect
+    {|
+      line: 1 column: 9
+      	~~ type: expected type FloatType but got IntType |}]
+
+let%expect_test "simple-stmt-5" =
+  Ppp.ppp_ast
+    "show 10. % false;";
+  [%expect
+    {|
+      line: 1 column: 6
+      	~~ type: expected type FloatType but got BoolType |}]
+
+let%expect_test "simple-stmt-6" =
+  Ppp.ppp_ast
+    "show true >= false;";
+  [%expect
+    {|
+      line: 1 column: 6
+      	~~ type: expected one of the following types: (IntType FloatType) but got BoolType |}]
+
+let%expect_test "simple-stmt-7" =
+  Ppp.ppp_ast
+    "show 1 || 10;";
+  [%expect
+    {|
+      line: 1 column: 6
+      	~~ type: expected type BoolType but got IntType |}]
+
+let%expect_test "simple-stmt-8" =
+  Ppp.ppp_ast
+    "show true && 10;";
+  [%expect
+    {|
+      line: 1 column: 6
+      	~~ type: expected type IntType but got BoolType |}]
+
+let%expect_test "simple-stmt-9" =
+  Ppp.ppp_ast
+    "let x = false;
+     let y = if true then
+     100 else true && x;";
+  [%expect
+    {|
+      line: 2 column: 14
+      	~~ type: expected type IntType but got BoolType |}]

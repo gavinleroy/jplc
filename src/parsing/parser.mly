@@ -120,7 +120,7 @@ stmt:
   | RETURN; e=expr { ReturnS($startpos,e) }
 
 binding:
-  | LCURLY; bs=separated_list(COMMA,binding); RCURLY; { CrossbindB($startpos, bs) }
+  | LCURLY; bs=separated_list(COMMA,binding); RCURLY { CrossbindB($startpos, bs) }
   | a=arg; COLON; t=typee { ArgB($startpos,a,t) }
 
 lvalue:

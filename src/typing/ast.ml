@@ -15,7 +15,7 @@ type expr =
   | ArrayCE of type_expr * expr list
   | BinopE of type_expr * expr * bin_op * expr
   | UnopE of type_expr * un_op * expr
-  | CastE of type_expr * expr * type_expr
+  | CastE of type_expr * expr
   (* NOTE cross index must be int to support static typing *)
   | CrossidxE of type_expr * expr * Int64.t
   | ArrayidxE of type_expr * expr * expr list
@@ -33,7 +33,7 @@ type lvalue =
   | CrossbindLV of type_expr * lvalue list
 
 type binding =
-  | ArgB of type_expr * arg * type_expr
+  | ArgB of type_expr * arg
   | CrossbindB of type_expr * binding list
 
 type stmt =

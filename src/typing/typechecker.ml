@@ -39,6 +39,10 @@ let foldM f env xs =
     all vs >>= fun vs' ->
     env' >>| fun env'' -> vs', env''
 
+let extract_binding_type = function
+  | TA.ArgB(t,_) -> t
+  | TA.CrossbindB(t,_) -> t
+
 let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
   let t = fst3 te in
   if not (exp=t) then
@@ -113,27 +117,50 @@ let rec type_expr env = function
   | CrossE(_,_) -> Error (Error.of_string "TODO")
   | ArrayCE(_,_) -> Error (Error.of_string "TODO")
 
-  | BinopE(l,lhs,Mul,rhs) -> type_expr env lhs
-    >>= expect_or l [IntT; FloatT]
-    >>= fun (tl,lhs',env') -> type_expr env' rhs
-    >>= expect l tl
-    >>| fun (tr,rhs',env'') -> tr, TA.BinopE(tr,lhs',Mul,rhs'), env''
-  | BinopE(_,_,_,_) -> Error (Error.of_string "TODO")
+  | BinopE(l,lhs,op,rhs) ->
+    let type_boolop = fun ts ort -> type_expr env lhs
+      >>= expect_or l ts >>= fun (tl,lhs',env') -> type_expr env' rhs
+      >>= expect l tl >>| fun (tr,rhs',env'') ->
+      (match ort with | Some t -> t | None -> tr),
+      TA.BinopE(tr,lhs',op,rhs'), env'' in
+    (match op with
+     | Lt | Gt | Lte | Gte | Cmp | Neq ->
+       type_boolop [IntT; FloatT] (Some BoolT)
+     | Mul | Div | Mod | Plus | Minus ->
+       type_boolop [IntT; FloatT] None
+     | Or | And -> type_boolop [BoolT] None)
+  | UnopE(l,op,e) ->
+    let type_unop = fun ts -> type_expr env e
+      >>= expect_or l ts >>| fun (t, e', env') ->
+      t, TA.UnopE(t, op, e'), env' in
+    (match op with
+     | Bang -> type_unop [BoolT]
+     | Neg -> type_unop [IntT; FloatT])
 
-  | UnopE(l,Bang,e) -> type_expr env e
-    >>= expect l BoolT
-    >>| fun (t, e', env') -> t, TA.UnopE(t, Bang, e'), env'
-  | UnopE(l,Neg,e) -> type_expr env e
-    >>= expect_or l [IntT; FloatT]
-    >>| fun (t, e', env') -> t, TA.UnopE(t, Neg, e'), env'
-
-  | CastE(_,_,_) -> Error (Error.of_string "TODO")
+  | CastE(l,e,t) ->
+    type_expr env e
+    >>= fun (et,e',env') ->
+    (match et,t with
+     | IntT, FloatT
+     | FloatT, IntT -> return (t, TA.CastE(et, e'), env')
+     | _,_ ->
+       Err.cerr_msg ~pos:l ~t:"type"
+         ~msg:(Printf.sprintf
+                 "cannot convert expression of type %s to type %s"
+                 (Sexp.to_string (sexp_of_type et))
+                 (Sexp.to_string (sexp_of_type t))))
   | CrossidxE(_,_,_) -> Error (Error.of_string "TODO")
   | ArrayidxE(_,_,_) -> Error (Error.of_string "TODO")
-  | IteE(_,_,_,_) -> Error (Error.of_string "TODO")
+  | IteE(l,cnd,ie,ee) -> type_expr env cnd
+    >>= expect l BoolT >>= fun (_,cnd',env') ->
+    type_expr env' ie >>= fun (it,ie',env'') ->
+    type_expr env'' ee >>= expect l it
+    >>| fun (et,ee',env''') ->
+    et, TA.IteE(et,cnd',ie',ee'), env'''
   | ArrayLE(_,_,_) -> Error (Error.of_string "TODO")
   | SumLE(_,_,_) -> Error (Error.of_string "TODO")
   | AppE(_,_,_) -> Error (Error.of_string "TODO")
+
 
 let type_stmt env = function
   | LetS(_,lv,e) -> type_expr env e
@@ -145,6 +172,15 @@ let type_stmt env = function
     >>| fun (_, e', env') -> Unit, TA.AssertS(e', s), env'
   | ReturnS(_,e) -> type_expr env e
     >>| fun (t, e', env') -> t, TA.ReturnS(t,e'), env'
+
+let rec type_binding env = function
+  | ArgB(_,a,te) -> unify_arg a te env
+    >>| fun (a',env') -> te,TA.ArgB(te,a'),env'
+  | CrossbindB(_,bs) ->
+    foldM type_binding env bs
+    >>| fun (bs', env') ->
+    let t = CrossT (List.map bs' ~f:extract_binding_type) in
+    t, TA.CrossbindB(t, bs'), env'
 
 let rec type_cmd env = function
   | ReadimgC (_,fn, VarA(_,vn)) ->
@@ -165,15 +201,20 @@ let rec type_cmd env = function
     >>| fun (_, e', env') -> Unit, TA.ShowC e', env'
   | TimeC (_,c) -> type_cmd env c
     >>| fun (_, c', env') -> Unit, TA.TimeC c', env'
-  (* | FnC (l,vn,bs,te,ss) -> *)
-  | FnC (_,_,_,_,_) ->
-    (* 1. extend env with the args *)
-    (* 2. typecheck all of the statements (foldM over list)  *)
-    (* 3. make sure return type is present and matches expected *)
-    (* 4. extend env with arrowT. *)
-    Error (Error.of_string "TODO")
-  | StmtC (_,s) ->
-    type_stmt env s
+  | FnC (l,vn,bs,te,ss) ->
+    let get_retstmt_type = fun stmts ->
+      match (List.find stmts ~f:(fun s ->
+          match s with | TA.ReturnS _ -> true | _ -> false)) with
+      | Some (TA.ReturnS (rt,_)) -> return rt
+      | _ -> Err.cerr_msg ~pos:l ~t:"type" ~msg:"functions must return a value" in
+    foldM type_binding env bs
+    >>= fun (bs', env') -> foldM type_stmt env' ss
+    >>= fun (ss', _) -> get_retstmt_type ss'
+    >>= fun rt -> expect l te (rt,0,env')
+    >>| fun _ ->
+    let fntype = ArrowT(rt, List.map bs' ~f:extract_binding_type) in
+    fntype, TA.FnC (fntype, vn, bs', te, ss'), Env.extend env vn fntype
+  | StmtC (_,s) -> type_stmt env s
     >>| fun (_, s', env') -> Unit, TA.StmtC s', env'
 
 let type_prog (p : prog) =
