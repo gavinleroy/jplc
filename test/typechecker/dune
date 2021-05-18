@@ -1,0 +1,7 @@
+(library
+ (name test_typing)
+ (libraries core compiler)
+ (inline_tests
+   ;; (flags) add flag for typing -t
+ )
+ (preprocess (pps ppx_jane)))
