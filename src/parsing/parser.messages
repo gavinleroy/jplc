@@ -8,7 +8,7 @@ prog: ASSERT TRUE COMMA WRITE
 ## ASSERT expr COMMA
 ##
 
-expected string but got command
+expected string
 
 prog: ASSERT TRUE WRITE
 ##
@@ -36,7 +36,7 @@ prog: ASSERT TRUE WRITE
 ## ASSERT expr
 ##
 
-expected ',' but got command
+expected ','
 
 prog: ASSERT WRITE
 ##
@@ -48,7 +48,7 @@ prog: ASSERT WRITE
 ## ASSERT
 ##
 
-expected expression but got command
+expected expression
 
 prog: FN IDEN LPAREN IDEN COLON INTT WRITE
 ##
@@ -73,7 +73,7 @@ prog: FN IDEN LPAREN IDEN COLON WRITE
 ## arg COLON
 ##
 
-expected type expression but got command
+expected type expression
 
 prog: FN IDEN LPAREN IDEN SEMICOLON
 ##
@@ -154,7 +154,7 @@ prog: FN IDEN LPAREN LCURLY RCURLY WRITE
 ## binding
 ##
 
-expected ':' but got command
+expected ':'
 
 prog: FN IDEN LPAREN LCURLY WRITE
 ##
@@ -166,7 +166,7 @@ prog: FN IDEN LPAREN LCURLY WRITE
 ## LCURLY
 ##
 
-expected expression but got command
+expected expression
 
 prog: FN IDEN LPAREN RPAREN COLON INTT LCURLY ASSERT FALSE COMMA STRING WRITE
 ##
@@ -178,7 +178,7 @@ prog: FN IDEN LPAREN RPAREN COLON INTT LCURLY ASSERT FALSE COMMA STRING WRITE
 ## stmt
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: FN IDEN LPAREN RPAREN COLON INTT LCURLY RETURN FALSE SEMICOLON WRITE
 ##
@@ -215,7 +215,7 @@ prog: FN IDEN LPAREN RPAREN COLON INTT WRITE
 ## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON typee
 ##
 
-expected '{' but got command
+expected '{'
 
 prog: FN IDEN LPAREN RPAREN COLON WRITE
 ##
@@ -227,7 +227,7 @@ prog: FN IDEN LPAREN RPAREN COLON WRITE
 ## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN COLON
 ##
 
-expected type expression but got command
+expected type expression
 
 prog: FN IDEN LPAREN RPAREN WRITE
 ##
@@ -239,7 +239,7 @@ prog: FN IDEN LPAREN RPAREN WRITE
 ## FN IDEN LPAREN loption(separated_nonempty_list(COMMA,binding)) RPAREN
 ##
 
-expected ':' but got command
+expected ':'
 
 prog: FN IDEN LPAREN WRITE
 ##
@@ -251,7 +251,7 @@ prog: FN IDEN LPAREN WRITE
 ## FN IDEN LPAREN
 ##
 
-expected arg list but got command
+expected arg list
 
 prog: FN IDEN WRITE
 ##
@@ -263,7 +263,7 @@ prog: FN IDEN WRITE
 ## FN IDEN
 ##
 
-expected '(' but got command
+expected '('
 
 prog: FN WRITE
 ##
@@ -275,7 +275,7 @@ prog: FN WRITE
 ## FN
 ##
 
-expected symbol but got command
+expected symbol
 
 prog: LET IDEN EQ TRUE WRITE
 ##
@@ -303,7 +303,7 @@ prog: LET IDEN EQ TRUE WRITE
 ## LET lvalue EQ expr
 ##
 
-unexpecte command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: LET IDEN EQ WRITE
 ##
@@ -315,7 +315,7 @@ prog: LET IDEN EQ WRITE
 ## LET lvalue EQ
 ##
 
-expected expression but got command
+expected expression
 
 prog: LET IDEN LSQUARE IDEN COMMA WRITE
 ##
@@ -384,7 +384,7 @@ prog: LET IDEN WRITE
 ## IDEN
 ##
 
-expected '=' but got command
+expected '='
 
 prog: LET LCURLY IDEN COMMA WRITE
 ##
@@ -440,7 +440,7 @@ prog: LET WRITE
 ## LET
 ##
 
-expected symbol but got command
+expected symbol
 
 prog: PRINT STRING WRITE
 ##
@@ -452,7 +452,7 @@ prog: PRINT STRING WRITE
 ## cmd
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: PRINT WRITE
 ##
@@ -464,7 +464,7 @@ prog: PRINT WRITE
 ## PRINT
 ##
 
-expected string but got command
+expected string
 
 prog: READ IMAGE STRING TO WRITE
 ##
@@ -488,7 +488,7 @@ prog: READ IMAGE STRING WRITE
 ## READ IMAGE STRING
 ##
 
-expected 'to' but got command
+expected 'to'
 
 prog: READ IMAGE WRITE
 ##
@@ -500,7 +500,7 @@ prog: READ IMAGE WRITE
 ## READ IMAGE
 ##
 
-expected string but got command
+expected string
 
 prog: READ VIDEO STRING TO WRITE
 ##
@@ -512,7 +512,7 @@ prog: READ VIDEO STRING TO WRITE
 ## READ VIDEO STRING TO
 ##
 
-expected symbol but got command
+expected symbol
 
 prog: READ VIDEO STRING WRITE
 ##
@@ -524,7 +524,7 @@ prog: READ VIDEO STRING WRITE
 ## READ VIDEO STRING
 ##
 
-expected 'to' but got command
+expected 'to'
 
 prog: READ VIDEO WRITE
 ##
@@ -536,7 +536,7 @@ prog: READ VIDEO WRITE
 ## READ VIDEO
 ##
 
-expected string but got command
+expected string
 
 prog: READ WRITE
 ##
@@ -549,7 +549,7 @@ prog: READ WRITE
 ## READ
 ##
 
-expected media type [ image | video ] but got command
+expected media type [ image | video ]
 
 prog: RETURN TRUE WRITE
 ##
@@ -577,7 +577,7 @@ prog: RETURN TRUE WRITE
 ## RETURN expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: RETURN WRITE
 ##
@@ -589,7 +589,7 @@ prog: RETURN WRITE
 ## RETURN
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW ARRAY LSQUARE IDEN COLON FALSE RSQUARE TRUE WRITE
 ##
@@ -617,7 +617,7 @@ prog: SHOW ARRAY LSQUARE IDEN COLON FALSE RSQUARE TRUE WRITE
 ## ARRAY LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW ARRAY LSQUARE IDEN COLON FALSE RSQUARE WRITE
 ##
@@ -629,7 +629,7 @@ prog: SHOW ARRAY LSQUARE IDEN COLON FALSE RSQUARE WRITE
 ## ARRAY LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW ARRAY LSQUARE WRITE
 ##
@@ -653,7 +653,7 @@ prog: SHOW ARRAY WRITE
 ## ARRAY
 ##
 
-expected '[' but got command
+expected '['
 
 prog: SHOW BANG TRUE WRITE
 ##
@@ -681,7 +681,7 @@ prog: SHOW BANG TRUE WRITE
 ## BANG expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW BANG WRITE
 ##
@@ -693,7 +693,7 @@ prog: SHOW BANG WRITE
 ## BANG
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW IDEN LPAREN TRUE RCURLY
 ##
@@ -737,7 +737,7 @@ prog: SHOW IDEN WRITE
 ## IDEN
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW IF TRUE THEN TRUE ELSE TRUE WRITE
 ##
@@ -765,7 +765,7 @@ prog: SHOW IF TRUE THEN TRUE ELSE TRUE WRITE
 ## IF expr THEN expr ELSE expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW IF TRUE THEN TRUE ELSE WRITE
 ##
@@ -777,7 +777,7 @@ prog: SHOW IF TRUE THEN TRUE ELSE WRITE
 ## IF expr THEN expr ELSE
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW IF TRUE THEN TRUE WRITE
 ##
@@ -805,7 +805,7 @@ prog: SHOW IF TRUE THEN TRUE WRITE
 ## IF expr THEN expr
 ##
 
-expected 'else' but got command
+expected 'else'
 
 prog: SHOW IF TRUE THEN WRITE
 ##
@@ -817,7 +817,7 @@ prog: SHOW IF TRUE THEN WRITE
 ## IF expr THEN
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW IF TRUE WRITE
 ##
@@ -845,7 +845,7 @@ prog: SHOW IF TRUE WRITE
 ## IF expr
 ##
 
-expected 'then' but got command
+expected 'then'
 
 prog: SHOW IF WRITE
 ##
@@ -857,7 +857,7 @@ prog: SHOW IF WRITE
 ## IF
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW LCURLY TRUE RSQUARE
 ##
@@ -940,7 +940,7 @@ prog: SHOW LSQUARE TRUE COMMA WRITE
 ## expr COMMA
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW LSQUARE TRUE RPAREN
 ##
@@ -1028,7 +1028,7 @@ prog: SHOW MINUS TRUE WRITE
 ## MINUS expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW MINUS WRITE
 ##
@@ -1040,7 +1040,7 @@ prog: SHOW MINUS WRITE
 ## MINUS
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW SUM LSQUARE IDEN COLON FALSE COMMA WRITE
 ##
@@ -1052,7 +1052,7 @@ prog: SHOW SUM LSQUARE IDEN COLON FALSE COMMA WRITE
 ## arr_bounds_e COMMA
 ##
 
-expected arg binding but got command
+expected arg binding
 
 prog: SHOW SUM LSQUARE IDEN COLON FALSE RSQUARE TRUE WRITE
 ##
@@ -1080,7 +1080,7 @@ prog: SHOW SUM LSQUARE IDEN COLON FALSE RSQUARE TRUE WRITE
 ## SUM LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW SUM LSQUARE IDEN COLON FALSE RSQUARE WRITE
 ##
@@ -1092,7 +1092,7 @@ prog: SHOW SUM LSQUARE IDEN COLON FALSE RSQUARE WRITE
 ## SUM LSQUARE separated_nonempty_list(COMMA,arr_bounds_e) RSQUARE
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW SUM LSQUARE IDEN COLON TRUE WRITE
 ##
@@ -1168,7 +1168,7 @@ prog: SHOW SUM WRITE
 ## SUM
 ##
 
-expected '[' but got command
+expected '['
 
 prog: SHOW TRUE AND TRUE WRITE
 ##
@@ -1196,7 +1196,7 @@ prog: SHOW TRUE AND TRUE WRITE
 ## expr AND expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE AND WRITE
 ##
@@ -1208,7 +1208,7 @@ prog: SHOW TRUE AND WRITE
 ## expr AND
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW TRUE AS INTT LSQUARE COMMA WRITE
 ##
@@ -1245,7 +1245,7 @@ prog: SHOW TRUE AS INTT WRITE
 ## expr AS typee
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE AS LCURLY INTT COMMA WRITE
 ##
@@ -1323,7 +1323,7 @@ prog: SHOW TRUE CMP TRUE WRITE
 ## expr CMP expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE CMP WRITE
 ##
@@ -1363,7 +1363,7 @@ prog: SHOW TRUE DIV TRUE WRITE
 ## expr DIV expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE DIV WRITE
 ##
@@ -1403,7 +1403,7 @@ prog: SHOW TRUE GT TRUE WRITE
 ## expr GT expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE GT WRITE
 ##
@@ -1443,7 +1443,7 @@ prog: SHOW TRUE GTE TRUE WRITE
 ## expr GTE expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE GTE WRITE
 ##
@@ -1455,7 +1455,7 @@ prog: SHOW TRUE GTE WRITE
 ## expr GTE
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW TRUE LCURLY INT WRITE
 ##
@@ -1538,7 +1538,7 @@ prog: SHOW TRUE LT TRUE WRITE
 ## expr LT expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE LT WRITE
 ##
@@ -1550,7 +1550,7 @@ prog: SHOW TRUE LT WRITE
 ## expr LT
 ##
 
-expected expression but got command
+expected expression
 
 prog: SHOW TRUE LTE TRUE WRITE
 ##
@@ -1578,7 +1578,7 @@ prog: SHOW TRUE LTE TRUE WRITE
 ## expr LTE expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE LTE WRITE
 ##
@@ -1618,7 +1618,7 @@ prog: SHOW TRUE MINUS TRUE WRITE
 ## expr MINUS expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE MINUS WRITE
 ##
@@ -1658,7 +1658,7 @@ prog: SHOW TRUE MOD TRUE WRITE
 ## expr MOD expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol  (perhaps a missing ';')
 
 prog: SHOW TRUE MOD WRITE
 ##
@@ -1698,7 +1698,7 @@ prog: SHOW TRUE MUL TRUE WRITE
 ## expr MUL expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE MUL WRITE
 ##
@@ -1738,7 +1738,7 @@ prog: SHOW TRUE NEQ TRUE WRITE
 ## expr NEQ expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE NEQ WRITE
 ##
@@ -1778,7 +1778,7 @@ prog: SHOW TRUE OR TRUE WRITE
 ## expr OR expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE OR WRITE
 ##
@@ -1818,7 +1818,7 @@ prog: SHOW TRUE PLUS TRUE WRITE
 ## expr PLUS expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW TRUE PLUS WRITE
 ##
@@ -1870,7 +1870,7 @@ prog: SHOW TRUE WRITE
 ## SHOW expr
 ##
 
-unexpected command (perhaps a missing ';')
+unexpected symbol (perhaps a missing ';')
 
 prog: SHOW WRITE
 ##
@@ -1918,7 +1918,7 @@ prog: WRITE IMAGE TRUE TO WRITE
 ## WRITE IMAGE expr TO
 ##
 
-expected string but got command
+expected string
 
 prog: WRITE IMAGE TRUE WRITE
 ##
@@ -1946,7 +1946,7 @@ prog: WRITE IMAGE TRUE WRITE
 ## WRITE IMAGE expr
 ##
 
-expected 'to' but got command
+expected 'to'
 
 prog: WRITE IMAGE WRITE
 ##
@@ -1958,7 +1958,7 @@ prog: WRITE IMAGE WRITE
 ## WRITE IMAGE
 ##
 
-expected symbol but got command
+expected symbol
 
 prog: WRITE VIDEO TRUE TO WRITE
 ##
@@ -1970,7 +1970,7 @@ prog: WRITE VIDEO TRUE TO WRITE
 ## WRITE VIDEO expr TO
 ##
 
-expected string but got command
+expected string
 
 prog: WRITE VIDEO TRUE WRITE
 ##
@@ -1998,7 +1998,7 @@ prog: WRITE VIDEO TRUE WRITE
 ## WRITE VIDEO expr
 ##
 
-expected 'to' but got command
+expected 'to'
 
 prog: WRITE VIDEO WRITE
 ##
@@ -2010,7 +2010,7 @@ prog: WRITE VIDEO WRITE
 ## WRITE VIDEO
 ##
 
-expected symbol but got command
+expected symbol
 
 prog: WRITE WRITE
 ##
@@ -2023,4 +2023,4 @@ prog: WRITE WRITE
 ## WRITE
 ##
 
-expected media type [ image | video ] but got command
+expected media type [ image | video ]
