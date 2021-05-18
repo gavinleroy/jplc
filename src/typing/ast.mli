@@ -39,7 +39,7 @@ type binding =
 type stmt =
   | LetS of lvalue * expr
   | AssertS of expr * string
-  | ReturnS of expr
+  | ReturnS of type_expr * expr
 
 type cmd =
   | ReadimgC of Filename.t * arg

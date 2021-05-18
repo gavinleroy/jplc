@@ -91,7 +91,7 @@ let rec sexp_of_binding = function
 let sexp_of_stmt = function
   | LetS (lv,e) -> Sexp.(List[Atom "LetStmt"; sexp_of_type Unit; sexp_of_lvalue lv; sexp_of_expr e])
   | AssertS (e,str) -> Sexp.(List[Atom "AssertStmt"; sexp_of_type Unit; sexp_of_expr e; Atom str])
-  | ReturnS e -> Sexp.(List[Atom "ReturnStmt"; sexp_of_type Unit; sexp_of_expr e])
+  | ReturnS(t,e) -> Sexp.(List[Atom "ReturnStmt"; sexp_of_type t; sexp_of_type Unit; sexp_of_expr e])
 
 let rec sexp_of_cmd = function
   | ReadimgC (fn,a) ->
