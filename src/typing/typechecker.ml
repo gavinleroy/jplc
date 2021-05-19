@@ -15,6 +15,9 @@ module TA = Ast
 (********* UTILITY FUNCITONS *********)
 (*************************************)
 
+let type_to_s t =
+  Sexp.to_string (sexp_of_type t)
+
 let unwrap3 f v t =
   let _, _, e = t in f e v
 
@@ -43,13 +46,39 @@ let extract_binding_type = function
   | TA.ArgB(t,_) -> t
   | TA.CrossbindB(t,_) -> t
 
+let extract_expr_type = function
+  | TA.IntE _ -> IntT
+  | TA.FloatE _ -> FloatT
+  | TA.FalseE | TA.TrueE -> BoolT
+  | TA.VarE(t,_)        (* -> t *)
+  | TA.CrossE(t,_)      (* -> t *)
+  | TA.ArrayCE(t,_)     (* -> t *)
+  | TA.BinopE(t,_,_,_)  (* -> t *)
+  | TA.UnopE(t,_,_)     (* -> t *)
+  | TA.CastE(t,_)       (* -> t *)
+  | TA.CrossidxE(t,_,_) (* -> t *)
+  | TA.ArrayidxE(t,_,_) (* -> t *)
+  | TA.IteE(t,_,_,_)    (* -> t *)
+  | TA.ArrayLE(t,_,_)   (* -> t *)
+  | TA.SumLE(t,_,_)     (* -> t *)
+  | TA.AppE(t,_,_)      -> t
+
+let all_equal' x xs ~equal =
+  List.fold_left xs ~init:true
+    ~f:(fun acc v ->
+        acc && equal x v)
+
+let all_equal xs ~equal =
+  match xs with
+  | [] | [_] -> true
+  | x :: xs' -> all_equal' x xs' ~equal:equal
+
 let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
   let t = fst3 te in
   if not (exp=t) then
     Err.cerr_msg ~pos:pos ~t:"type"
       ~msg:(Printf.sprintf "expected type %s but got %s"
-              (Sexp.to_string (sexp_of_type exp))
-              (Sexp.to_string (sexp_of_type t)))
+              (type_to_s exp) (type_to_s t))
   else return te
 
 let expect_or pos (exps : type_expr list) (te : type_expr * 'a * Env.t) =
@@ -59,7 +88,7 @@ let expect_or pos (exps : type_expr list) (te : type_expr * 'a * Env.t) =
   | None -> Err.cerr_msg ~pos:pos ~t:"type"
               ~msg:(Printf.sprintf "expected one of the following types: %s but got %s"
                       (Sexp.to_string (List.sexp_of_t sexp_of_type exps))
-                      (Sexp.to_string (sexp_of_type t)))
+                      (type_to_s t))
 
 let lookup_err env p vn =
   match Env.lookup env vn with
@@ -83,7 +112,7 @@ let unify_arg arg t env =
                    (Int64.to_int_exn r) (Int64.to_int_exn vnsl))
      | _ -> Err.cerr_msg ~pos:l ~t:"type"
               ~msg:(Printf.sprintf "expected ArrayT but got %s"
-                      (Sexp.to_string (sexp_of_type t))))
+                      (type_to_s t)))
 
 let unify_lvalue lv t env =
   match lv with
@@ -101,7 +130,7 @@ let unify_lvalue lv t env =
      | _ -> Err.cerr_msg ~pos:l ~t:"type"
               ~msg:(Printf.sprintf
                       "expected tuple right-hand-side but got %s"
-                      (Sexp.to_string (sexp_of_type t))))
+                      (type_to_s t)))
 
 (*****************************************)
 (********* TYPECHECKER FUNCITONS *********)
@@ -114,15 +143,28 @@ let rec type_expr env = function
   | FalseE _ -> return (BoolT, TA.FalseE, env)
   | VarE(l,vn) -> lookup_err env l vn
     >>| fun t -> t, TA.VarE(t, vn), env
-  | CrossE(_,_) -> Error (Error.of_string "TODO")
-  | ArrayCE(_,_) -> Error (Error.of_string "TODO")
-
+  | CrossE(_,es) ->
+    foldM type_expr env es
+    >>| fun (es', env') ->
+    let t = CrossT (List.map es' ~f:extract_expr_type) in
+    t, TA.CrossE(t,es'), env'
+  | ArrayCE(l,es) ->
+    foldM type_expr env es
+    >>= fun (es', env') ->
+    let tes = List.map es' ~f:extract_expr_type in
+    if not (all_equal tes ~equal:( = )) then
+      Err.cerr_msg ~pos:l ~t:"type" ~msg:"array types must all be equal"
+    else let arrt = ArrayT(
+        (match List.hd tes with
+         | None -> Unit
+         | Some y -> y), Int64.of_int 1) in
+      return (arrt, TA.ArrayCE(arrt,es'), env')
   | BinopE(l,lhs,op,rhs) ->
     let type_boolop = fun ts ort -> type_expr env lhs
       >>= expect_or l ts >>= fun (tl,lhs',env') -> type_expr env' rhs
       >>= expect l tl >>| fun (tr,rhs',env'') ->
-      (match ort with | Some t -> t | None -> tr),
-      TA.BinopE(tr,lhs',op,rhs'), env'' in
+      let tt = (match ort with | Some t -> t | None -> tr) in
+      tt, TA.BinopE(tt,lhs',op,rhs'), env'' in
     (match op with
      | Lt | Gt | Lte | Gte | Cmp | Neq ->
        type_boolop [IntT; FloatT] (Some BoolT)
@@ -147,8 +189,7 @@ let rec type_expr env = function
        Err.cerr_msg ~pos:l ~t:"type"
          ~msg:(Printf.sprintf
                  "cannot convert expression of type %s to type %s"
-                 (Sexp.to_string (sexp_of_type et))
-                 (Sexp.to_string (sexp_of_type t))))
+                 (type_to_s et) (type_to_s t)))
   | CrossidxE(_,_,_) -> Error (Error.of_string "TODO")
   | ArrayidxE(_,_,_) -> Error (Error.of_string "TODO")
   | IteE(l,cnd,ie,ee) -> type_expr env cnd
@@ -159,8 +200,22 @@ let rec type_expr env = function
     et, TA.IteE(et,cnd',ie',ee'), env'''
   | ArrayLE(_,_,_) -> Error (Error.of_string "TODO")
   | SumLE(_,_,_) -> Error (Error.of_string "TODO")
-  | AppE(_,_,_) -> Error (Error.of_string "TODO")
-
+  | AppE(l,vn,ps) ->
+    lookup_err env l vn
+    >>= fun arrowt ->
+    (match arrowt with
+     | ArrowT(rt,pst) -> foldM type_expr env ps
+       >>= fun (ps', _) ->
+       let pst' = List.map ps' ~f:extract_expr_type in
+       if not (List.equal ( = ) pst pst') then
+         Err.cerr_msg ~pos:l ~t:"type"
+           ~msg:(Printf.sprintf "expected parameter types of %s but got %s"
+                   (Sexp.to_string (List.sexp_of_t sexp_of_type pst))
+                   (Sexp.to_string (List.sexp_of_t sexp_of_type pst')))
+       else return (rt, TA.AppE(rt, vn, ps'), env)
+     | ot -> Err.cerr_msg ~pos:l ~t:"type"
+               ~msg:(Printf.sprintf "expected type of ArrowT but got %s"
+                       (type_to_s ot)))
 
 let type_stmt env = function
   | LetS(_,lv,e) -> type_expr env e

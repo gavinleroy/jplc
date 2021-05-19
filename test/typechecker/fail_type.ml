@@ -87,3 +87,56 @@ let%expect_test "simple-stmt-9" =
     {|
       line: 2 column: 14
       	~~ type: expected type IntType but got BoolType |}]
+
+let%expect_test "simple-stmt-10" =
+  Ppp.ppp_ast
+    "let y = [false, true, 10];";
+  [%expect
+    {|
+      line: 1 column: 9
+      	~~ type: array types must all be equal |}]
+
+let%expect_test "simple-stmt-11" =
+  Ppp.ppp_ast
+    "let y = [11, 10, 10 == 12];";
+  [%expect
+    {|
+      line: 1 column: 9
+      	~~ type: array types must all be equal |}]
+
+let%expect_test "simple-stmt-12" =
+  Ppp.ppp_ast
+    "
+    fn foo(x : int, y : float) : float
+    {
+      return x as float * y;
+    } let y = [foo(10, 3.5), 100];";
+  [%expect
+    {|
+      line: 5 column: 15
+      	~~ type: array types must all be equal |}]
+
+let%expect_test "simple-stmt-13" =
+  Ppp.ppp_ast
+    "
+    fn foo(x : int, y : float) : float
+    {
+      return x as float * y;
+    } let y = foo(10, 3);";
+  [%expect
+    {|
+      line: 5 column: 15
+      	~~ type: expected parameter types of (IntType FloatType) but got (IntType IntType) |}]
+
+let%expect_test "simple-stmt-14" =
+  Ppp.ppp_ast
+    "
+    fn foo(x : int, y : float) : float
+    {
+      return x as float * y;
+    } let y = foo(10, 3.);
+    show y * 5;";
+  [%expect
+    {|
+      line: 6 column: 10
+      	~~ type: expected type FloatType but got IntType |}]
