@@ -16,7 +16,6 @@ type expr =
   | BinopE of type_expr * expr * bin_op * expr
   | UnopE of type_expr * un_op * expr
   | CastE of type_expr * expr
-  (* NOTE cross index must be int to support static typing *)
   | CrossidxE of type_expr * expr * Int64.t
   | ArrayidxE of type_expr * expr * expr list
   | IteE of type_expr * expr * expr * expr
