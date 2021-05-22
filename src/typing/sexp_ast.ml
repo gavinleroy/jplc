@@ -47,7 +47,7 @@ let rec sexp_of_expr e =
   | UnopE (t,op,e') -> Sexp.(List[Atom "UnopExpr"; sexp_of_type t; sexp_of_unop op; sexp_of_expr e'])
   | CastE(t,e') -> Sexp.(List[Atom "CastExpr"; sexp_of_type t; sexp_of_expr e'; sexp_of_type t])
   | CrossidxE (t,e',i) ->
-    Sexp.(List[Atom "CrossidxExpr"; sexp_of_type t; sexp_of_expr e'; Int64.sexp_of_t i])
+    Sexp.(List[Atom "CrossidxExpr"; sexp_of_type t; sexp_of_expr e'; Int.sexp_of_t i])
   | ArrayidxE (t,base,idxs) ->
     Sexp.(List[Atom "ArrayidxExpr"; sexp_of_type t; sexp_of_expr base
               ; List.sexp_of_t sexp_of_expr idxs])

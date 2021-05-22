@@ -16,7 +16,7 @@ type expr =
   | BinopE of type_expr * expr * bin_op * expr
   | UnopE of type_expr * un_op * expr
   | CastE of type_expr * expr
-  | CrossidxE of type_expr * expr * Int64.t
+  | CrossidxE of type_expr * expr * int
   | ArrayidxE of type_expr * expr * expr list
   | IteE of type_expr * expr * expr * expr
   | ArrayLE of type_expr * (Varname.t * expr) list * expr
@@ -53,6 +53,8 @@ type cmd =
 
 type prog = cmd list
 
+(* helper methods *)
+
 let extract_expr_type = function
   | IntE _ -> IntT
   | FloatE _ -> FloatT
@@ -71,5 +73,5 @@ let extract_expr_type = function
   | AppE(t,_,_)      -> t
 
 let extract_binding_type = function
-  | ArgB(t,_) -> t
+  | ArgB(t,_)
   | CrossbindB(t,_) -> t

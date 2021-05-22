@@ -215,3 +215,30 @@ let%expect_test "simple-stmt-24" =
     {|
       line: 1 column: 6
       	~~ type: expected one of the following types: (IntType FloatType) but got BoolType |}]
+
+let%expect_test "simple-stmt-25" =
+  Ppp.ppp_ast
+    "let d = { 1, 2, 3 };
+     show d{ 3 };";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: index 3 out of tuple range |}]
+
+let%expect_test "simple-stmt-26" =
+  Ppp.ppp_ast
+    "let d = { 1, 2, 3 };
+     show d{ -1 }; // shouldn't parse!";
+  [%expect
+    {|
+      line: 2 column: 14
+      	~~ parser: unexpected command |}]
+
+let%expect_test "simple-stmt-27" =
+  Ppp.ppp_ast
+    "let d = { 1, 2, false };
+     show d{ 0 } * d{ 1 } + d{ 2 };";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: expected type IntType but got BoolType |}]

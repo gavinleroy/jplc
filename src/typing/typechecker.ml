@@ -149,7 +149,7 @@ let rec type_expr env e =
     >>| fun (_, env') ->
     (List.map2_exn bs es' ~f:(fun (a,_) e' ->
          a,e')), env' in
-
+  (* case statement for typechecking exprs *)
   match e with
   | IntE(_,i) -> return (IntT, TA.IntE i, env)
   | FloatE(_,f) -> return (FloatT, TA.FloatE f, env)
@@ -203,7 +203,23 @@ let rec type_expr env e =
          ~msg:(Printf.sprintf
                  "cannot convert expression of type %s to type %s"
                  (type_to_s et) (type_to_s t)))
-  | CrossidxE(_,_,_) -> Error (Error.of_string "TODO")
+  | CrossidxE(l,e,i) ->
+    type_expr env e
+    >>= fun (t,e',_) ->
+    (match t with
+     | CrossT tes ->
+       (try let iint = (Int64.to_int_exn i) in
+          match List.nth tes iint with
+          | Some ti ->
+            return (ti, TA.CrossidxE(ti,e',iint), env)
+          | None ->
+            Err.cerr_msg ~pos:l ~t:"type"
+              ~msg:(Printf.sprintf "index %d out of tuple range" iint)
+        with _ -> Err.cerr_msg ~pos:l ~t:"type"
+                    ~msg:(Printf.sprintf "tuple sizes greater than %d unsupported" Int.max_value))
+     | _ -> Err.cerr_msg ~pos:l ~t:"type"
+              ~msg:(Printf.sprintf "expected base type of CrossT but got %s"
+                      (type_to_s t)))
   | ArrayidxE(_,_,_) -> Error (Error.of_string "TODO")
   | IteE(l,cnd,ie,ee) -> type_expr env cnd
     >>= expect l BoolT >>= fun (_,cnd',env') ->

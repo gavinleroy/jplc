@@ -300,3 +300,142 @@ let%expect_test "simple-stmt-13" =
             (j (BinopExpr IntType (VarExpr IntType N) * (IntExpr IntType 10))))
            (BinopExpr IntType (IntExpr IntType 3) +
             (BinopExpr IntType (VarExpr IntType j) * (VarExpr IntType i)))))))) |}]
+
+let%expect_test "simple-stmt-14" =
+  Ppp.ppp_ast
+    "let d = { 1, 2., false };
+     show d{ 0 } * 5;
+     show d{ 1 } / 3.;
+     show d{ 2 } && d{ 2 };";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (CrossType (IntType FloatType BoolType))
+           (VarArg (CrossType (IntType FloatType BoolType)) d))
+          (CrossExpr (CrossType (IntType FloatType BoolType))
+           ((IntExpr IntType 1) (FloatExpr FloatType 2) (FalseExpr BoolType)))))
+        (ShowCmd
+         (BinopExpr IntType
+          (CrossidxExpr IntType
+           (VarExpr (CrossType (IntType FloatType BoolType)) d) 0)
+          * (IntExpr IntType 5)))
+        (ShowCmd
+         (BinopExpr FloatType
+          (CrossidxExpr FloatType
+           (VarExpr (CrossType (IntType FloatType BoolType)) d) 1)
+          / (FloatExpr FloatType 3)))
+        (ShowCmd
+         (IteExpr
+          (CrossidxExpr BoolType
+           (VarExpr (CrossType (IntType FloatType BoolType)) d) 2)
+          BoolType
+          (CrossidxExpr BoolType
+           (VarExpr (CrossType (IntType FloatType BoolType)) d) 2)
+          (FalseExpr BoolType))))) |}]
+
+let%expect_test "simple-stmt-14" =
+  Ppp.ppp_ast
+    "let d = { 1, 2., false };
+     let dd = { d, d, { true, true, d } };
+     show dd{ 0 }{ 1 } * .5;
+     let d = dd{ 2 };
+     show d{ 1 } || true;
+     show dd{ 2 }{ 2 }{ 0 } * 2;";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (CrossType (IntType FloatType BoolType))
+           (VarArg (CrossType (IntType FloatType BoolType)) d))
+          (CrossExpr (CrossType (IntType FloatType BoolType))
+           ((IntExpr IntType 1) (FloatExpr FloatType 2) (FalseExpr BoolType)))))
+        (StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue
+           (CrossType
+            ((CrossType (IntType FloatType BoolType))
+             (CrossType (IntType FloatType BoolType))
+             (CrossType
+              (BoolType BoolType (CrossType (IntType FloatType BoolType))))))
+           (VarArg
+            (CrossType
+             ((CrossType (IntType FloatType BoolType))
+              (CrossType (IntType FloatType BoolType))
+              (CrossType
+               (BoolType BoolType (CrossType (IntType FloatType BoolType))))))
+            dd))
+          (CrossExpr
+           (CrossType
+            ((CrossType (IntType FloatType BoolType))
+             (CrossType (IntType FloatType BoolType))
+             (CrossType
+              (BoolType BoolType (CrossType (IntType FloatType BoolType))))))
+           ((VarExpr (CrossType (IntType FloatType BoolType)) d)
+            (VarExpr (CrossType (IntType FloatType BoolType)) d)
+            (CrossExpr
+             (CrossType
+              (BoolType BoolType (CrossType (IntType FloatType BoolType))))
+             ((TrueExpr BoolType) (TrueExpr BoolType)
+              (VarExpr (CrossType (IntType FloatType BoolType)) d)))))))
+        (ShowCmd
+         (BinopExpr FloatType
+          (CrossidxExpr FloatType
+           (CrossidxExpr (CrossType (IntType FloatType BoolType))
+            (VarExpr
+             (CrossType
+              ((CrossType (IntType FloatType BoolType))
+               (CrossType (IntType FloatType BoolType))
+               (CrossType
+                (BoolType BoolType (CrossType (IntType FloatType BoolType))))))
+             dd)
+            0)
+           1)
+          * (FloatExpr FloatType 0.5)))
+        (StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue
+           (CrossType (BoolType BoolType (CrossType (IntType FloatType BoolType))))
+           (VarArg
+            (CrossType
+             (BoolType BoolType (CrossType (IntType FloatType BoolType))))
+            d))
+          (CrossidxExpr
+           (CrossType (BoolType BoolType (CrossType (IntType FloatType BoolType))))
+           (VarExpr
+            (CrossType
+             ((CrossType (IntType FloatType BoolType))
+              (CrossType (IntType FloatType BoolType))
+              (CrossType
+               (BoolType BoolType (CrossType (IntType FloatType BoolType))))))
+            dd)
+           2)))
+        (ShowCmd
+         (IteExpr
+          (CrossidxExpr BoolType
+           (VarExpr
+            (CrossType
+             (BoolType BoolType (CrossType (IntType FloatType BoolType))))
+            d)
+           1)
+          BoolType (TrueExpr BoolType) (TrueExpr BoolType)))
+        (ShowCmd
+         (BinopExpr IntType
+          (CrossidxExpr IntType
+           (CrossidxExpr (CrossType (IntType FloatType BoolType))
+            (CrossidxExpr
+             (CrossType
+              (BoolType BoolType (CrossType (IntType FloatType BoolType))))
+             (VarExpr
+              (CrossType
+               ((CrossType (IntType FloatType BoolType))
+                (CrossType (IntType FloatType BoolType))
+                (CrossType
+                 (BoolType BoolType (CrossType (IntType FloatType BoolType))))))
+              dd)
+             2)
+            2)
+           0)
+          * (IntExpr IntType 2))))) |}]
