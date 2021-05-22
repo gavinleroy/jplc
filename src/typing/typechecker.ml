@@ -220,7 +220,24 @@ let rec type_expr env e =
      | _ -> Err.cerr_msg ~pos:l ~t:"type"
               ~msg:(Printf.sprintf "expected base type of CrossT but got %s"
                       (type_to_s t)))
-  | ArrayidxE(_,_,_) -> Error (Error.of_string "TODO")
+  | ArrayidxE(l,base,idxs) ->
+    (* typecheck the base and make sure it is ArrayT *)
+    type_expr env base
+    >>= fun (tb,base',_) ->
+    (match tb with
+     | ArrayT(baset,r) ->
+       if Int64.( = ) r (List.length idxs |> Int64.of_int) then
+         foldM3 (fun ev e -> type_expr ev e
+                  >>= expect (extract_expr_pos e) IntT) env idxs
+         >>= fun (idxs',_) ->
+         return (baset, TA.ArrayidxE(baset, base', idxs'), env)
+       else Err.cerr_msg ~pos:l ~t:"type"
+           ~msg:(Printf.sprintf
+                   "incorrect number of indexes provided for array of rank %d"
+                   (Int64.to_int_exn r))
+     | _ -> Err.cerr_msg ~pos:l ~t:"type"
+              ~msg:(Printf.sprintf "expected base type of ArrayT but got %s"
+                      (type_to_s tb)))
   | IteE(l,cnd,ie,ee) -> type_expr env cnd
     >>= expect l BoolT >>= fun (_,cnd',env') ->
     type_expr env' ie >>= fun (it,ie',env'') ->

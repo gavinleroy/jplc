@@ -242,3 +242,76 @@ let%expect_test "simple-stmt-27" =
     {|
       line: 2 column: 11
       	~~ type: expected type IntType but got BoolType |}]
+
+let%expect_test "simple-stmt-28" =
+  Ppp.ppp_ast
+    "let tuple = 10;
+     show tuple{ 0 };";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: expected base type of CrossT but got IntType |}]
+
+let%expect_test "simple-stmt-29" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11.] 5.;";
+  [%expect
+    {|
+      line: 1 column: 27
+      	~~ type: expected type IntType but got FloatType |}]
+
+let%expect_test "simple-stmt-30" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11] i * j;
+     show a[0., 0.];";
+  [%expect
+    {|
+      line: 2 column: 13
+      	~~ type: expected type IntType but got FloatType |}]
+
+let%expect_test "simple-stmt-31" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11] i * j;
+     show a[0, 0] && false;";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: expected type BoolType but got IntType |}]
+
+let%expect_test "simple-stmt-32" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11] i * j;
+     show a[0, 0] && false;";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: expected type BoolType but got IntType |}]
+
+let%expect_test "simple-stmt-33" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11] i * j;
+     show a[ 0 ];";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: incorrect number of indexes provided for array of rank 2 |}]
+
+let%expect_test "simple-stmt-34" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11]
+       array[k : i * j]
+         array[g : 100, h : k * i] 0;
+     show a[0, 0][1000][0];";
+  [%expect
+    {|
+      line: 4 column: 11
+      	~~ type: incorrect number of indexes provided for array of rank 2 |}]
+
+let%expect_test "simple-stmt-35" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11] false;
+     show a[0, 0, 0];";
+  [%expect
+    {|
+      line: 2 column: 11
+      	~~ type: incorrect number of indexes provided for array of rank 2 |}]

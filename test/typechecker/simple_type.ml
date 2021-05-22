@@ -439,3 +439,147 @@ let%expect_test "simple-stmt-14" =
             2)
            0)
           * (IntExpr IntType 2))))) |}]
+
+let%expect_test "simple-stmt-15" =
+  Ppp.ppp_ast
+    "let a = [ 1, 2, 3, 4 ];
+     show a[0] * 10;
+     show a[0] * a[1] * a[2] * a[3];";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (ArrayType IntType 1) (VarArg (ArrayType IntType 1) a))
+          (ArrayConsExpr (ArrayType IntType 1)
+           ((IntExpr IntType 1) (IntExpr IntType 2) (IntExpr IntType 3)
+            (IntExpr IntType 4)))))
+        (ShowCmd
+         (BinopExpr IntType
+          (ArrayidxExpr IntType (VarExpr (ArrayType IntType 1) a)
+           ((IntExpr IntType 0)))
+          * (IntExpr IntType 10)))
+        (ShowCmd
+         (BinopExpr IntType
+          (BinopExpr IntType
+           (BinopExpr IntType
+            (ArrayidxExpr IntType (VarExpr (ArrayType IntType 1) a)
+             ((IntExpr IntType 0)))
+            *
+            (ArrayidxExpr IntType (VarExpr (ArrayType IntType 1) a)
+             ((IntExpr IntType 1))))
+           *
+           (ArrayidxExpr IntType (VarExpr (ArrayType IntType 1) a)
+            ((IntExpr IntType 2))))
+          *
+          (ArrayidxExpr IntType (VarExpr (ArrayType IntType 1) a)
+           ((IntExpr IntType 3))))))) |}]
+
+let%expect_test "simple-stmt-16" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 20] 1;
+     show a[0, 10];";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (ArrayType IntType 2) (VarArg (ArrayType IntType 2) a))
+          (ArrayExpr (ArrayType IntType 2)
+           ((i (IntExpr IntType 10)) (j (IntExpr IntType 20))) (IntExpr IntType 1))))
+        (ShowCmd
+         (ArrayidxExpr IntType (VarExpr (ArrayType IntType 2) a)
+          ((IntExpr IntType 0) (IntExpr IntType 10)))))) |}]
+
+let%expect_test "simple-stmt-17" =
+  Ppp.ppp_ast
+    "let a = array[i : 10] array [j : i] j * i;
+     show a[0][0];";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (ArrayType (ArrayType IntType 1) 1)
+           (VarArg (ArrayType (ArrayType IntType 1) 1) a))
+          (ArrayExpr (ArrayType (ArrayType IntType 1) 1) ((i (IntExpr IntType 10)))
+           (ArrayExpr (ArrayType IntType 1) ((j (VarExpr IntType i)))
+            (BinopExpr IntType (VarExpr IntType j) * (VarExpr IntType i))))))
+        (ShowCmd
+         (ArrayidxExpr IntType
+          (ArrayidxExpr (ArrayType IntType 1)
+           (VarExpr (ArrayType (ArrayType IntType 1) 1) a) ((IntExpr IntType 0)))
+          ((IntExpr IntType 0)))))) |}]
+
+let%expect_test "simple-stmt-18" =
+  Ppp.ppp_ast
+    "show (array[i : 10, j : 10, k : 10] false)[1,2,3];";
+  [%expect
+    {|
+      (Prog
+       ((ShowCmd
+         (ArrayidxExpr BoolType
+          (ArrayExpr (ArrayType BoolType 3)
+           ((i (IntExpr IntType 10)) (j (IntExpr IntType 10))
+            (k (IntExpr IntType 10)))
+           (FalseExpr BoolType))
+          ((IntExpr IntType 1) (IntExpr IntType 2) (IntExpr IntType 3)))))) |}]
+
+let%expect_test "simple-stmt-19" =
+  Ppp.ppp_ast
+    "let a = array[i : 10000, j : 10000] j <= i;
+     let b = array[i : 999, j : 999] a[i, j];
+     show b[800, 777] || true;";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (ArrayType BoolType 2) (VarArg (ArrayType BoolType 2) a))
+          (ArrayExpr (ArrayType BoolType 2)
+           ((i (IntExpr IntType 10000)) (j (IntExpr IntType 10000)))
+           (BinopExpr BoolType (VarExpr IntType j) <= (VarExpr IntType i)))))
+        (StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (ArrayType BoolType 2) (VarArg (ArrayType BoolType 2) b))
+          (ArrayExpr (ArrayType BoolType 2)
+           ((i (IntExpr IntType 999)) (j (IntExpr IntType 999)))
+           (ArrayidxExpr BoolType (VarExpr (ArrayType BoolType 2) a)
+            ((VarExpr IntType i) (VarExpr IntType j))))))
+        (ShowCmd
+         (IteExpr
+          (ArrayidxExpr BoolType (VarExpr (ArrayType BoolType 2) b)
+           ((IntExpr IntType 800) (IntExpr IntType 777)))
+          BoolType (TrueExpr BoolType) (TrueExpr BoolType))))) |}]
+
+let%expect_test "simple-stmt-20" =
+  Ppp.ppp_ast
+    "let a = array[i : 10, j : 11]
+       array[k : i * j]
+         array[g : 100, h : k * i] 0;
+     show a[0, 0][1000][0, 10] == 0;";
+  [%expect
+    {|
+      (Prog
+       ((StmtCmd UnitType
+         (LetStmt UnitType
+          (ArgLValue (ArrayType (ArrayType (ArrayType IntType 2) 1) 2)
+           (VarArg (ArrayType (ArrayType (ArrayType IntType 2) 1) 2) a))
+          (ArrayExpr (ArrayType (ArrayType (ArrayType IntType 2) 1) 2)
+           ((i (IntExpr IntType 10)) (j (IntExpr IntType 11)))
+           (ArrayExpr (ArrayType (ArrayType IntType 2) 1)
+            ((k (BinopExpr IntType (VarExpr IntType i) * (VarExpr IntType j))))
+            (ArrayExpr (ArrayType IntType 2)
+             ((g (IntExpr IntType 100))
+              (h (BinopExpr IntType (VarExpr IntType k) * (VarExpr IntType i))))
+             (IntExpr IntType 0))))))
+        (ShowCmd
+         (BinopExpr BoolType
+          (ArrayidxExpr IntType
+           (ArrayidxExpr (ArrayType IntType 2)
+            (ArrayidxExpr (ArrayType (ArrayType IntType 2) 1)
+             (VarExpr (ArrayType (ArrayType (ArrayType IntType 2) 1) 2) a)
+             ((IntExpr IntType 0) (IntExpr IntType 0)))
+            ((IntExpr IntType 1000)))
+           ((IntExpr IntType 0) (IntExpr IntType 10)))
+          == (IntExpr IntType 0))))) |}]
