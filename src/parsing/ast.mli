@@ -24,6 +24,8 @@ type expr =
   | SumLE of loc * (Varname.t * expr) list * expr
   | AppE of loc * Varname.t * expr list
 
+val extract_expr_pos: expr -> loc
+
 type arg =
   | VarA of loc * Varname.t
   | ArraybindA of loc * Varname.t * Varname.t list

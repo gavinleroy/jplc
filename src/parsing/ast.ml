@@ -24,6 +24,17 @@ type expr =
   | SumLE of loc * (Varname.t * expr) list * expr
   | AppE of loc * Varname.t * expr list
 
+(* return the position of the ast expr *)
+let extract_expr_pos = function
+  | IntE (l,_) | FloatE (l,_)
+  | FalseE l | TrueE l
+  | VarE(l,_) | CrossE(l,_)
+  | ArrayCE(l,_) | BinopE(l,_,_,_)
+  | UnopE(l,_,_) | CastE(l,_,_)
+  | CrossidxE(l,_,_) | ArrayidxE(l,_,_)
+  | IteE(l,_,_,_) | ArrayLE(l,_,_)
+  | SumLE(l,_,_) | AppE(l,_,_) -> l
+
 type arg =
   | VarA of loc * Varname.t
   | ArraybindA of loc * Varname.t * Varname.t list

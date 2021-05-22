@@ -50,47 +50,19 @@ let foldM2 f env xs =
   foldMN (fun a -> a >>| fst) (fun a -> a >>| snd)
     (fun g v (_,e) -> g e v) f env xs
 
-let extract_binding_type = function
-  | TA.ArgB(t,_) -> t
-  | TA.CrossbindB(t,_) -> t
-
-let extract_expr_type = function
-  | TA.IntE _ -> IntT
-  | TA.FloatE _ -> FloatT
-  | TA.FalseE | TA.TrueE -> BoolT
-  | TA.VarE(t,_)        (* -> t *)
-  | TA.CrossE(t,_)      (* -> t *)
-  | TA.ArrayCE(t,_)     (* -> t *)
-  | TA.BinopE(t,_,_,_)  (* -> t *)
-  | TA.UnopE(t,_,_)     (* -> t *)
-  | TA.CastE(t,_)       (* -> t *)
-  | TA.CrossidxE(t,_,_) (* -> t *)
-  | TA.ArrayidxE(t,_,_) (* -> t *)
-  | TA.IteE(t,_,_,_)    (* -> t *)
-  | TA.ArrayLE(t,_,_)   (* -> t *)
-  | TA.SumLE(t,_,_)     (* -> t *)
-  | TA.AppE(t,_,_)      -> t
-
-let extract_expr_pos = function
-  | IntE (l,_) | FloatE (l,_)
-  | FalseE l | TrueE l
-  | VarE(l,_) | CrossE(l,_)
-  | ArrayCE(l,_) | BinopE(l,_,_,_)
-  | UnopE(l,_,_) | CastE(l,_,_)
-  | CrossidxE(l,_,_) | ArrayidxE(l,_,_)
-  | IteE(l,_,_,_) | ArrayLE(l,_,_)
-  | SumLE(l,_,_) | AppE(l,_,_)      -> l
-
 let all_equal' x xs ~equal =
   List.fold_left xs ~init:true
     ~f:(fun acc v ->
         acc && equal x v)
 
+(* return boolean indicating if all list elements are equal
+ * according to the function `equal` *)
 let all_equal xs ~equal =
   match xs with
   | [] | [_] -> true
   | x :: xs' -> all_equal' x xs' ~equal:equal
 
+(* expect type `te` to be of type `expr` *)
 let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
   let t = fst3 te in
   if not (exp=t) then
@@ -99,6 +71,7 @@ let expect pos (exp : type_expr) (te : type_expr * 'a * Env.t) =
               (type_to_s exp) (type_to_s t))
   else return te
 
+(* expect type `te`  to be one of the given exps *)
 let expect_or pos (exps : type_expr list) (te : type_expr * 'a * Env.t) =
   let t = fst3 te in
   match List.find exps ~f:(fun t' -> t=t') with
@@ -107,6 +80,7 @@ let expect_or pos (exps : type_expr list) (te : type_expr * 'a * Env.t) =
               ~msg:(Printf.sprintf "expected one of the following types: %s but got %s"
                       (type_list_to_s exps) (type_to_s t))
 
+(* lookup Varname.t in the environment and return an error if not bound *)
 let lookup_err env p vn =
   match Env.lookup env vn with
   | None -> Err.cerr_msg ~pos:p ~t:"type"
@@ -159,20 +133,23 @@ let rec unify_lvalue lv t env =
 (*****************************************)
 
 let rec type_expr env e =
+  (* given an environment and a loop bind (vn * expr)
+   * typecheck all exprs and expect and IntT then
+   * bind all of the types to the Varnames *)
   let type_loopbind env bs =
     let exs = List.map ~f:snd bs in
     foldM3 (fun ev e ->
         type_expr ev e
         >>= expect (extract_expr_pos e) IntT) env exs
     >>= fun (es', _) ->
-    let tes = List.map ~f:extract_expr_type es' in
-    foldM2 (fun env (lv, te) ->
-        unify_arg lv te env) env
+    let tes = List.map ~f:TA.extract_expr_type es' in
+    foldM2 (fun env (lv, te) -> unify_arg lv te env) env
       (List.map2_exn bs tes ~f:(fun (a,_) t ->
            VarA(Lexing.dummy_pos, a), t))
     >>| fun (_, env') ->
     (List.map2_exn bs es' ~f:(fun (a,_) e' ->
-         a,e')),env' in
+         a,e')), env' in
+
   match e with
   | IntE(_,i) -> return (IntT, TA.IntE i, env)
   | FloatE(_,f) -> return (FloatT, TA.FloatE f, env)
@@ -183,12 +160,12 @@ let rec type_expr env e =
   | CrossE(_,es) ->
     foldM3 type_expr env es
     >>| fun (es', env') ->
-    let t = CrossT (List.map es' ~f:extract_expr_type) in
+    let t = CrossT (List.map es' ~f:TA.extract_expr_type) in
     t, TA.CrossE(t,es'), env'
   | ArrayCE(l,es) ->
     foldM3 type_expr env es
     >>= fun (es', env') ->
-    let tes = List.map es' ~f:extract_expr_type in
+    let tes = List.map es' ~f:TA.extract_expr_type in
     if not (all_equal tes ~equal:( = )) then
       Err.cerr_msg ~pos:l ~t:"type" ~msg:"array types must all be equal"
     else let arrt = ArrayT(
@@ -249,7 +226,7 @@ let rec type_expr env e =
     (match arrowt with
      | ArrowT(rt,pst) -> foldM3 type_expr env ps
        >>= fun (ps', _) ->
-       let pst' = List.map ps' ~f:extract_expr_type in
+       let pst' = List.map ps' ~f:TA.extract_expr_type in
        if not (List.equal ( = ) pst pst') then
          Err.cerr_msg ~pos:l ~t:"type"
            ~msg:(Printf.sprintf "expected parameter types of %s but got %s"
@@ -275,7 +252,7 @@ let rec type_binding env = function
   | CrossbindB(_,bs) ->
     foldM3 type_binding env bs
     >>| fun (bs', env') ->
-    let t = CrossT (List.map bs' ~f:extract_binding_type) in
+    let t = CrossT (List.map bs' ~f:TA.extract_binding_type) in
     t, TA.CrossbindB(t, bs'), env'
 
 let rec type_cmd env = function
@@ -308,7 +285,7 @@ let rec type_cmd env = function
     >>= fun (ss', _) -> get_retstmt_type ss'
     >>= fun rt -> expect l te (rt,0,env')
     >>| fun _ ->
-    let fntype = ArrowT(rt, List.map bs' ~f:extract_binding_type) in
+    let fntype = ArrowT(rt, List.map bs' ~f:TA.extract_binding_type) in
     fntype, TA.FnC (fntype, vn, bs', te, ss'), Env.extend env vn fntype
   | StmtC (_,s) -> type_stmt env s
     >>| fun (_, s', env') -> Unit, TA.StmtC s', env'

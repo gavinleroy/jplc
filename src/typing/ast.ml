@@ -52,3 +52,24 @@ type cmd =
   | StmtC of stmt
 
 type prog = cmd list
+
+let extract_expr_type = function
+  | IntE _ -> IntT
+  | FloatE _ -> FloatT
+  | FalseE | TrueE -> BoolT
+  | VarE(t,_)
+  | CrossE(t,_)
+  | ArrayCE(t,_)
+  | BinopE(t,_,_,_)
+  | UnopE(t,_,_)
+  | CastE(t,_)
+  | CrossidxE(t,_,_)
+  | ArrayidxE(t,_,_)
+  | IteE(t,_,_,_)
+  | ArrayLE(t,_,_)
+  | SumLE(t,_,_)
+  | AppE(t,_,_)      -> t
+
+let extract_binding_type = function
+  | ArgB(t,_) -> t
+  | CrossbindB(t,_) -> t

@@ -52,3 +52,7 @@ type cmd =
   | StmtC of stmt
 
 type prog = cmd list
+
+val extract_expr_type: expr -> type_expr
+
+val extract_binding_type: binding -> type_expr
