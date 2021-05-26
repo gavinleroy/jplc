@@ -315,3 +315,14 @@ let%expect_test "simple-stmt-35" =
     {|
       line: 2 column: 11
       	~~ type: incorrect number of indexes provided for array of rank 2 |}]
+
+let%expect_test "simple-stmt-36" =
+  Ppp.ppp_ast
+    "fn id( x : int ) : int { return x; }
+    show id( 10. );
+    fn id( x : float ) : float { return x; }
+    show id( 10 );";
+  [%expect
+    {|
+      line: 2 column: 10
+      	~~ type: expected parameter types of (IntType) but got (FloatType) |}]

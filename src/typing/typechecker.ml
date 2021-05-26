@@ -307,6 +307,11 @@ let rec type_cmd env = function
     >>| fun (_, e', env') -> Unit, TA.ShowC e', env'
   | TimeC (_,c) -> type_cmd env c
     >>| fun (_, c', env') -> Unit, TA.TimeC c', env'
+
+
+
+
+
   | FnC (l,vn,bs,te,ss) ->
     let get_retstmt_type = fun stmts ->
       match (List.find stmts ~f:(fun s ->
@@ -314,14 +319,22 @@ let rec type_cmd env = function
       | Some (TA.ReturnS (rt,_)) -> return rt
       | _ -> Err.cerr_msg ~pos:l ~t:"type" ~msg:"functions must return a value" in
     foldM3 type_binding env bs
-    >>= fun (bs', env') -> foldM3 type_stmt env' ss
+    >>= fun (bs', env') ->
+    let fntype = ArrowT(te, List.map bs' ~f:TA.extract_binding_type) in
+    let env' = Env.extend env' vn fntype in
+    foldM3 type_stmt env' ss
     >>= fun (ss', _) -> get_retstmt_type ss'
     >>= fun rt -> expect l te (rt,0,env')
     >>| fun _ ->
-    let fntype = ArrowT(rt, List.map bs' ~f:TA.extract_binding_type) in
     fntype, TA.FnC (fntype, vn, bs', te, ss'), Env.extend env vn fntype
   | StmtC (_,s) -> type_stmt env s
     >>| fun (_, s', env') -> Unit, TA.StmtC s', env'
+
+
+
+
+
+
 
 let type_prog (p : prog) =
   foldM3 type_cmd (Env.empty ()) p

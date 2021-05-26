@@ -583,3 +583,55 @@ let%expect_test "simple-stmt-20" =
             ((IntExpr IntType 1000)))
            ((IntExpr IntType 0) (IntExpr IntType 10)))
           == (IntExpr IntType 0))))) |}]
+
+let%expect_test "simple-stmt-21" =
+  Ppp.ppp_ast
+    "fn bad_fac(x : int) : int
+     { return x * bad_fac(x - 1); }
+     show bad_fac(10);";
+  [%expect
+    {|
+      (Prog
+       ((Func (ArrowType IntType (IntType)) bad_fac
+         ((ArgBinding IntType (VarArg IntType x) IntType)) IntType
+         ((ReturnStmt IntType UnitType
+           (BinopExpr IntType (VarExpr IntType x) *
+            (AppExpr IntType bad_fac
+             ((BinopExpr IntType (VarExpr IntType x) - (IntExpr IntType 1))))))))
+        (ShowCmd (AppExpr IntType bad_fac ((IntExpr IntType 10)))))) |}]
+
+let%expect_test "simple-stmt-22" =
+  Ppp.ppp_ast
+    "fn fac(x : int) : int
+     { return if x == 0 then 1 else x * fac(x - 1); }
+     show fac (10);";
+  [%expect
+    {|
+      (Prog
+       ((Func (ArrowType IntType (IntType)) fac
+         ((ArgBinding IntType (VarArg IntType x) IntType)) IntType
+         ((ReturnStmt IntType UnitType
+           (IteExpr (BinopExpr BoolType (VarExpr IntType x) == (IntExpr IntType 0))
+            IntType (IntExpr IntType 1)
+            (BinopExpr IntType (VarExpr IntType x) *
+             (AppExpr IntType fac
+              ((BinopExpr IntType (VarExpr IntType x) - (IntExpr IntType 1)))))))))
+        (ShowCmd (AppExpr IntType fac ((IntExpr IntType 10)))))) |}]
+
+let%expect_test "simple-stmt-23" =
+  Ppp.ppp_ast
+    "fn iden(x : int) : int { return x; }
+     show iden( 10 );
+     fn iden(y : float) : float { return y; }
+     show iden( 199. );";
+  [%expect
+    {|
+      (Prog
+       ((Func (ArrowType IntType (IntType)) iden
+         ((ArgBinding IntType (VarArg IntType x) IntType)) IntType
+         ((ReturnStmt IntType UnitType (VarExpr IntType x))))
+        (ShowCmd (AppExpr IntType iden ((IntExpr IntType 10))))
+        (Func (ArrowType FloatType (FloatType)) iden
+         ((ArgBinding FloatType (VarArg FloatType y) FloatType)) FloatType
+         ((ReturnStmt FloatType UnitType (VarExpr FloatType y))))
+        (ShowCmd (AppExpr FloatType iden ((FloatExpr FloatType 199)))))) |}]
