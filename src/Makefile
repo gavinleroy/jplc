@@ -13,3 +13,6 @@ parse:
 type:
 	dune exec ./jplc.exe -- -t $(TEST)
 
+flat:
+	dune exec ./jplc.exe -- -f $(TEST)
+

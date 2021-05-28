@@ -1,0 +1,4 @@
+(library
+ (name flattening)
+ (libraries core ast_utils typing)
+ (preprocess (pps ppx_jane)))

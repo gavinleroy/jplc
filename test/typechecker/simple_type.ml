@@ -635,3 +635,13 @@ let%expect_test "simple-stmt-23" =
          ((ArgBinding FloatType (VarArg FloatType y) FloatType)) FloatType
          ((ReturnStmt FloatType UnitType (VarExpr FloatType y))))
         (ShowCmd (AppExpr FloatType iden ((FloatExpr FloatType 199)))))) |}]
+
+let%expect_test "simple-stmt-24" =
+  Ppp.ppp_ast
+    "show 1 + 2 * 3;";
+  [%expect
+    {|
+      (Prog
+       ((ShowCmd
+         (BinopExpr IntType (IntExpr IntType 1) +
+          (BinopExpr IntType (IntExpr IntType 2) * (IntExpr IntType 3)))))) |}]
