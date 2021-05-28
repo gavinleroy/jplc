@@ -22,7 +22,7 @@ let compile_prog
   >>= Typing.Typechecker.type_prog
   >>= maybe_exit skip_flatten Pp.print_sexp Typing.Sexp_ast.sexp_of_prog
   >>= Flattening.Flattener.flatten_prog
-  >>= maybe_exit skip_codegen Pp.print_sexp Typing.Sexp_ast.sexp_of_prog
+  >>= maybe_exit skip_codegen Pp.print_sexp Flattening.Sexp_ast.sexp_of_prog
   |> function
   | Ok _ -> (* TODO something *)
     ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented codegen\n")

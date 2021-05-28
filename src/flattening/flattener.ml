@@ -6,4 +6,4 @@
 open Core
 
 let flatten_prog _p =
-  Error (Error.of_string "TODO flatten prog")
+  Error (Error.of_string "TODO flatten prog\n")
