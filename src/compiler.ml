@@ -28,4 +28,4 @@ let compile_prog
     ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented codegen\n")
   | Error msg -> (* print the error message to the console *)
     Error.to_string_hum msg
-    |> ANSITerminal.(eprintf [red; Bold] "%s")
+    |> ANSITerminal.(eprintf [red; Bold] "%s\n")

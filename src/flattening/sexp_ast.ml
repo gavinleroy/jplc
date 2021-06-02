@@ -105,13 +105,13 @@ and sexp_of_param_binding { var; bind_type; } =
 and sexp_of_loop_binding { var; bound; } =
   Sexp.(List [ Atom var; Atom bound ])
 
-let sexp_of_fn { fn_type; name; params; body; } =
-  Sexp.(List [ Atom "Func"
-             ; sexp_of_type fn_type
-             ; Atom name
-             ; List.sexp_of_t sexp_of_param_binding params
-             ; sexp_of_returning_block body])
+(* let sexp_of_fn { fn_type; name; params; body; } =
+ *   Sexp.(List [ Atom "Func"
+ *              ; sexp_of_type fn_type
+ *              ; Atom name
+ *              ; List.sexp_of_t sexp_of_param_binding params
+ *              ; sexp_of_returning_block body]) *)
 
 let sexp_of_prog (p : Ast.prog) =
   Sexp.(List [ Atom "Prog"
-             ; List.sexp_of_t sexp_of_fn p ])
+             ; List.sexp_of_t Fn.sexp_of_t p ])

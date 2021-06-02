@@ -6,4 +6,6 @@
 open Core
 open Ast
 
+val sexp_of_expr : expr -> Sexp.t
+
 val sexp_of_prog: prog -> Sexp.t

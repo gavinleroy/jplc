@@ -3,6 +3,7 @@
 (*       05.2021        *)
 (************************)
 
+open Core
 open Ast_utils
 
 type var_name = string
@@ -49,10 +50,34 @@ type expr =
    * Examples include: function bodies, if/else bodies, etc ... *)
 and returning_block = expr list
 
-type fn_cmd =
-  { fn_type : type_expr
-  ; name    : var_name
-  ; params  : param_binding list
-  ; body    : returning_block }
+module Expr : sig
+  module T : sig
+    type t = expr
+    val sexp_of_t: t -> Sexp.t
+    val compare: t -> t -> int
+  end
+  type t = T.t
+  val compare : t -> t -> int
+  val sexp_of_t : t -> Sexp.t
+  type comparator_witness = Base.Comparator.Make(T).comparator_witness
+  val comparator : (t, comparator_witness) Comparator.t
+end
 
-type prog = fn_cmd list
+module Fn : sig
+  module T : sig
+    type t =
+      { fn_type : type_expr
+      ; name    : var_name (* NOTE the function name at this point must be unique*)
+      ; params  : param_binding list
+      ; body    : returning_block }
+    val compare: t -> t -> int
+    val sexp_of_t: t -> Sexp.t
+  end
+  type t = T.t
+  val compare : t -> t -> int
+  val sexp_of_t : t -> Sexp.t
+  type comparator_witness = Base.Comparator.Make(T).comparator_witness
+  val comparator : (t, comparator_witness) Comparator.t
+end
+
+type prog = Fn.t list

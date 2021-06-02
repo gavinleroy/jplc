@@ -40,3 +40,7 @@ type type_expr =
 val sexp_of_type: type_expr -> Sexp.t
 
 val ( = ): type_expr -> type_expr -> bool
+
+val type_to_s: type_expr -> string
+
+val type_list_to_s: type_expr list -> string

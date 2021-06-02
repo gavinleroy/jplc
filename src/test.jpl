@@ -1,3 +1,2 @@
 
-show 1 + 2 * 3;
-print "Hallo, Welt";
+show 1;

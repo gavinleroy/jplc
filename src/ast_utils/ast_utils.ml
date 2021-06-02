@@ -71,3 +71,9 @@ let rec ( = ) lhs rhs =
   | ArrowT(t1,ts1), ArrowT(t2,ts2) ->
     t1=t2 && List.equal (=) ts1 ts2
   | _, _ -> false
+
+let type_to_s t =
+  Sexp.to_string (sexp_of_type t)
+
+let type_list_to_s ts =
+  Sexp.to_string (List.sexp_of_t sexp_of_type ts)

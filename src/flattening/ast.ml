@@ -3,6 +3,7 @@
 (*       05.2021        *)
 (************************)
 
+open Core
 open Ast_utils
 
 type var_name = string
@@ -49,10 +50,44 @@ type expr =
    * Examples include: function bodies, if/else bodies, etc ... *)
 and returning_block = expr list
 
-type fn_cmd =
-  { fn_type : type_expr
-  ; name    : var_name
-  ; params  : param_binding list
-  ; body    : returning_block }
+(* FOR THE DERIVING INTERFACE *)
+let sexp_of_expr = Sexp_ast.sexp_of_expr
 
-type prog = fn_cmd list
+(* TODO *)
+let compare_expr _e1 _e2 =
+  0
+
+module Expr = struct
+  module T = struct
+    type t = expr
+    [@@deriving compare, sexp_of]
+  end
+  include T
+  include Comparator.Make(T)
+end
+
+module Fn = struct
+  module T = struct
+    type t =
+      { fn_type : type_expr
+      ; name    : var_name (* NOTE the function name at this point must be unique*)
+      ; params  : param_binding list
+      ; body    : returning_block }
+
+    let compare t1 t2 =
+      String.compare t1.name t2.name
+
+    let sexp_of_t t : Sexp.t =
+      List [ Atom "Func"
+           ; sexp_of_type t.fn_type
+           ; Atom t.name
+           ; List.sexp_of_t
+               Sexp_ast.sexp_of_param_binding t.params
+           ; Sexp_ast.sexp_of_returning_block t.body]
+
+  end
+  include T
+  include Comparator.Make(T)
+end
+
+type prog = Fn.t list

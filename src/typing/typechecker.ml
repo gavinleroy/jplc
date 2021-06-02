@@ -7,48 +7,14 @@ open Core
 open Ast_utils
 open Utils
 open Parsing.Ast
-open Result
+
+open Utils.Functional.Utils( Or_error )
 
 module TA = Ast
 
 (*************************************)
 (********* UTILITY FUNCITONS *********)
 (*************************************)
-
-let type_to_s t =
-  Sexp.to_string (sexp_of_type t)
-
-let type_list_to_s ts =
-  Sexp.to_string (List.sexp_of_t sexp_of_type ts)
-
-let foldMN
-    (r1 : 'd Or_error.t -> 'e Or_error.t)
-    (r2 : 'd Or_error.t -> 'f Or_error.t)
-    (unwrap : (Env.t -> 'a -> 'd Or_error.t) -> 'a -> 'd -> 'd Or_error.t)
-    (f : Env.t -> 'a -> 'd Or_error.t)
-    (env : Env.t) (xs : 'a list) =
-  let rec foldM' prev xs =
-    match xs with
-    | [] -> [r1 prev], r2 prev
-    | y :: ys ->
-      foldM' (prev >>= unwrap f y) ys
-      |> fun (vs', env') ->
-      ((r1 prev) :: vs'), env' in
-  match xs with
-  | [] -> return ([], env)
-  | x :: xs ->
-    foldM' (f env x) xs
-    |> fun (vs, env') ->
-    all vs >>= fun vs' ->
-    env' >>| fun env'' -> vs', env''
-
-let foldM3 f env xs =
-  foldMN (fun a -> a >>| snd3) (fun a -> a >>| trd3)
-    (fun g v (_,_,e) -> g e v) f env xs
-
-let foldM2 f env xs =
-  foldMN (fun a -> a >>| fst) (fun a -> a >>| snd)
-    (fun g v (_,e) -> g e v) f env xs
 
 let all_equal' x xs ~equal =
   List.fold_left xs ~init:true
@@ -307,11 +273,6 @@ let rec type_cmd env = function
     >>| fun (_, e', env') -> Unit, TA.ShowC e', env'
   | TimeC (_,c) -> type_cmd env c
     >>| fun (_, c', env') -> Unit, TA.TimeC c', env'
-
-
-
-
-
   | FnC (l,vn,bs,te,ss) ->
     let get_retstmt_type = fun stmts ->
       match (List.find stmts ~f:(fun s ->
@@ -329,12 +290,6 @@ let rec type_cmd env = function
     fntype, TA.FnC (fntype, vn, bs', te, ss'), Env.extend env vn fntype
   | StmtC (_,s) -> type_stmt env s
     >>| fun (_, s', env') -> Unit, TA.StmtC s', env'
-
-
-
-
-
-
 
 let type_prog (p : prog) =
   foldM3 type_cmd (Env.empty ()) p
