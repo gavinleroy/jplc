@@ -9,7 +9,9 @@ type t = (Varname.t * type_expr)  list
 
 val img_te: type_expr
 
-val empty: unit -> t
+val mempty: unit -> t
+
+val mappend: t -> t -> t
 
 val extend: t -> Varname.t -> type_expr -> t
 

@@ -12,9 +12,11 @@ let img_te =
   ArrayT ((CrossT [FloatT; FloatT; FloatT; FloatT;]) (* base type *)
          , (Int64.of_int 2)) (* rank 2 *)
 
-let empty () =
+let mempty () =
   (* TODO put the library and default env *)
   []
+
+let mappend = ( @ )
 
 let extend e vn te = (vn, te) :: e
 

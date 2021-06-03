@@ -7,8 +7,19 @@ open Core
 open Ast_utils
 open Utils
 open Parsing.Ast
+module F = Utils.Functional
 
-open Utils.Functional.Utils( Or_error )
+(* StateT is a wrapper around ('a, State.t) M.t *)
+
+module Error_option = struct
+  include Or_error
+  let run = ok_exn
+end
+
+module EitherStateT = F.StateT(Env)(Error_option)
+module Monadic = Utils.Functional.Utils(EitherStateT)
+open EitherStateT
+open Monadic
 
 module TA = Ast
 
@@ -254,6 +265,7 @@ let rec type_binding env = function
     let t = CrossT (List.map bs' ~f:TA.extract_binding_type) in
     t, TA.CrossbindB(t, bs'), env'
 
+(* val type_cmd: Cmd.t -> StateT (State.t -> (TA.cmd * State.t)) Or_error.t *)
 let rec type_cmd env = function
   | ReadimgC (_,fn, VarA(_,vn)) ->
     return (Unit, TA.ReadimgC (fn, TA.VarA(Env.img_te, vn)), Env.extend_img env vn)
@@ -291,6 +303,14 @@ let rec type_cmd env = function
   | StmtC (_,s) -> type_stmt env s
     >>| fun (_, s', env') -> Unit, TA.StmtC s', env'
 
+(* val type_prog: Parsing.Ast.prog -> Typing.Ast.prog Or_error.t *)
 let type_prog (p : prog) =
-  foldM3 type_cmd (Env.empty ()) p
-  >>| fst
+  let e = Env.mempty () in
+  let smth = undefined in
+  match run_state_t smth e with
+  | Ok st -> Ok (run st)
+  | Error e -> Error e
+
+(* foldM p ~f:type_cmd ~init:(return ())
+ *   foldM3 type_cmd (Env.empty ()) p
+ * >>| fst *)
