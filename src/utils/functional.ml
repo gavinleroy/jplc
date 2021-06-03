@@ -55,49 +55,13 @@ module State (S: MONOID) = struct
 end
 
 module Utils (M : MONAD) = struct
-  include M
+  open M
 
-  let foldlM
+  let foldM
       (xs : 'a list)
       ~(f : 'b -> 'a -> 'b t)
       ~(init : 'b) : 'b t =
     let c = (fun x k z -> (f z x) >>= k) in
     let go = List.fold_right xs ~f:c ~init:return in
     go init
-
-  let foldM = foldlM
-
-  (* TODO delete *)
-  (* let foldMN
-   *     (r1 : 'd t -> 'e t)
-   *     (r2 : 'd t -> 'f t)
-   *     (unwrap : ('b -> 'a -> 'd t) -> 'a -> 'd -> 'd t)
-   *     (f : 'b -> 'a -> 'd t)
-   *     (env : 'b) (xs : 'a list) =
-   *   let rec foldM' prev xs =
-   *     match xs with
-   *     | [] -> [r1 prev], r2 prev
-   *     | y :: ys ->
-   *       foldM' (prev >>= unwrap f y) ys
-   *       |> fun (vs', env') ->
-   *       ((r1 prev) :: vs'), env' in
-   *   match xs with
-   *   | [] -> return ([], env)
-   *   | x :: xs ->
-   *     foldM' (f env x) xs
-   *     |> fun (vs, env') ->
-   *     all vs >>= fun vs' ->
-   *     env' >>| fun env'' -> vs', env''
-   *
-   * let foldM3 f env xs =
-   *   foldMN
-   *     (fun a -> a >>| snd3)
-   *     (fun a -> a >>| trd3)
-   *     (fun g v (_,_,e) -> g e v) f env xs
-   *
-   * let foldM2 f env xs =
-   *   foldMN
-   *     (fun a -> a >>| fst)
-   *     (fun a -> a >>| snd)
-   *     (fun g v (_,e) -> g e v) f env xs *)
 end
