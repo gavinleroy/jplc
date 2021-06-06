@@ -1,2 +1,8 @@
 
-show 1;
+fn ident ( x : float3[,] ) : float3[,] {
+   return x;
+}
+
+read image "myimg.png" to img;
+let img = ident(img);
+write image img to "newimg.png";

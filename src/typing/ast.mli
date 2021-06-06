@@ -15,7 +15,7 @@ type expr =
   | ArrayCE of type_expr * expr list
   | BinopE of type_expr * expr * bin_op * expr
   | UnopE of type_expr * un_op * expr
-  | CastE of type_expr * expr
+  | CastE of type_expr * expr * type_expr
   | CrossidxE of type_expr * expr * int
   | ArrayidxE of type_expr * expr * expr list
   | IteE of type_expr * expr * expr * expr

@@ -11,5 +11,5 @@
    ;; ocaml libs
    core ANSITerminal
    ;; my libs
-   utils parsing typing flattening)
+   utils parsing typing)
  (preprocess (pps ppx_jane)))

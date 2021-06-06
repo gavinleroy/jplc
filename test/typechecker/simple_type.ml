@@ -126,8 +126,8 @@ let%expect_test "simple-stmt-6" =
           (ArgBinding FloatType (VarArg FloatType b) FloatType))
          FloatType
          ((ReturnStmt FloatType UnitType
-           (BinopExpr FloatType (CastExpr IntType (VarExpr IntType a) IntType) *
-            (VarExpr FloatType b)))))
+           (BinopExpr FloatType (CastExpr IntType -> FloatType (VarExpr IntType a))
+            * (VarExpr FloatType b)))))
         (StmtCmd UnitType
          (LetStmt UnitType
           (ArgLValue (ArrayType FloatType 1) (VarArg (ArrayType FloatType 1) x))
@@ -209,7 +209,7 @@ let%expect_test "simple-stmt-9" =
         (ShowCmd
          (IteExpr
           (BinopExpr BoolType (VarExpr IntType e) <=
-           (CastExpr FloatType (VarExpr FloatType f) FloatType))
+           (CastExpr FloatType -> IntType (VarExpr FloatType f)))
           BoolType (TrueExpr BoolType) (VarExpr BoolType g))))) |}]
 
 let%expect_test "simple-stmt-10" =
@@ -234,7 +234,7 @@ let%expect_test "simple-stmt-10" =
          ((ReturnStmt BoolType UnitType
            (IteExpr
             (BinopExpr BoolType (VarExpr IntType a) <=
-             (CastExpr FloatType (VarExpr FloatType b) FloatType))
+             (CastExpr FloatType -> IntType (VarExpr FloatType b)))
             BoolType (TrueExpr BoolType) (VarExpr BoolType c)))))
         (StmtCmd UnitType
          (LetStmt UnitType (ArgLValue IntType (VarArg IntType a))
