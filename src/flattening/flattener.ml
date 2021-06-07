@@ -4,57 +4,63 @@
 (************************)
 
 open Core
+
 open Ast_utils
 open Ast
-open Env
 
-module RT : Utils.Functional.MONOID = struct
-  type t =
-    { fns : (Fn.t, Fn.comparator_witness) Set.t
-    ; exprs : (Expr.t, Expr.comparator_witness) Set.t
-    ; env : Env.t }
-
-  let mempty () =
-    { fns = Set.empty(module Fn)
-    ; exprs = Set.empty(module Expr)
-    ; env=(Env.empty ()) }
-
-  let mappend
-      _ _
-      (* { fns1; exprs1; env1; }
-       * { fns2; exprs2; env2; } *)
-    = mempty ()
-end
-
-(* val return: 'a -> 'a t
- * val join: 'a t t -> 'a t
- * val all: ('a t) list -> ('a list) t
- * val ( >>= ): 'a t -> ('a -> 'b t) -> 'b t
- * val ( >>| ): 'a t -> ('a -> 'b) -> 'b t *)
-
-module ST = Utils.Functional.State( RT )
-open Utils.Functional.Utils( ST )
+exception Todo
 
 (* give a shortcut for the Parsing.Ast module *)
 module TA = Typing.Ast
 
-(* type expr =
- *   | IntE of Int64.t
- *   | FloatE of float
- *   | TrueE
- *   | FalseE
- *   | VarE of type_expr * Varname.t
- *   | CrossE of type_expr * expr list
- *   | ArrayCE of type_expr * expr list
- *   | BinopE of type_expr * expr * bin_op * expr
- *   | UnopE of type_expr * un_op * expr
- *   | CastE of type_expr * expr
- *   | CrossidxE of type_expr * expr * int
- *   | ArrayidxE of type_expr * expr * expr list
- *   | IteE of type_expr * expr * expr * expr
- *   | ArrayLE of type_expr * (Varname.t * expr) list * expr
- *   | SumLE of type_expr * (Varname.t * expr) list * expr
- *   | AppE of type_expr * Varname.t * expr list *)
+module State = Utils.Functional.State(Env)
+module Monadic = Utils.Functional.Utils(State)
+open State
+open Monadic
+
+(*********************)
+(* UTILITY FUNCTIONS *)
+(*********************)
+
+(* let gen_new_var () =
+ *   get >>= fun env ->
+ *   let (t, env') = Env.get_unique_var env in
+ *   put env' >> return t *)
+
+(* let expect_vare_exn expr =
+ *   match expr with
+ *   | VarE _ -> return expr
+ *   | _ -> raise (InvalidState
+ *                   ("expected VarE but got " ^
+ *                    (Sexp_ast.sexp_of_expr expr |> Sexp.to_string))) *)
+
+let new_expr_mod ?(name = "") e =
+  if String.is_empty name then
+    fun s -> Env.add_new_expr s None e
+  else fun s -> Env.add_new_expr s (Some name) e
+
+(* type expr = *)
+let flatten_expr = function
+  | TA.IntE i -> get
+    >>= fun env -> let (name, env) = Env.get_unique_var env in
+    put env
+    >> modify (new_expr_mod ~name (IntE i))
+    >> return (Varname(IntT, name))
+  | TA.FloatE _f -> raise Todo
+  | TA.TrueE -> raise Todo
+  | TA.FalseE -> raise Todo
+  | TA.VarE(_t, _vn) -> raise Todo
+  | TA.CrossE(_t, _es) -> raise Todo
+  | TA.ArrayCE(_t,_es) -> raise Todo
+  | TA.BinopE(_t,_lhs,_op,_rhs) -> raise Todo
+  | TA.UnopE(_t,_op,_e) -> raise Todo
+  | TA.CastE(_t,_e,_ct) -> raise Todo
+  | TA.CrossidxE(_t,_e,_i) -> raise Todo
+  | TA.ArrayidxE(_t,_e,_es) -> raise Todo
+  | TA.IteE(_t,_cnd,_ie,_ee) -> raise Todo
+  | TA.ArrayLE(_t,_bs,_e) -> raise Todo
+  | TA.SumLE(_t,_bs,_e) -> raise Todo
+  | TA.AppE(_t,_vn,_es) -> raise Todo
 
 (* type arg =
  *   | VarA of type_expr * Varname.t
@@ -68,48 +74,43 @@ module TA = Typing.Ast
  *   | ArgB of type_expr * arg
  *   | CrossbindB of type_expr * binding list *)
 
-(* type stmt =
- *   | LetS of lvalue * expr
- *   | AssertS of expr * string
- *   | ReturnS of type_expr * expr *)
+(* let flatten_stmt = function
+ *   | TA.LetS(_lv,_e) -> raise Todo
+ *   | TA.AssertS(_e,_s) -> raise Todo
+ *   | TA.ReturnS(_te,_e) -> raise Todo *)
 
-let todo e = return (rt_empty e)
-let flatten_cmd env = function
-  (* TODO FIXME *)
-  | TA.ReadimgC(_fn, _arg) -> todo env
-  (* TODO FIXME *)
-  | TA.ReadvidC(_fn, _arg) -> todo env
-  (* TODO FIXME *)
-  | TA.WriteimgC(_expr, _fn) -> todo env
-  (* TODO FIXME *)
-  | TA.WritevidC(_expr, _fn) -> todo env
-  (* TODO FIXME *)
-  | TA.PrintC _str -> todo env
-  (* TODO FIXME *)
+let flatten_cmd = function
+  | TA.ReadimgC(_fn, _arg) -> raise Todo
+  | TA.ReadvidC(_fn, _arg) -> raise Todo
+  | TA.WriteimgC(_expr, _fn) -> raise Todo
+  | TA.WritevidC(_expr, _fn) -> raise Todo
+  | TA.PrintC _str -> raise Todo
 
+  | TA.ShowC expr -> flatten_expr expr
+    >>= fun vn -> modify (new_expr_mod (ShowE vn))
+    >> return []
 
-  | TA.ShowC _expr ->
-    return (rt_empty env)
+  | TA.TimeC _c -> raise Todo
+  | TA.FnC(_te, _vn, _bs, _te', _ses) -> raise Todo
+  | TA.StmtC TA.ReturnS(_,expr) -> flatten_expr expr
+    >>= fun vn -> modify (new_expr_mod (ReturnE vn))
+    >> get >>= fun env ->
+    let (body, env) = Env.clear_exprs env in
+    put env >> return body
+  | TA.StmtC _s -> raise Todo
 
+let make_main (rb : expr list) : Fn.t =
+  { name = Varname (ArrowT (IntT, []), "main")
+  ; params = []
+  ; body = rb }
 
-  (* TODO FIXME *)
-  | TA.TimeC _c -> todo env
-  (* TODO FIXME *)
-  | TA.FnC(_te, _vn, _bs, _te', _ses) -> todo env
-  (* TODO FIXME *)
-  | TA.StmtC _s -> todo env
+let fix_ret_blocks rbs =
+  List.filter ~f:(fun l -> List.length l > 0) rbs
+  |> List.hd_exn (* NOTE should never throw *)
+  |> List.rev
 
-(* what are we trying to do?
- * Given a cmd/stmt/... we want to get back
- * a fn_cmds list and a expr list and an updated
- *  env
- *
- * 'a refers to the AST NODE type.  *)
-
-(* p is a list of commands. In our new grammar, we need to return a list of *function commands*
- * where all non-FnCs go into MAIN *)
-let flatten_prog (p : TA.prog) =
-  ( foldM2 flatten_cmd (Env.empty ()) p
-    >>= fun { fns; exprs; _; } ->
-    return fns )
-  |> Result.Ok
+let flatten_prog (p : TA.prog) : prog Or_error.t =
+  run_state (map_m p ~f:flatten_cmd) (Env.mempty ())
+  |> fun (ret_blocks, env) ->
+  let fns = Env.get_fns env in
+  Ok (make_main (fix_ret_blocks ret_blocks) :: fns)

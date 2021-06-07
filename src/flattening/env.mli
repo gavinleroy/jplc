@@ -7,7 +7,12 @@ open Ast_utils
 
 type t
 
-val empty: unit -> t
+exception Impossible of string
+
+val mempty: unit -> t
+
+(* WARNING exn *)
+val mappend: t -> t -> t
 
 (* add a new symbol to the env
  * returning: the new symbol string, the updated env *)
@@ -17,6 +22,12 @@ val lookup: t -> Varname.t -> string
 
 val get_unique_var: t -> string * t
 
+val add_new_expr: t -> string option -> Ast.expr -> t
+
+val clear_exprs: t -> (Ast.expr list * t)
+
 val open_scope: t -> t
 
 val close_scope: t -> t
+
+val get_fns: t -> Ast.Fn.t list

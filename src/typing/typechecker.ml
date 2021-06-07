@@ -7,23 +7,22 @@ open Core
 open Ast_utils
 open Utils
 open Parsing.Ast
+
+(* some shorthand module names *)
 module F = Utils.Functional
 module TA = Ast
 
 module Error_option = struct
   include Or_error
   let run = ok_exn (* NOTE run shouldn't be called in an Error_option *)
-  let liftM m ~f = m >>| f
+  let liftM = map (* NOTE map is >>| *)
 end
 
 module ErrorStateT = F.StateT(Env)(Error_option)
 module Monadic = F.Utils(ErrorStateT)
-(* module ErrorStateT = Monad.Make(ErrorStateT) *)
-(* Open the StateT module and Utils module for foldM *)
+(* Open the StateT module and Utils module for map_m and map_m_ *)
 open ErrorStateT (* NOTE this is a (StateT Env.t Ether a)  *)
-(* open ErrorStateT.Let_syntax *)
 open Monadic
-
 
 (*************************************)
 (********* UTILITY FUNCITONS *********)
@@ -321,8 +320,7 @@ let rec type_cmd = function
 
 (* val type_prog: Parsing.Ast.prog -> Typing.Ast.prog Or_error.t *)
 let type_prog (p : prog) : TA.prog Or_error.t =
-  let e = Env.mempty () in
-  let smth = map_m p ~f:type_cmd in
-  match eval_state_t smth e with
-  | Ok st -> Ok st
-  | Error e -> Error e
+  let dp = Lexing.dummy_pos in
+  (* make sure that the top-level has a return *)
+  let p = p @ [StmtC(dp, ReturnS(dp, IntE(dp, Int64.zero)))] in
+  eval_state_t (map_m p ~f:type_cmd) (Env.mempty ())

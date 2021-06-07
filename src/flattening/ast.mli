@@ -6,7 +6,8 @@
 open Core
 open Ast_utils
 
-type var_name = string
+type var_name =
+  | Varname of type_expr * string
 
 (* Array/Tuple deconstructions must be expanded *)
 type param_binding =
@@ -21,8 +22,6 @@ type expr =
   | TrueE | FalseE
   | IntE of Int64.t
   | FloatE of float
-  (* NOTE all previous exprs are no longer recursive *)
-  | VarE of type_expr * var_name
   | CrossE of type_expr * var_name list
   | ArrayCE of type_expr * var_name list
   | BinopE of type_expr * var_name * bin_op * var_name
@@ -37,7 +36,7 @@ type expr =
   (* previously seen as Stmts *)
   | LetE of var_name * expr
   | AssertE of var_name * string
-  | ReturnE of type_expr * var_name
+  | ReturnE of var_name
   (* previously seen as Cmds *)
   | ReadimgE of string * var_name
   | ReadvidE of string * var_name
@@ -50,30 +49,19 @@ type expr =
    * Examples include: function bodies, if/else bodies, etc ... *)
 and returning_block = expr list
 
-module Expr : sig
-  module T : sig
-    type t = expr
-    val sexp_of_t: t -> Sexp.t
-    val compare: t -> t -> int
-  end
-  type t = T.t
-  val compare : t -> t -> int
-  val sexp_of_t : t -> Sexp.t
-  type comparator_witness = Base.Comparator.Make(T).comparator_witness
-  val comparator : (t, comparator_witness) Comparator.t
-end
-
 module Fn : sig
   module T : sig
     type t =
-      { fn_type : type_expr
-      ; name    : var_name (* NOTE the function name at this point must be unique*)
+      { name    : var_name (* NOTE the function name at this point must be unique*)
       ; params  : param_binding list
       ; body    : returning_block }
     val compare: t -> t -> int
     val sexp_of_t: t -> Sexp.t
   end
-  type t = T.t
+  type t = T.t =
+    { name    : var_name (* NOTE the function name at this point must be unique*)
+    ; params  : param_binding list
+    ; body    : returning_block }
   val compare : t -> t -> int
   val sexp_of_t : t -> Sexp.t
   type comparator_witness = Base.Comparator.Make(T).comparator_witness
@@ -81,3 +69,5 @@ module Fn : sig
 end
 
 type prog = Fn.t list
+
+val sexp_of_prog: prog -> Sexp.t
