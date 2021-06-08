@@ -14,6 +14,8 @@ val mempty: unit -> t
 (* WARNING exn *)
 val mappend: t -> t -> t
 
+val add_alias: t -> string -> string -> t
+
 (* add a new symbol to the env
  * returning: the new symbol string, the updated env *)
 val add_symbol: t -> Varname.t -> string * t

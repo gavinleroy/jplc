@@ -1,4 +1,4 @@
 (library
  (name flattening)
- (libraries core ast_utils utils typing)
+ (libraries core ast_utils utils typing runtime)
  (preprocess (pps ppx_jane)))

@@ -32,6 +32,12 @@ let mempty () =
 let mappend _v1 _v2 =
   raise (Impossible "mappend for flattened Env unimplemented")
 
+let add_alias e lhs rhs =
+  let env' = match e.env with
+    | scope :: ss -> ((lhs, rhs) :: scope) :: ss
+    | [] -> [[(lhs, rhs)]] in
+  { e with env = env' }
+
 let add_symbol e vn =
   let vn = Varname.to_string vn in
   let m = Map.update e.seen_syms vn
