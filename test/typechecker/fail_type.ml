@@ -326,3 +326,27 @@ let%expect_test "simple-stmt-36" =
     {|
       line: 2 column: 10
       	~~ type: expected parameter types of (IntType) but got (FloatType) |}]
+
+let%expect_test "simple-stmt-37" =
+  Ppp.ppp_ast
+    " fn foo ( img[W,H] : float4[,,] ) : int {
+        return W * H;
+      }
+      read image \"foo.png\" to img;
+      show foo(img);";
+  [%expect
+    {|
+      line: 1 column: 11
+      	~~ type: binding a rank 3 array with 2 dimensions |}]
+
+let%expect_test "simple-stmt-38" =
+  Ppp.ppp_ast
+    " fn foo ( img[W,H] : float4[] ) : int {
+        return W * H;
+      }
+      read image \"foo.png\" to img;
+      show foo(img);";
+  [%expect
+    {|
+      line: 1 column: 11
+      	~~ type: binding a rank 1 array with 2 dimensions |}]

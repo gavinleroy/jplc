@@ -13,7 +13,8 @@ let%expect_test "simple-cmd-1" =
       (Prog
        ((ReadImageCmd someimg.png
          (VarArg
-          (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img)))) |}]
+          (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-cmd-2" =
   Ppp.ppp_ast
@@ -28,7 +29,8 @@ let%expect_test "simple-cmd-2" =
         (WriteImageCmd
          (VarExpr
           (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img)
-         newimg.png))) |}]
+         newimg.png)
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-1" =
   Ppp.ppp_ast
@@ -36,7 +38,8 @@ let%expect_test "simple-stmt-1" =
   [%expect
     {|
       (Prog
-       ((StmtCmd UnitType (AssertStmt UnitType (FalseExpr BoolType) "print me!")))) |}]
+       ((StmtCmd UnitType (AssertStmt UnitType (FalseExpr BoolType) "print me!"))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-2" =
   Ppp.ppp_ast
@@ -46,7 +49,8 @@ let%expect_test "simple-stmt-2" =
       (Prog
        ((StmtCmd UnitType
          (LetStmt UnitType (ArgLValue IntType (VarArg IntType x))
-          (IntExpr IntType 1))))) |}]
+          (IntExpr IntType 1)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-3" =
   Ppp.ppp_ast
@@ -70,7 +74,8 @@ let%expect_test "simple-stmt-3" =
            (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img)))
         (StmtCmd UnitType
          (LetStmt UnitType (ArgLValue IntType (VarArg IntType c))
-          (UnopExpr IntType - (VarExpr IntType H)))))) |}]
+          (UnopExpr IntType - (VarExpr IntType H))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-4" =
   Ppp.ppp_ast
@@ -94,7 +99,8 @@ let%expect_test "simple-stmt-4" =
            (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img)))
         (StmtCmd UnitType
          (LetStmt UnitType (ArgLValue IntType (VarArg IntType c))
-          (BinopExpr IntType (VarExpr IntType H) * (VarExpr IntType W)))))) |}]
+          (BinopExpr IntType (VarExpr IntType H) * (VarExpr IntType W))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-5" =
   Ppp.ppp_ast
@@ -107,7 +113,8 @@ let%expect_test "simple-stmt-5" =
           (ArgLValue (ArrayType IntType 1) (VarArg (ArrayType IntType 1) x))
           (ArrayConsExpr (ArrayType IntType 1)
            ((IntExpr IntType 1) (IntExpr IntType 2) (IntExpr IntType 3)
-            (IntExpr IntType 4) (IntExpr IntType 5))))))) |}]
+            (IntExpr IntType 4) (IntExpr IntType 5)))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 
 let%expect_test "simple-stmt-6" =
@@ -133,7 +140,8 @@ let%expect_test "simple-stmt-6" =
           (ArgLValue (ArrayType FloatType 1) (VarArg (ArrayType FloatType 1) x))
           (ArrayConsExpr (ArrayType FloatType 1)
            ((FloatExpr FloatType 0)
-            (AppExpr FloatType f ((IntExpr IntType 2) (FloatExpr FloatType 5))))))))) |}]
+            (AppExpr FloatType f ((IntExpr IntType 2) (FloatExpr FloatType 5)))))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-7" =
   Ppp.ppp_ast
@@ -147,7 +155,8 @@ let%expect_test "simple-stmt-7" =
           (BinopExpr BoolType (IntExpr IntType 10) == (IntExpr IntType 10))))
         (ShowCmd
          (IteExpr (VarExpr BoolType x) BoolType (FalseExpr BoolType)
-          (FalseExpr BoolType))))) |}]
+          (FalseExpr BoolType)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-8" =
   Ppp.ppp_ast
@@ -171,7 +180,8 @@ let%expect_test "simple-stmt-8" =
          (IteExpr (VarExpr BoolType b) BoolType (TrueExpr BoolType)
           (FalseExpr BoolType)))
         (ShowCmd
-         (BinopExpr FloatType (VarExpr FloatType x) % (FloatExpr FloatType 2.6))))) |}]
+         (BinopExpr FloatType (VarExpr FloatType x) % (FloatExpr FloatType 2.6)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-9" =
   Ppp.ppp_ast
@@ -210,7 +220,8 @@ let%expect_test "simple-stmt-9" =
          (IteExpr
           (BinopExpr BoolType (VarExpr IntType e) <=
            (CastExpr FloatType -> IntType (VarExpr FloatType f)))
-          BoolType (TrueExpr BoolType) (VarExpr BoolType g))))) |}]
+          BoolType (TrueExpr BoolType) (VarExpr BoolType g)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-10" =
   Ppp.ppp_ast
@@ -253,7 +264,8 @@ let%expect_test "simple-stmt-10" =
            ((VarExpr IntType a) (VarExpr FloatType b) (VarExpr BoolType c)))))
         (ShowCmd
          (AppExpr BoolType unpack
-          ((VarExpr (CrossType (IntType FloatType BoolType)) d)))))) |}]
+          ((VarExpr (CrossType (IntType FloatType BoolType)) d))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-11" =
   Ppp.ppp_ast
@@ -263,7 +275,8 @@ let%expect_test "simple-stmt-11" =
       (Prog
        ((StmtCmd UnitType
          (LetStmt UnitType (ArgLValue IntType (VarArg IntType a))
-          (SumExpr IntType ((i (IntExpr IntType 100))) (VarExpr IntType i)))))) |}]
+          (SumExpr IntType ((i (IntExpr IntType 100))) (VarExpr IntType i))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-12" =
   Ppp.ppp_ast
@@ -276,7 +289,8 @@ let%expect_test "simple-stmt-12" =
           (ArgLValue (ArrayType IntType 2) (VarArg (ArrayType IntType 2) a))
           (ArrayExpr (ArrayType IntType 2)
            ((i (IntExpr IntType 100)) (j (IntExpr IntType 100)))
-           (BinopExpr IntType (VarExpr IntType i) + (VarExpr IntType j))))))) |}]
+           (BinopExpr IntType (VarExpr IntType i) + (VarExpr IntType j)))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-13" =
   Ppp.ppp_ast
@@ -299,7 +313,8 @@ let%expect_test "simple-stmt-13" =
            ((i (VarExpr IntType M))
             (j (BinopExpr IntType (VarExpr IntType N) * (IntExpr IntType 10))))
            (BinopExpr IntType (IntExpr IntType 3) +
-            (BinopExpr IntType (VarExpr IntType j) * (VarExpr IntType i)))))))) |}]
+            (BinopExpr IntType (VarExpr IntType j) * (VarExpr IntType i))))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-14" =
   Ppp.ppp_ast
@@ -333,7 +348,8 @@ let%expect_test "simple-stmt-14" =
           BoolType
           (CrossidxExpr BoolType
            (VarExpr (CrossType (IntType FloatType BoolType)) d) 2)
-          (FalseExpr BoolType))))) |}]
+          (FalseExpr BoolType)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-14" =
   Ppp.ppp_ast
@@ -438,7 +454,8 @@ let%expect_test "simple-stmt-14" =
              2)
             2)
            0)
-          * (IntExpr IntType 2))))) |}]
+          * (IntExpr IntType 2)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-15" =
   Ppp.ppp_ast
@@ -473,7 +490,8 @@ let%expect_test "simple-stmt-15" =
             ((IntExpr IntType 2))))
           *
           (ArrayidxExpr IntType (VarExpr (ArrayType IntType 1) a)
-           ((IntExpr IntType 3))))))) |}]
+           ((IntExpr IntType 3)))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-16" =
   Ppp.ppp_ast
@@ -489,7 +507,8 @@ let%expect_test "simple-stmt-16" =
            ((i (IntExpr IntType 10)) (j (IntExpr IntType 20))) (IntExpr IntType 1))))
         (ShowCmd
          (ArrayidxExpr IntType (VarExpr (ArrayType IntType 2) a)
-          ((IntExpr IntType 0) (IntExpr IntType 10)))))) |}]
+          ((IntExpr IntType 0) (IntExpr IntType 10))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-17" =
   Ppp.ppp_ast
@@ -509,7 +528,8 @@ let%expect_test "simple-stmt-17" =
          (ArrayidxExpr IntType
           (ArrayidxExpr (ArrayType IntType 1)
            (VarExpr (ArrayType (ArrayType IntType 1) 1) a) ((IntExpr IntType 0)))
-          ((IntExpr IntType 0)))))) |}]
+          ((IntExpr IntType 0))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-18" =
   Ppp.ppp_ast
@@ -523,7 +543,8 @@ let%expect_test "simple-stmt-18" =
            ((i (IntExpr IntType 10)) (j (IntExpr IntType 10))
             (k (IntExpr IntType 10)))
            (FalseExpr BoolType))
-          ((IntExpr IntType 1) (IntExpr IntType 2) (IntExpr IntType 3)))))) |}]
+          ((IntExpr IntType 1) (IntExpr IntType 2) (IntExpr IntType 3))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-19" =
   Ppp.ppp_ast
@@ -550,7 +571,8 @@ let%expect_test "simple-stmt-19" =
          (IteExpr
           (ArrayidxExpr BoolType (VarExpr (ArrayType BoolType 2) b)
            ((IntExpr IntType 800) (IntExpr IntType 777)))
-          BoolType (TrueExpr BoolType) (TrueExpr BoolType))))) |}]
+          BoolType (TrueExpr BoolType) (TrueExpr BoolType)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-20" =
   Ppp.ppp_ast
@@ -582,7 +604,8 @@ let%expect_test "simple-stmt-20" =
              ((IntExpr IntType 0) (IntExpr IntType 0)))
             ((IntExpr IntType 1000)))
            ((IntExpr IntType 0) (IntExpr IntType 10)))
-          == (IntExpr IntType 0))))) |}]
+          == (IntExpr IntType 0)))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-21" =
   Ppp.ppp_ast
@@ -598,7 +621,8 @@ let%expect_test "simple-stmt-21" =
            (BinopExpr IntType (VarExpr IntType x) *
             (AppExpr IntType bad_fac
              ((BinopExpr IntType (VarExpr IntType x) - (IntExpr IntType 1))))))))
-        (ShowCmd (AppExpr IntType bad_fac ((IntExpr IntType 10)))))) |}]
+        (ShowCmd (AppExpr IntType bad_fac ((IntExpr IntType 10))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-22" =
   Ppp.ppp_ast
@@ -616,7 +640,8 @@ let%expect_test "simple-stmt-22" =
             (BinopExpr IntType (VarExpr IntType x) *
              (AppExpr IntType fac
               ((BinopExpr IntType (VarExpr IntType x) - (IntExpr IntType 1)))))))))
-        (ShowCmd (AppExpr IntType fac ((IntExpr IntType 10)))))) |}]
+        (ShowCmd (AppExpr IntType fac ((IntExpr IntType 10))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-23" =
   Ppp.ppp_ast
@@ -634,7 +659,8 @@ let%expect_test "simple-stmt-23" =
         (Func (ArrowType FloatType (FloatType)) iden
          ((ArgBinding FloatType (VarArg FloatType y) FloatType)) FloatType
          ((ReturnStmt FloatType UnitType (VarExpr FloatType y))))
-        (ShowCmd (AppExpr FloatType iden ((FloatExpr FloatType 199)))))) |}]
+        (ShowCmd (AppExpr FloatType iden ((FloatExpr FloatType 199))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
 
 let%expect_test "simple-stmt-24" =
   Ppp.ppp_ast
@@ -644,4 +670,5 @@ let%expect_test "simple-stmt-24" =
       (Prog
        ((ShowCmd
          (BinopExpr IntType (IntExpr IntType 1) +
-          (BinopExpr IntType (IntExpr IntType 2) * (IntExpr IntType 3)))))) |}]
+          (BinopExpr IntType (IntExpr IntType 2) * (IntExpr IntType 3))))
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
