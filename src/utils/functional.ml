@@ -84,45 +84,34 @@ module State (S: MONOID) = struct
 end
 
 module Basic = struct
-  let curry f =
-    fun fst snd ->
-      f (fst, snd)
-  let uncurry f =
-    fun (fst, snd) ->
-    f fst snd
-  let ( <.> ) f g =
-    fun x -> f (g x)
-  let ( <$> ) f v =
-    f v
+  let curry f = fun fst snd -> f (fst, snd) [@@inline always]
+  let uncurry f = fun (fst, snd) -> f fst snd [@@inline always]
+  let ( <.> ) f g = fun x -> f (g x) [@@inline always]
+  let ( <$> ) f v = f v [@@inline always]
 end
 
 module Utils (M : MONAD) = struct
   open M
   include Basic
-  let fold_m
-      (xs : 'a list)
-      ~(f : 'b -> 'a -> 'b t)
-      ~(init : 'b) : 'b t =
+
+  let fold_m (xs : 'a list)
+      ~(f : 'b -> 'a -> 'b t) ~(init : 'b) : 'b t =
     let c = (fun x k z -> (f z x) >>= k) in
     let go = List.fold_right xs ~f:c ~init:return in
     go init
-  let map_m
-      (xs : 'a list)
-      ~(f : 'a -> 'b t)
+
+  let map_m (xs : 'a list) ~(f : 'a -> 'b t)
     : ('b list) t =
     let cons_f = (fun x ys ->
-        (* let x' = run (f x) in *)
         f x >>= fun x' ->
-        ys >>= fun ys' ->
-        (* let ys' = run ys in *)
-        return (x' :: ys')) in
+        ys >>= fun ys' -> return (x' :: ys')) in
     List.fold_right ~f:cons_f ~init:(return []) xs
-  let map_m_
-      (xs : 'a list)
-      ~(f : 'a -> 'b t)
+
+  let map_m_ (xs : 'a list) ~(f : 'a -> 'b t)
     : unit t =
     let c = (fun x k -> (f x) >>= fun _ -> k) in
     List.fold_right xs ~f:c ~init:(return ())
+
   let ( >> ) (m : 'a t) (k : 'b t) : 'b t =
     m >>= fun _ -> k
 end
