@@ -281,15 +281,10 @@ let rec type_binding = function
 
 (* val type_cmd: Cmd.t -> StateT (State.t -> (TA.cmd * State.t)) Or_error.t *)
 let rec type_cmd = function
-  | ReadimgC (_,fn, VarA(_,vn)) ->
-    modify (fun s -> Env.extend_img s vn)
-    >> return (TA.ReadimgC (fn, TA.VarA(Env.img_te, vn)))
-  | ReadvidC (l,_, VarA(_,_)) ->
+  | ReadimgC (_,fn, arg) -> unify_arg arg Env.img_te
+    >>= fun arg' -> return (TA.ReadimgC (fn, arg'))
+  | ReadvidC (l,_, _arg) ->
     cerr_msg ~pos:l ~t:"type" ~msg:"video currently unsupported"
-  | ReadimgC (l,_, ArraybindA _) ->
-    cerr_msg ~pos:l ~t:"type" ~msg:"cannot pattern match within 'read' command"
-  | ReadvidC (l,_, ArraybindA _) ->
-    cerr_msg ~pos:l ~t:"type" ~msg:"cannot pattern match within 'read' command"
   | WriteimgC (l,e,fn) -> type_expr e
     >>= expect_e l Env.img_te
     >>| fun e' -> TA.WriteimgC(e', fn)
