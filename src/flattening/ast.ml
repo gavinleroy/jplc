@@ -9,15 +9,15 @@
  * between modules. *)
 
 open Core
-open Ast_utils
+open Runtime
 
 type var_name =
-  | Varname of type_expr * string
+  | Varname of runtime_type * string
 
 (* Array/Tuple deconstructions must be expanded *)
 type param_binding =
   { var       : string
-  ; bind_type : type_expr }
+  ; bind_type : runtime_type }
 
 type loop_binding =
   { var   : var_name
@@ -27,17 +27,17 @@ type expr =
   | TrueE | FalseE
   | IntE of Int64.t
   | FloatE of float
-  | CrossE of type_expr * var_name list
-  | ArrayCE of type_expr * var_name list
-  | BinopE of type_expr * var_name * bin_op * var_name
-  | UnopE of type_expr * un_op * var_name
-  | CastE of type_expr * var_name
-  | CrossidxE of type_expr * var_name * int
-  | ArrayidxE of type_expr * var_name * var_name list
-  | IteE of type_expr * var_name * returning_block * returning_block
-  | ArrayLE of type_expr * loop_binding list * returning_block
-  | SumLE of type_expr * loop_binding list * returning_block
-  | AppE of type_expr * var_name * var_name list
+  | CrossE of runtime_type * var_name list
+  | ArrayCE of runtime_type * var_name list
+  | BinopE of runtime_type * var_name * Ast_utils.bin_op * var_name
+  | UnopE of runtime_type * Ast_utils.un_op * var_name
+  | CastE of runtime_type * var_name
+  | CrossidxE of runtime_type * var_name * int
+  | ArrayidxE of runtime_type * var_name * var_name list
+  | IteE of runtime_type * var_name * returning_block * returning_block
+  | ArrayLE of runtime_type * loop_binding list * returning_block
+  | SumLE of runtime_type * loop_binding list * returning_block
+  | AppE of runtime_type * var_name * var_name list
   (* previously seen as Stmts *)
   | LetE of var_name * expr
   | AssertE of var_name * string
@@ -55,6 +55,7 @@ type expr =
 and returning_block = expr list
 
 let sexp_of_binop o =
+  let open Ast_utils in
   Sexp.Atom (match o with
       | Lt -> "<"
       | Gt -> ">"
@@ -71,62 +72,63 @@ let sexp_of_binop o =
       | Minus -> "-")
 
 let sexp_of_unop o =
+  let open Ast_utils in
   Sexp.Atom (match o with
       | Bang -> "!" | Neg -> "-")
 
 let sexp_of_varname = function
-  | Varname(t,s) -> Sexp.(List [ sexp_of_type t; Atom s ])
+  | Varname(t,s) -> Sexp.(List [ sexp_of_rtype t; Atom s ])
 
 let rec sexp_of_expr = function
   | TrueE ->
-    Sexp.(List[Atom "TrueExpr"; sexp_of_type BoolT])
+    Sexp.(List[Atom "TrueExpr"; sexp_of_rtype BoolRT])
   | FalseE ->
-    Sexp.(List[Atom "FalseExpr"; sexp_of_type BoolT])
+    Sexp.(List[Atom "FalseExpr"; sexp_of_rtype BoolRT])
   | IntE i ->
-    Sexp.(List [ Atom "IntExpr" ; sexp_of_type IntT ; Int64.sexp_of_t i ])
+    Sexp.(List [ Atom "IntExpr" ; sexp_of_rtype IntRT ; Int64.sexp_of_t i ])
   | FloatE f ->
-    Sexp.(List [ Atom "FloatExpr" ; sexp_of_type FloatT ; Float.sexp_of_t f ])
+    Sexp.(List [ Atom "FloatExpr" ; sexp_of_rtype FloatRT ; Float.sexp_of_t f ])
   | CrossE (t,es) ->
-    Sexp.(List [ Atom "CrossExpr"; sexp_of_type t; List.sexp_of_t sexp_of_varname es ])
+    Sexp.(List [ Atom "CrossExpr"; sexp_of_rtype t; List.sexp_of_t sexp_of_varname es ])
   | ArrayCE (t,es) ->
-    Sexp.(List [ Atom "ArrayConsExpr" ; sexp_of_type t ; List.sexp_of_t sexp_of_varname es ])
+    Sexp.(List [ Atom "ArrayConsExpr" ; sexp_of_rtype t ; List.sexp_of_t sexp_of_varname es ])
   | BinopE (t,lhs,op,rhs) ->
-    Sexp.(List [ Atom "BinopExpr"; sexp_of_type t
+    Sexp.(List [ Atom "BinopExpr"; sexp_of_rtype t
                ; sexp_of_varname lhs ; sexp_of_binop op ; sexp_of_varname rhs ])
   | UnopE (t,op,e') ->
-    Sexp.(List [ Atom "UnopExpr"; sexp_of_type t; sexp_of_unop op; sexp_of_varname e' ])
+    Sexp.(List [ Atom "UnopExpr"; sexp_of_rtype t; sexp_of_unop op; sexp_of_varname e' ])
   | CastE(t,e') ->
-    Sexp.(List [ Atom "CastExpr"; sexp_of_type t; sexp_of_varname e' ])
+    Sexp.(List [ Atom "CastExpr"; sexp_of_rtype t; sexp_of_varname e' ])
   | CrossidxE (t,e',i) ->
-    Sexp.(List[Atom "CrossidxExpr"; sexp_of_type t; sexp_of_varname e'; Int.sexp_of_t i])
+    Sexp.(List[Atom "CrossidxExpr"; sexp_of_rtype t; sexp_of_varname e'; Int.sexp_of_t i])
   | ArrayidxE (t,base,idxs) ->
-    Sexp.(List[Atom "ArrayidxExpr"; sexp_of_type t; sexp_of_varname base
+    Sexp.(List[Atom "ArrayidxExpr"; sexp_of_rtype t; sexp_of_varname base
               ; List.sexp_of_t sexp_of_varname idxs])
   | IteE (t,cnd,ie,ee) ->
     Sexp.(List[Atom "IteExpr"
-              ; sexp_of_type t ; sexp_of_varname cnd
+              ; sexp_of_rtype t ; sexp_of_varname cnd
               ; sexp_of_returning_block ie
               ; sexp_of_returning_block ee])
   | ArrayLE (t,vnes,bdy) ->
     Sexp.(List[Atom "ArrayExpr"
-              ; sexp_of_type t
+              ; sexp_of_rtype t
               ; List.sexp_of_t sexp_of_loop_binding vnes
               ; sexp_of_returning_block bdy])
   | SumLE (t,vnes,bdy) ->
     Sexp.(List[Atom "SumExpr"
-              ; sexp_of_type t
+              ; sexp_of_rtype t
               ; List.sexp_of_t sexp_of_loop_binding vnes
               ; sexp_of_returning_block bdy])
   | AppE (t,vn,es) ->
     Sexp.(List[Atom "AppExpr"
-              ; sexp_of_type t
+              ; sexp_of_rtype t
               ; sexp_of_varname vn
               ; List.sexp_of_t sexp_of_varname es])
   (* STMT *)
   | LetE (lv,e) ->
-    Sexp.(List [ Atom "LetExpr"; sexp_of_type Unit; sexp_of_varname lv; sexp_of_expr e ])
+    Sexp.(List [ Atom "LetExpr"; sexp_of_rtype UnitRT; sexp_of_varname lv; sexp_of_expr e ])
   | AssertE (e,str) ->
-    Sexp.(List [ Atom "AssertExpr"; sexp_of_type Unit; sexp_of_varname e; Atom str ])
+    Sexp.(List [ Atom "AssertExpr"; sexp_of_rtype UnitRT; sexp_of_varname e; Atom str ])
   | ReturnE e ->
     Sexp.(List[Atom "ReturnExpr"; sexp_of_varname e ])
   (* CMD *)
@@ -148,7 +150,7 @@ and sexp_of_returning_block es =
 
 (* Array/Tuple deconstructions must be expanded *)
 and sexp_of_param_binding { var; bind_type; } =
-  Sexp.(List [ Atom var; sexp_of_type bind_type ])
+  Sexp.(List [ Atom var; sexp_of_rtype bind_type ])
 
 and sexp_of_loop_binding { var; bound; } =
   Sexp.(List [ sexp_of_varname var; sexp_of_varname bound ])
@@ -168,7 +170,7 @@ module Fn = struct
     let sexp_of_t t : Sexp.t =
       let Varname (fn_type, name) = t.name in
       List [ Atom "Func"
-           ; sexp_of_type fn_type
+           ; sexp_of_rtype fn_type
            ; Atom name
            ; List.sexp_of_t
                sexp_of_param_binding t.params
@@ -183,3 +185,15 @@ type prog = Fn.t list
 let sexp_of_prog (p : prog) =
   Sexp.(List [ Atom "Prog"
              ; List.sexp_of_t Fn.sexp_of_t p ])
+
+let get_expr_type = function
+  | TrueE | FalseE -> BoolRT
+  | IntE _ -> IntRT
+  | FloatE _ -> FloatRT
+  (* other exprs return t *)
+  | CrossE(t,_) | ArrayCE(t,_) | BinopE(t,_,_,_) | UnopE(t,_,_)
+  | CastE(t,_) | CrossidxE(t,_,_) | ArrayidxE(t,_,_) | IteE(t,_,_,_)
+  | ArrayLE(t,_,_) | SumLE(t,_,_) | AppE(t,_,_) -> t
+  (* Stmt and Cmd don't return type *)
+  | LetE _ | AssertE _ | ReturnE _ | ReadimgE _ | ReadvidE _
+  | WriteimgE _ | WritevidE _ | PrintE _ | ShowE _ -> UnitRT

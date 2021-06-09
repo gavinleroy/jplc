@@ -5,7 +5,6 @@
 
 open Core
 open Ast
-open Ast_utils
 
 exception Impossible of string
 
@@ -39,7 +38,7 @@ let add_alias e lhs rhs =
   { e with env = env' }
 
 let add_symbol e vn =
-  let vn = Varname.to_string vn in
+  let vn = Ast_utils.Varname.to_string vn in
   let m = Map.update e.seen_syms vn
       (* default return value is 0 for NONE case *)
       ~f:(fun vo -> (Option.value ~default:(-1) vo) + 1) in
@@ -54,7 +53,7 @@ let add_symbol e vn =
 let lookup e vn =
   List.find_exn (List.join e.env)
     ~f:(fun tup ->
-        String.( = ) (fst tup) (Varname.to_string vn))
+        String.( = ) (fst tup) (Ast_utils.Varname.to_string vn))
   |> snd
 
 let get_unique_var e =
@@ -70,7 +69,7 @@ let clear_exprs (e : t) : (expr list * t) =
   let exprs = List.map e.exprs
       ~f:(fun (so, e) ->
           match so with
-          | Some s -> LetE(Varname (IntT, s), e)
+          | Some s -> LetE(Varname (get_expr_type e, s), e)
           | None -> e) in
   exprs, { e with exprs = [] }
 

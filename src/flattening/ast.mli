@@ -4,15 +4,16 @@
 (************************)
 
 open Core
+open Runtime
 open Ast_utils
 
 type var_name =
-  | Varname of type_expr * string
+  | Varname of runtime_type * string
 
 (* Array/Tuple deconstructions must be expanded *)
 type param_binding =
   { var       : string
-  ; bind_type : type_expr }
+  ; bind_type : runtime_type }
 
 type loop_binding =
   { var   : var_name
@@ -22,17 +23,17 @@ type expr =
   | TrueE | FalseE
   | IntE of Int64.t
   | FloatE of float
-  | CrossE of type_expr * var_name list
-  | ArrayCE of type_expr * var_name list
-  | BinopE of type_expr * var_name * bin_op * var_name
-  | UnopE of type_expr * un_op * var_name
-  | CastE of type_expr * var_name
-  | CrossidxE of type_expr * var_name * int
-  | ArrayidxE of type_expr * var_name * var_name list
-  | IteE of type_expr * var_name * returning_block * returning_block
-  | ArrayLE of type_expr * loop_binding list * returning_block
-  | SumLE of type_expr * loop_binding list * returning_block
-  | AppE of type_expr * var_name * var_name list
+  | CrossE of runtime_type * var_name list
+  | ArrayCE of runtime_type * var_name list
+  | BinopE of runtime_type * var_name * bin_op * var_name
+  | UnopE of runtime_type * un_op * var_name
+  | CastE of runtime_type * var_name
+  | CrossidxE of runtime_type * var_name * int
+  | ArrayidxE of runtime_type * var_name * var_name list
+  | IteE of runtime_type * var_name * returning_block * returning_block
+  | ArrayLE of runtime_type * loop_binding list * returning_block
+  | SumLE of runtime_type * loop_binding list * returning_block
+  | AppE of runtime_type * var_name * var_name list
   (* previously seen as Stmts *)
   | LetE of var_name * expr
   | AssertE of var_name * string
@@ -71,3 +72,5 @@ end
 type prog = Fn.t list
 
 val sexp_of_prog: prog -> Sexp.t
+
+val get_expr_type: expr -> runtime_type

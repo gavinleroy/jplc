@@ -5,7 +5,6 @@
 
 open Core
 
-open Ast_utils
 open Ast
 
 exception Todo
@@ -44,28 +43,41 @@ let extend_env_expr e =
   >>= fun name -> modify (new_expr_mod ~name e)
   >> return name
 
+let rec rt_of_t = function
+  | Ast_utils.Unit -> Runtime.UnitRT
+  | Ast_utils.BoolT -> Runtime.BoolRT
+  | Ast_utils.IntT -> Runtime.IntRT
+  | Ast_utils.FloatT -> Runtime.FloatRT
+  | Ast_utils.ArrayT(b,r) -> Runtime.ArrayRT (rt_of_t b, Int64.to_int_exn r)
+  | Ast_utils.CrossT ls -> Runtime.CrossRT (List.map ~f:rt_of_t ls)
+  | Ast_utils.ArrowT(r,ps) -> Runtime.ArrowRT (rt_of_t r, List.map ~f:rt_of_t ps)
+
+(***********************)
+(* FLATTENING FUNCTION *)
+(***********************)
+
 let rec flatten_expr = function
   | TA.TrueE -> raise Todo
   | TA.FalseE -> raise Todo
   | TA.IntE i -> extend_env_expr (IntE i)
-    >>= fun name -> return (Varname(IntT, name))
+    >>= fun name -> return (Varname(IntRT, name))
   | TA.FloatE f -> extend_env_expr (FloatE f)
-    >>= fun name -> return (Varname(FloatT, name))
+    >>= fun name -> return (Varname(FloatRT, name))
   | TA.VarE(t, vn) -> get >>= fun env ->
-    return <.> (fun s -> Varname (t, s)) <$> Env.lookup env vn
+    return <.> (fun s -> Varname (rt_of_t t, s)) <$> Env.lookup env vn
   | TA.CrossE(t, es) -> map_m es ~f:flatten_expr
-    >>= fun exprs' -> extend_env_expr (CrossE (t, exprs'))
-    >>= fun name -> return (Varname (t, name))
+    >>= fun exprs' -> extend_env_expr (CrossE (rt_of_t t, exprs'))
+    >>= fun name -> return (Varname (rt_of_t t, name))
   | TA.ArrayCE(t,es) -> map_m es ~f:flatten_expr
-    >>= fun exprs' -> extend_env_expr (ArrayCE (t, exprs'))
-    >>= fun name -> return (Varname (t, name))
+    >>= fun exprs' -> extend_env_expr (ArrayCE (rt_of_t t, exprs'))
+    >>= fun name -> return (Varname (rt_of_t t, name))
   | TA.BinopE(t,lhs,op,rhs) -> flatten_expr lhs
     >>= fun lhsvn -> flatten_expr rhs
-    >>= fun rhsvn -> extend_env_expr (BinopE (t, lhsvn, op, rhsvn))
-    >>= fun name -> return (Varname (t,name))
+    >>= fun rhsvn -> extend_env_expr (BinopE (rt_of_t t, lhsvn, op, rhsvn))
+    >>= fun name -> return (Varname (rt_of_t t,name))
   | TA.UnopE(t,op,expr) -> flatten_expr expr
-    >>= fun vn -> extend_env_expr (UnopE (t, op, vn))
-    >>= fun name -> return (Varname (t, name))
+    >>= fun vn -> extend_env_expr (UnopE (rt_of_t t, op, vn))
+    >>= fun name -> return (Varname (rt_of_t t, name))
   | TA.CastE(_t,_e,_ct) -> raise Todo
   | TA.CrossidxE(_t,_e,_i) -> raise Todo
   | TA.ArrayidxE(_t,_e,_es) -> raise Todo
@@ -75,9 +87,9 @@ let rec flatten_expr = function
   | TA.AppE(_t,_vn,_es) -> raise Todo
 
 let flatten_arg = function
-  | TA.VarA(_t,vn) -> `Single (Varname.to_string vn)
+  | TA.VarA(_t,vn) -> `Single (Ast_utils.Varname.to_string vn)
   | TA.ArraybindA(_te,vn,vns) ->
-    let f = fun vn -> (Varname.to_string vn) in
+    let f = fun vn -> (Ast_utils.Varname.to_string vn) in
     let dims = List.map vns ~f in
     let base = f vn in `Array (base, dims)
 
@@ -116,11 +128,14 @@ let flatten_stmt = function
     put env >> return body
 
 let rec flatten_cmd = function
-  (* these should be similar *)
-  | TA.ReadimgC(_fn, _arg) -> raise Todo
+  | TA.ReadimgC(_fn, arg) -> (match flatten_arg arg with
+      | `Single _vn -> raise Todo
+      | `Array(_base, _dims) -> raise Todo )
   | TA.ReadvidC(_fn, _arg) -> raise Todo
-  (* these should be similar *)
-  | TA.WriteimgC(_expr, _fn) -> raise Todo
+  | TA.WriteimgC(expr, fn) -> flatten_expr expr
+    >>= fun vn ->
+    modify (new_expr_mod (WriteimgE (vn, Ast_utils.Filename.to_string fn)))
+    >> return []
   | TA.WritevidC(_expr, _fn) -> raise Todo
 
   | TA.PrintC str -> modify (new_expr_mod (PrintE str))
@@ -129,30 +144,24 @@ let rec flatten_cmd = function
     >>= fun vn -> modify (new_expr_mod (ShowE vn))
     >> return []
   | TA.StmtC s -> flatten_stmt s
-  (* TODO FIXME clean up the comments *)
   | TA.TimeC c -> gen_new_var ()
-    (* NOTE 1. put in a get_time command *)
     >>= fun time_var1 ->
     modify (get_time_call_expr () |> new_expr_mod ~name:time_var1)
-    (* 2. flatten the c which will produce this return value *)
     >> flatten_cmd c
     >>= fun ret_val -> gen_new_var ()
-    (* 3. put in a get_time command *)
     >>= fun time_var2 ->
     modify (get_time_call_expr () |> new_expr_mod ~name:time_var2)
     >> gen_new_var() >>= fun time_var3 ->
-    (*  4. subtract the two times (second - first) *)
     let rt = Runtime.get_time_info.return_type in
     modify (new_expr_mod ~name:time_var3
               (BinopE (rt, Varname (rt, time_var1), Minus, Varname (rt, time_var2))))
-    (* 5. print "Time: ..." *)
     >> modify (new_expr_mod (PrintE time_string))
     >> modify (new_expr_mod (ShowE (Varname (rt, time_var3))))
     >> return ret_val
   | TA.FnC(_te, _vn, _bs, _te', _ses) -> raise Todo
 
 let make_main (rb : expr list) : Fn.t =
-  { name = Varname (ArrowT (IntT, []), "main")
+  { name = Varname (ArrowRT (IntRT, []), "main")
   ; params = []
   ; body = rb }
 
