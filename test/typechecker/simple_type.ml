@@ -5,6 +5,23 @@
 
 open Core
 
+let%expect_test "simple-cmd-0" =
+  Ppp.ppp_ast
+    "read image \"someimg.png\" to img[H, W];
+     write image img to \"newimg.png\";";
+  [%expect
+    {|
+      (Prog
+       ((ReadImageCmd someimg.png
+         (ArraybindArg
+          (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img
+          (H W)))
+        (WriteImageCmd
+         (VarExpr
+          (ArrayType (CrossType (FloatType FloatType FloatType FloatType)) 2) img)
+         newimg.png)
+        (StmtCmd UnitType (ReturnStmt IntType UnitType (IntExpr IntType 0))))) |}]
+
 let%expect_test "simple-cmd-1" =
   Ppp.ppp_ast
     "read image \"someimg.png\" to img;";
