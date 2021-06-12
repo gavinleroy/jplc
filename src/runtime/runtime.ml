@@ -6,7 +6,8 @@
 open Core
 
 type runtime_type =
-  | UnitRT | BoolRT
+  | UnitRT
+  | BoolRT
   | IntRT
   | FloatRT
   | StringRT
