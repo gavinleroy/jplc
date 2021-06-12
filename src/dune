@@ -11,5 +11,21 @@
    ;; ocaml libs
    core ANSITerminal
    ;; my libs
-   utils parsing typing flattening)
+   utils
+
+   ;; Parsing library to create the initial AST
+   parsing
+
+   ;; Typing library to transform a parse AST to a type AST
+   typing
+
+   ;; Optimizing librar to come XXX
+   ;; this will most likely be easier at some other level of IR (LLVM or custom)
+
+   ;; Flatten the type AST to a SSA module of all functions (top level included in `main`)
+   flattening
+
+   ;; Code Generation library to take a flattened AST and transorm this into LLVM IR
+   ;; XXX additional optimizations should be done here (e.g. vectorization, ...)
+   codegen)
  (preprocess (pps ppx_jane)))

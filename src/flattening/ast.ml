@@ -27,6 +27,7 @@ type expr =
   | TrueE | FalseE
   | IntE of Int64.t
   | FloatE of float
+  | StringE of string
   | CrossE of runtime_type * var_name list
   | ArrayCE of runtime_type * var_name list
   | BinopE of runtime_type * var_name * Ast_utils.bin_op * var_name
@@ -88,6 +89,7 @@ let rec sexp_of_expr = function
     Sexp.(List [ Atom "IntExpr" ; sexp_of_rtype IntRT ; Int64.sexp_of_t i ])
   | FloatE f ->
     Sexp.(List [ Atom "FloatExpr" ; sexp_of_rtype FloatRT ; Float.sexp_of_t f ])
+  | StringE s -> Sexp.(List [ Atom "StringExpr"; Atom s])
   | CrossE (t,es) ->
     Sexp.(List [ Atom "CrossExpr"; sexp_of_rtype t; List.sexp_of_t sexp_of_varname es ])
   | ArrayCE (t,es) ->
@@ -190,6 +192,7 @@ let get_expr_type = function
   | TrueE | FalseE -> BoolRT
   | IntE _ -> IntRT
   | FloatE _ -> FloatRT
+  | StringE _ -> StringRT
   (* other exprs return t *)
   | CrossE(t,_) | ArrayCE(t,_) | BinopE(t,_,_,_) | UnopE(t,_,_)
   | CastE(t,_) | CrossidxE(t,_,_) | ArrayidxE(t,_,_) | IteE(t,_,_,_)

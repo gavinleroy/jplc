@@ -7,8 +7,6 @@ open Core
 
 open Ast
 
-exception Todo
-
 (* give a shortcut for the Parsing.Ast module *)
 module TA = Typing.Ast
 
@@ -33,13 +31,17 @@ let get_time_call_expr () =
   let info = Runtime.get_time_info in
   AppE (info.return_type, Varname (info.arrow_type, info.name), [])
 
+let get_read_img_expr str_vn =
+  let info = Runtime.read_img_info in
+  AppE (info.return_type, Varname (info.arrow_type, info.name)
+       , [Varname(StringRT, str_vn)])
+
 let new_expr_mod ?(name = "") e =
   if String.is_empty name then
     fun s -> Env.add_new_expr s None e
   else fun s -> Env.add_new_expr s (Some name) e
 
-let extend_env_expr e =
-  gen_new_var ()
+let extend_env_expr e = gen_new_var ()
   >>= fun name -> modify (new_expr_mod ~name e)
   >> return name
 
@@ -57,8 +59,8 @@ let rec rt_of_t = function
 (***********************)
 
 let rec flatten_expr = function
-  | TA.TrueE -> raise Todo
-  | TA.FalseE -> raise Todo
+  | TA.TrueE -> assert false
+  | TA.FalseE -> assert false
   | TA.IntE i -> extend_env_expr (IntE i)
     >>= fun name -> return (Varname(IntRT, name))
   | TA.FloatE f -> extend_env_expr (FloatE f)
@@ -78,13 +80,32 @@ let rec flatten_expr = function
   | TA.UnopE(t,op,expr) -> flatten_expr expr
     >>= fun vn -> extend_env_expr (UnopE (rt_of_t t, op, vn))
     >>= fun name -> return (Varname (rt_of_t t, name))
-  | TA.CastE(_t,_e,_ct) -> raise Todo
-  | TA.CrossidxE(_t,_e,_i) -> raise Todo
-  | TA.ArrayidxE(_t,_e,_es) -> raise Todo
-  | TA.IteE(_t,_cnd,_ie,_ee) -> raise Todo
-  | TA.ArrayLE(_t,_bs,_e) -> raise Todo
-  | TA.SumLE(_t,_bs,_e) -> raise Todo
-  | TA.AppE(_t,_vn,_es) -> raise Todo
+  | TA.CastE(_t,expr,ct) -> flatten_expr expr
+    >>= fun vn -> extend_env_expr (CastE (rt_of_t ct, vn))
+    >>= fun name -> return (Varname (rt_of_t ct, name))
+  | TA.CrossidxE(t,expr,i) -> flatten_expr expr
+    >>= fun vn -> extend_env_expr (CrossidxE (rt_of_t t, vn, i))
+    >>= fun name -> return (Varname (rt_of_t t, name))
+  | TA.ArrayidxE(t,expr,es) -> flatten_expr expr
+    >>= fun vn -> map_m es ~f:flatten_expr
+    >>= fun idxs_vn -> extend_env_expr (ArrayidxE (rt_of_t t, vn, idxs_vn))
+    >>= fun name -> return (Varname (rt_of_t t, name))
+  (* TODO how to expand ITEs in such a way that they will work? *)
+  | TA.IteE(_t,_cnd,_ie,_ee) -> assert false
+  (**************************************************************)
+  | TA.ArrayLE(_t,_bs,_expr) -> modify Env.open_scope
+    >> assert false
+  (* >> flatten_loop_bind bs
+   * >>= fun bs' -> flatten_expr expr
+   * >>= fun vn -> modify Env.close_scope
+   * >> extend_env_expr (ArrayLE (rt_of_t t, bs', vn))
+   * >>= fun name -> return (Varname (rt_of_t t, name)) *)
+  | TA.SumLE(_t,_bs,_e) ->
+    assert false
+  | TA.AppE(_t,_vn,_es) -> assert false
+(* helper for flattening the bindings of a loop expr *)
+and _flatten_loop_bind _bs =
+  []
 
 let flatten_arg = function
   | TA.VarA(_t,vn) -> `Single (Ast_utils.Varname.to_string vn)
@@ -108,12 +129,12 @@ let rec unify_lhs_rhs flv expr =
     >>= fun (Varname (_expr_t, expr_vn)) ->
     modify (fun s -> Env.add_alias s vn expr_vn)
     >> return []
-  | `Array (_base, _dims) -> raise Todo
+  | `Array (_base, _dims) -> assert false
   | `Cross lvs ->
     map_m_ ~f:(fun (lv, expr) -> unify_lhs_rhs lv expr)
     <$> (match expr with
         | TA.CrossE(_te,exprs) -> List.zip_exn lvs exprs
-        | _ -> raise Todo)
+        | _ -> assert false)
     >> return []
 
 let flatten_stmt = function
@@ -128,16 +149,20 @@ let flatten_stmt = function
     put env >> return body
 
 let rec flatten_cmd = function
-  | TA.ReadimgC(_fn, arg) -> (match flatten_arg arg with
-      | `Single _vn -> raise Todo
-      | `Array(_base, _dims) -> raise Todo )
-  | TA.ReadvidC(_fn, _arg) -> raise Todo
+  | TA.ReadimgC(fn, arg) -> (match flatten_arg arg with
+      | `Single vn ->
+        extend_env_expr (get_read_img_expr (Ast_utils.Filename.to_string fn))
+        >>= fun name -> modify (fun s -> Env.add_alias s vn name)
+        >> return []
+      | `Array(_base, _dims) -> assert false )
   | TA.WriteimgC(expr, fn) -> flatten_expr expr
     >>= fun vn ->
     modify (new_expr_mod (WriteimgE (vn, Ast_utils.Filename.to_string fn)))
     >> return []
-  | TA.WritevidC(_expr, _fn) -> raise Todo
-
+  (* TODO not supported at the type level yet *)
+  | TA.ReadvidC(_fn, _arg) -> assert false
+  | TA.WritevidC(_expr, _fn) -> assert false
+  (********************************************)
   | TA.PrintC str -> modify (new_expr_mod (PrintE str))
     >> return []
   | TA.ShowC expr -> flatten_expr expr
@@ -158,7 +183,7 @@ let rec flatten_cmd = function
     >> modify (new_expr_mod (PrintE time_string))
     >> modify (new_expr_mod (ShowE (Varname (rt, time_var3))))
     >> return ret_val
-  | TA.FnC(_te, _vn, _bs, _te', _ses) -> raise Todo
+  | TA.FnC(_te, _vn, _bs, _te', _ses) -> assert false
 
 let make_main (rb : expr list) : Fn.t =
   { name = Varname (ArrowRT (IntRT, []), "main")

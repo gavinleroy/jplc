@@ -7,8 +7,6 @@ open Ast_utils
 
 type t
 
-exception Impossible of string
-
 val mempty: unit -> t
 
 (* WARNING exn *)
@@ -18,7 +16,7 @@ val add_alias: t -> string -> string -> t
 
 (* add a new symbol to the env
  * returning: the new symbol string, the updated env *)
-val add_symbol: t -> Varname.t -> string * t
+(* val add_symbol: t -> Varname.t -> string * t *)
 
 val lookup: t -> Varname.t -> string
 

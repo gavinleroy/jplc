@@ -6,8 +6,6 @@
 open Core
 open Ast
 
-exception Impossible of string
-
 type t =
   { fns       : (Fn.t, Fn.comparator_witness) Set.t
   (* NOTE if the string is NONE then
@@ -15,39 +13,30 @@ type t =
    * the body (this would be an assert/return)
    * Otherwise, this is a let binding and
    * we expand it out *)
-  ; exprs     : (string option * expr) list
-  ; seen_syms : (string, int, String.comparator_witness) Map.t
+  ; exprs     : (string option * expr) list list
   ; env       : (string * string) list list
   ; new_count : int }
 
 (* TODO account for the provided runtime env *)
 let mempty () =
-  { seen_syms = Map.empty (module String)
-  ; env       = [[]]
+  { env       = [[]]
   ; new_count = 0
   ; fns       = Set.empty(module Fn)
-  ; exprs     = [] }
+  ; exprs     = [[]] }
 
 let mappend _v1 _v2 =
-  raise (Impossible "mappend for flattened Env unimplemented")
+  assert false
+
+let append_to_hd v xs =
+  match xs with
+  | (x) :: xs' -> (v :: x) :: xs'
+  | _ -> [[v]]
 
 let add_alias e lhs rhs =
   let env' = match e.env with
     | scope :: ss -> ((lhs, rhs) :: scope) :: ss
     | [] -> [[(lhs, rhs)]] in
   { e with env = env' }
-
-let add_symbol e vn =
-  let vn = Ast_utils.Varname.to_string vn in
-  let m = Map.update e.seen_syms vn
-      (* default return value is 0 for NONE case *)
-      ~f:(fun vo -> (Option.value ~default:(-1) vo) + 1) in
-  let c = Map.find_exn m vn in
-  let newstr = Printf.sprintf "%s.%d" vn c in
-  let env' = match e.env with
-    | scope :: ss -> ((vn, newstr) :: scope) :: ss
-    | [] -> [[(vn, newstr)]] in
-  newstr, { e with seen_syms = m; env = env' }
 
 (* NOTE should never fail if program is typechecked  *)
 let lookup e vn =
@@ -62,24 +51,29 @@ let get_unique_var e =
 
 let add_new_expr
     (e : t) (name : string option) (expr : expr) : t =
-  let exprs' = (name, expr) :: e.exprs in
+  let exprs' = append_to_hd (name, expr)  e.exprs in
   { e with exprs = exprs' }
 
 let clear_exprs (e : t) : (expr list * t) =
-  let exprs = List.map e.exprs
-      ~f:(fun (so, e) ->
-          match so with
-          | Some s -> LetE(Varname (get_expr_type e, s), e)
-          | None -> e) in
-  exprs, { e with exprs = [] }
+  let exprs = List.hd_exn e.exprs
+              |> List.map
+                ~f:(fun (so, e) ->
+                    match so with
+                    | Some s -> LetE(Varname (get_expr_type e, s), e)
+                    | None -> e) in
+  exprs, { e with exprs = List.tl_exn e.exprs }
 
 let open_scope v =
   let e = v.env in
-  { v with env = [] :: e }
+  let ex = v.exprs in
+  { v with env = [] :: e
+         ; exprs = ex }
 
 let close_scope v =
   let e = v.env in
-  try { v with env = List.tl_exn e } with
+  let ex = v.exprs in
+  try { v with env = List.tl_exn e
+             ; exprs = List.tl_exn ex } with
   | _ -> v
 
 let get_fns e =

@@ -40,10 +40,15 @@ let command =
     Command.Let_syntax.(
       let%map_open
         filename = anon (maybe_with_default "-" ("filename" %: jpl_file))
-      and skip_typecheck = flag "-p" no_arg ~doc:" dump parsed AST and skip typechecking"
-      and skip_flatten = flag "-t" no_arg ~doc:" dump typed AST and skip flattening"
-      and skip_codegen = flag "-f" no_arg ~doc:" dump flattened AST and skip codegen"
-      (* and skip_assembler = flag "-s" no_arg ~doc:" dump assembly code" *)
+      (***************************************************************************
+       * NOTE emission of parsed/typed/flattened AST currently is in Sexp format *
+       ***************************************************************************
+       * TODO add an option to dump the code back in a similar JPL foramt        *
+       ***************************************************************************)
+      and skip_typecheck = flag "--emit-parse" no_arg ~doc:" emit the parsed AST and skip typechecking"
+      and skip_flatten = flag "--emit-typed" no_arg ~doc:" emit the typed AST and skip flattening"
+      and skip_codegen = flag "--emit-flat" no_arg ~doc:" emit the flattened AST and skip codegen"
+      and skip_assembler = flag "--emit-llvm" no_arg ~doc:" dump the generated LLVM IR"
       in
       fun () ->
         In_channel.with_file filename ~f:(fun file_ic ->
@@ -52,6 +57,7 @@ let command =
               ~skip_typecheck
               ~skip_flatten
               ~skip_codegen
+              ~skip_assembler
               lexbuf))
 
 let () =

@@ -23,6 +23,7 @@ type expr =
   | TrueE | FalseE
   | IntE of Int64.t
   | FloatE of float
+  | StringE of string
   | CrossE of runtime_type * var_name list
   | ArrayCE of runtime_type * var_name list
   | BinopE of runtime_type * var_name * bin_op * var_name
