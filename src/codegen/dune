@@ -1,0 +1,4 @@
+(library
+ (name codegen)
+ (libraries core llvm utils runtime flattening)
+ (preprocess (pps ppx_jane)))
