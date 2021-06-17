@@ -5,7 +5,6 @@
 
 open Core
 open Runtime
-open Ast_utils
 
 type var_name =
   | Varname of runtime_type * string
@@ -26,8 +25,8 @@ type expr =
   | StringE of string
   | CrossE of runtime_type * var_name list
   | ArrayCE of runtime_type * var_name list
-  | BinopE of runtime_type * var_name * bin_op * var_name
-  | UnopE of runtime_type * un_op * var_name
+  | BinopE of runtime_type * var_name * Ast_utils.bin_op * var_name
+  | UnopE of runtime_type * Ast_utils.un_op * var_name
   | CastE of runtime_type * var_name
   | CrossidxE of runtime_type * var_name * int
   | ArrayidxE of runtime_type * var_name * var_name list
@@ -71,6 +70,8 @@ module Fn : sig
 end
 
 type prog = Fn.t list
+
+val sexp_of_expr: expr -> Sexp.t
 
 val sexp_of_prog: prog -> Sexp.t
 

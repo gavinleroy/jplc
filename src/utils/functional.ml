@@ -64,6 +64,9 @@ module StateT (S: MONOID) (M: MONAD) = struct
       M.return ((), s))
   let modify f = StateT (fun s ->
       M.return ((), f s))
+  let modify_ f = StateT (fun s ->
+      f s; (* NOTE to use this the `state` is mutable *)
+      M.return ((), s))
   let lift m = StateT (fun s -> (* XXX monad transformer class *)
       M.bind m ~f:(fun a ->
           M.return (a, s)))
