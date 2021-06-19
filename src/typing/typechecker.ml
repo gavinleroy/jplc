@@ -172,18 +172,17 @@ let rec type_expr (e : expr) : TA.expr ErrorStateT.t =
         Option.value ort ~default:(TA.extract_expr_type rhs')
       ,lhs',op, rhs') in
     (match op with
-     | Lt | Gt | Lte | Gte | Cmp | Neq ->
+     | `Lt | `Gt | `Lte | `Gte | `Cmp | `Neq ->
        type_boolop [IntT; FloatT] (Some BoolT)
-     | Mul | Div | Mod | Plus | Minus ->
-       type_boolop [IntT; FloatT] None
-     | Or | And -> type_boolop [BoolT] None)
+     | `Mul | `Div | `Mod | `Plus | `Minus ->
+       type_boolop [IntT; FloatT] None)
   | UnopE(l,op,e) ->
     let type_unop = fun ts -> type_expr e
       >>= expect_or_e l ts
       >>| fun e' -> TA.UnopE(TA.extract_expr_type e', op, e') in
     (match op with
-     | Bang -> type_unop [BoolT]
-     | Neg -> type_unop [IntT; FloatT])
+     | `Bang -> type_unop [BoolT]
+     | `Neg -> type_unop [IntT; FloatT])
   | CastE(l,e,t) ->
     type_expr e >>= fun e' ->
     let et = TA.extract_expr_type e' in
@@ -296,26 +295,36 @@ let rec type_cmd = function
   | TimeC (_,c) -> type_cmd c
     >>| fun c' -> TA.TimeC c'
   | FnC (l,vn,bs,te,ss) ->
-    let get_retstmt_type = fun stmts ->
-      match (List.find stmts ~f:(fun s ->
-          match s with | TA.ReturnS _ -> true | _ -> false)) with
-      | Some (TA.ReturnS (rt,_)) -> return rt
-      | _ -> cerr_msg ~pos:l ~t:"type" ~msg:"functions must return a value" in
     get >>= fun env -> map_m bs ~f:type_binding
     >>= fun bs' ->
     let fntype = ArrowT(te, List.map bs' ~f:TA.extract_binding_type) in
     modify (fun s -> Env.extend s vn fntype)
     >> map_m ss ~f:type_stmt
-    >>= fun ss' -> get_retstmt_type ss'
+    >>= fun ss' -> get_retstmt_type l ss'
     >>= fun rt -> expect l ident te rt
     >> put env >> modify (fun s -> Env.extend s vn fntype)
     >> return (TA.FnC (fntype, vn, bs', te, ss'))
   | StmtC (_,s) -> type_stmt s
     >>| fun s' -> TA.StmtC s'
+(* given a list of statements find the one that is a RetStmt and return its type *)
+and get_retstmt_type l = fun stmts ->
+  match (List.find stmts ~f:(fun s ->
+      match s with | TA.ReturnS _ -> true | _ -> false)) with
+  | Some (TA.ReturnS (rt,_)) -> return rt
+  | _ -> cerr_msg ~pos:l ~t:"type" ~msg:"functions must return a value"
+
+let get_retstmt_type_c l = fun cmds ->
+  match (List.find cmds ~f:(fun s ->
+      match s with | (TA.StmtC TA.ReturnS _) -> true | _ -> false)) with
+  | Some (TA.StmtC TA.ReturnS (rt,_)) -> return rt
+  | _ -> cerr_msg ~pos:l ~t:"type" ~msg:"functions must return a value"
 
 (* val type_prog: Parsing.Ast.prog -> Typing.Ast.prog Or_error.t *)
 let type_prog (p : prog) : TA.prog Or_error.t =
   let dp = Lexing.dummy_pos in
   (* make sure that the top-level has a return *)
   let p = p @ [StmtC(dp, ReturnS(dp, IntE(dp, Int64.zero)))] in
-  eval_state_t (map_m p ~f:type_cmd) (Env.mempty ())
+  eval_state_t (map_m p ~f:type_cmd
+                >>= fun program -> get_retstmt_type_c dp program
+                >>= expect dp ident IntT
+                >> return program) (Env.mempty ())

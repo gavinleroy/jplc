@@ -5,15 +5,6 @@
 
 open Core
 
-type bin_op =
-  | Lt | Gt
-  | Cmp | Lte | Gte | Neq
-  | Mul | Div | Mod
-  | Plus | Minus
-
-type un_op =
-  | Bang | Neg
-
 type runtime_type =
   | UnitRT
   | BoolRT

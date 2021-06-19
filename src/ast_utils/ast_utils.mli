@@ -7,15 +7,6 @@ open Base
 
 type loc = Lexing.position
 
-type bin_op =
-  | Lt | Gt
-  | Cmp | Lte | Gte | Neq 
-  | Or | Mul | Div | Mod
-  | Plus | And | Minus
-
-type un_op =
-  | Bang | Neg
-
 module type IDENTIFIER = sig
   type t
   val of_string : string -> t
@@ -44,3 +35,18 @@ val ( = ): type_expr -> type_expr -> bool
 val type_to_s: type_expr -> string
 
 val type_list_to_s: type_expr list -> string
+
+val sexp_of_binop:
+  [< `Lt
+  | `Gt
+  | `Cmp
+  | `Lte
+  | `Gte
+  | `Neq
+  | `Mul
+  | `Div
+  | `Mod
+  | `Plus
+  | `Minus ] -> Sexp.t
+
+val sexp_of_unop: [< `Bang | `Neg ] -> Sexp.t

@@ -6,6 +6,9 @@
 open Core
 open Runtime
 
+type bin_op = Typing.Ast.bin_op
+type un_op = Typing.Ast.un_op
+
 type var_name =
   | Varname of runtime_type * string
 
@@ -25,8 +28,10 @@ type expr =
   | StringE of string
   | CrossE of runtime_type * var_name list
   | ArrayCE of runtime_type * var_name list
-  | BinopE of runtime_type * var_name * Ast_utils.bin_op * var_name
-  | UnopE of runtime_type * Ast_utils.un_op * var_name
+  | IBinopE of runtime_type * var_name * bin_op * var_name
+  | FBinopE of runtime_type * var_name * bin_op * var_name
+  | IUnopE of runtime_type * un_op * var_name
+  | FUnopE of runtime_type * un_op * var_name
   | CastE of runtime_type * var_name
   | CrossidxE of runtime_type * var_name * int
   | ArrayidxE of runtime_type * var_name * var_name list

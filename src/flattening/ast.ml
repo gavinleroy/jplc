@@ -11,6 +11,9 @@
 open Core
 open Runtime
 
+type bin_op = Typing.Ast.bin_op
+type un_op = Typing.Ast.un_op
+
 type var_name =
   | Varname of runtime_type * string
 
@@ -30,8 +33,10 @@ type expr =
   | StringE of string
   | CrossE of runtime_type * var_name list
   | ArrayCE of runtime_type * var_name list
-  | BinopE of runtime_type * var_name * Ast_utils.bin_op * var_name
-  | UnopE of runtime_type * Ast_utils.un_op * var_name
+  | IBinopE of runtime_type * var_name * bin_op * var_name
+  | FBinopE of runtime_type * var_name * bin_op * var_name
+  | IUnopE of runtime_type * un_op * var_name
+  | FUnopE of runtime_type * un_op * var_name
   | CastE of runtime_type * var_name
   | CrossidxE of runtime_type * var_name * int
   | ArrayidxE of runtime_type * var_name * var_name list
@@ -55,28 +60,6 @@ type expr =
    * Examples include: function bodies, if/else bodies, etc ... *)
 and returning_block = expr list
 
-let sexp_of_binop o =
-  let open Ast_utils in
-  Sexp.Atom (match o with
-      | Lt -> "<"
-      | Gt -> ">"
-      | Cmp -> "=="
-      | Lte -> "<="
-      | Gte -> ">="
-      | Neq -> "!="
-      | Or -> "||"
-      | Mul -> "*"
-      | Div -> "/"
-      | Mod -> "%"
-      | Plus -> "+"
-      | And -> "&&"
-      | Minus -> "-")
-
-let sexp_of_unop o =
-  let open Ast_utils in
-  Sexp.Atom (match o with
-      | Bang -> "!" | Neg -> "-")
-
 let sexp_of_varname = function
   | Varname(t,s) -> Sexp.(List [ sexp_of_rtype t; Atom s ])
 
@@ -94,11 +77,14 @@ let rec sexp_of_expr = function
     Sexp.(List [ Atom "CrossExpr"; sexp_of_rtype t; List.sexp_of_t sexp_of_varname es ])
   | ArrayCE (t,es) ->
     Sexp.(List [ Atom "ArrayConsExpr" ; sexp_of_rtype t ; List.sexp_of_t sexp_of_varname es ])
-  | BinopE (t,lhs,op,rhs) ->
+  (* two separate binary operators to make binding to llvm easier *)
+  | IBinopE (t,lhs,op,rhs)
+  | FBinopE (t,lhs,op,rhs) ->
     Sexp.(List [ Atom "BinopExpr"; sexp_of_rtype t
-               ; sexp_of_varname lhs ; sexp_of_binop op ; sexp_of_varname rhs ])
-  | UnopE (t,op,e') ->
-    Sexp.(List [ Atom "UnopExpr"; sexp_of_rtype t; sexp_of_unop op; sexp_of_varname e' ])
+               ; sexp_of_varname lhs ; Ast_utils.sexp_of_binop op ; sexp_of_varname rhs ])
+  | IUnopE (t,op,e')
+  | FUnopE (t,op,e') ->
+    Sexp.(List [ Atom "UnopExpr"; sexp_of_rtype t; Ast_utils.sexp_of_unop op; sexp_of_varname e' ])
   | CastE(t,e') ->
     Sexp.(List [ Atom "CastExpr"; sexp_of_rtype t; sexp_of_varname e' ])
   | CrossidxE (t,e',i) ->
@@ -194,7 +180,9 @@ let get_expr_type = function
   | FloatE _ -> FloatRT
   | StringE _ -> StringRT
   (* other exprs return t *)
-  | CrossE(t,_) | ArrayCE(t,_) | BinopE(t,_,_,_) | UnopE(t,_,_)
+  | CrossE(t,_) | ArrayCE(t,_)
+  | IBinopE(t,_,_,_) | FBinopE(t,_,_,_)
+  | IUnopE(t,_,_) | FUnopE(t,_,_)
   | CastE(t,_) | CrossidxE(t,_,_) | ArrayidxE(t,_,_) | IteE(t,_,_,_)
   | ArrayLE(t,_,_) | SumLE(t,_,_) | AppE(t,_,_) -> t
   (* Stmt and Cmd don't return type *)

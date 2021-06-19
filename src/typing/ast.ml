@@ -5,6 +5,9 @@
 
 open Ast_utils
 
+type bin_op = Parsing.Ast.bin_op
+type un_op = Parsing.Ast.un_op
+
 type expr =
   | IntE of Int64.t
   | FloatE of float

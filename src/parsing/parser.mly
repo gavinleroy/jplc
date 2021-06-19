@@ -144,11 +144,9 @@ expr:
   | e=expr; LCURLY; i=INT; RCURLY { CrossidxE($startpos,e,i) }
   | e=expr; LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayidxE($startpos,e,es) }
   | uop=un_op; e=expr %prec UNOP { UnopE($startpos,uop,e) }
-  | lhs=expr; bop=bin_op; rhs=expr
-    { match bop with
-      | And -> IteE($startpos,lhs,rhs,FalseE $startpos)
-      | Or  -> IteE($startpos,lhs,TrueE $startpos,rhs)
-      | _   -> BinopE($startpos,lhs,bop,rhs) }
+  | lhs=expr; AND; rhs=expr { IteE($startpos,lhs,rhs,FalseE $startpos) }
+  | lhs=expr; OR; rhs=expr { IteE($startpos,lhs,TrueE $startpos,rhs) }
+  | lhs=expr; bop=bin_op; rhs=expr { BinopE($startpos,lhs,bop,rhs) }
   /* second lowest precedence group */
   | LCURLY; es=separated_list(COMMA,expr); RCURLY { CrossE($startpos,es) }
   | LSQUARE; es=separated_list(COMMA,expr); RSQUARE { ArrayCE($startpos,es) }
@@ -173,20 +171,20 @@ typee:
   | FLOAT4T { CrossT [FloatT; FloatT; FloatT; FloatT] }
 
 %inline bin_op:
-  | AND { And }
-  | OR { Or }
-  | CMP { Cmp }
-  | NEQ { Neq }
-  | LT { Lt }
-  | GT { Gt }
-  | LTE { Lte }
-  | GTE { Gte }
-  | PLUS { Plus }
-  | MINUS { Minus }
-  | MUL { Mul }
-  | DIV { Div }
-  | MOD { Mod }
+  /* | AND { `And } */
+  /* | OR { `Or } */
+  | CMP { `Cmp }
+  | NEQ { `Neq }
+  | LT { `Lt }
+  | GT { `Gt }
+  | LTE { `Lte }
+  | GTE { `Gte }
+  | PLUS { `Plus }
+  | MINUS { `Minus }
+  | MUL { `Mul }
+  | DIV { `Div }
+  | MOD { `Mod }
 
 %inline un_op:
-  | MINUS { Neg }
-  | BANG { Bang }
+  | MINUS { `Neg }
+  | BANG { `Bang }

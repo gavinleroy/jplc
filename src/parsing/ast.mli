@@ -5,6 +5,24 @@
 
 open Ast_utils
 
+
+type bin_op =
+  [ `Lt
+  | `Gt
+  | `Cmp
+  | `Lte
+  | `Gte
+  | `Neq
+  | `Mul
+  | `Div
+  | `Mod
+  | `Plus
+  | `Minus ]
+
+type un_op =
+  [ `Bang
+  | `Neg ]
+
 type expr =
   | IntE of loc * Int64.t
   | FloatE of loc * float

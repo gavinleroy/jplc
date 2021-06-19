@@ -7,27 +7,6 @@ open Core
 open Ast
 open Ast_utils
 
-let sexp_of_binop o =
-  Sexp.Atom (match o with
-      | Lt -> "<"
-      | Gt -> ">"
-      | Cmp -> "=="
-      | Lte -> "<="
-      | Gte -> ">="
-      | Neq -> "!="
-      | Or -> "||"
-      | Mul -> "*"
-      | Div -> "/"
-      | Mod -> "%"
-      | Plus -> "+"
-      | And -> "&&"
-      | Minus -> "-")
-
-let sexp_of_unop o =
-  Sexp.Atom 
-    (match o with
-     | Bang -> "!" | Neg -> "-")
-
 let rec sexp_of_expr e =
   let sexp_of_loopbind = fun (a,b) -> 
     Sexp.(List[Atom (Varname.to_string a); sexp_of_expr b]) in

@@ -75,11 +75,20 @@ let rec flatten_expr = function
     >>= fun name -> return (Varname (rt_of_t t, name))
   | TA.BinopE(t,lhs,op,rhs) -> flatten_expr lhs
     >>= fun lhsvn -> flatten_expr rhs
-    >>= fun rhsvn -> extend_env_expr (BinopE (rt_of_t t, lhsvn, op, rhsvn))
-    >>= fun name -> return (Varname (rt_of_t t,name))
+    >>= fun rhsvn -> let t = rt_of_t t in
+    extend_env_expr (match t with
+        | IntRT -> IBinopE (t, lhsvn,  op, rhsvn)
+        | FloatRT -> FBinopE (t, lhsvn, op, rhsvn)
+        | _ -> assert false)
+    >>= fun name -> return (Varname (t,name))
   | TA.UnopE(t,op,expr) -> flatten_expr expr
-    >>= fun vn -> extend_env_expr (UnopE (rt_of_t t, op, vn))
-    >>= fun name -> return (Varname (rt_of_t t, name))
+    >>= fun vn -> let t = rt_of_t t in
+    extend_env_expr (match t with
+        | IntRT ->  IUnopE (t, op, vn)
+        | FloatRT -> FUnopE (t, op, vn)
+        | BoolRT -> assert false
+        | _ -> assert false)
+    >>= fun name -> return (Varname (t, name))
   | TA.CastE(_t,expr,ct) -> flatten_expr expr
     >>= fun vn -> extend_env_expr (CastE (rt_of_t ct, vn))
     >>= fun name -> return (Varname (rt_of_t ct, name))
@@ -177,9 +186,10 @@ let rec flatten_cmd = function
     >>= fun time_var2 ->
     modify (get_time_call_expr () |> new_expr_mod ~name:time_var2)
     >> gen_new_var() >>= fun time_var3 ->
+    (* NOTE the return type for get_time should be a FLOAT *)
     let rt = Runtime.get_time_info.return_type in
     modify (new_expr_mod ~name:time_var3
-              (BinopE (rt, Varname (rt, time_var1), Minus, Varname (rt, time_var2))))
+              (FBinopE (rt, Varname (rt, time_var1), `Minus, Varname (rt, time_var2))))
     >> modify (new_expr_mod (PrintE time_string))
     >> modify (new_expr_mod (ShowE (Varname (rt, time_var3))))
     >> return ret_val

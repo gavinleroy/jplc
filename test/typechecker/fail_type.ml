@@ -341,3 +341,19 @@ let%expect_test "simple-stmt-38" =
     {|
       line: 1 column: 11
       	~~ type: binding a rank 1 array with 2 dimensions |}]
+
+let%expect_test "simple-stmt-39" =
+  Ppp.ppp_ast
+    "return false;";
+  [%expect
+    {|
+      line: 0 column: 0
+      	~~ type: expected type IntType but got BoolType |}]
+
+let%expect_test "simple-stmt-40" =
+  Ppp.ppp_ast
+    "return .1;";
+  [%expect
+    {|
+      line: 0 column: 0
+      	~~ type: expected type IntType but got FloatType |}]

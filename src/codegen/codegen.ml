@@ -129,26 +129,38 @@ let rec gen_code_of_expr = function
   | StringE _str -> assert false
   | CrossE (_t, _vns) -> assert false
   | ArrayCE (_t, _vns) -> assert false
-  | BinopE (_t, Varname (_t', _l), o, Varname (_t'', _r)) ->
+  | IBinopE (_t, Varname (IntRT, _l), o, Varname (IntRT, _r)) ->
     (* get_llv l >>= fun llvl -> get_llv r >>= fun llvr -> *)
     (match o with
-     | Ast_utils.Lt -> assert false
-     | Ast_utils.Gt -> assert false
-     | Ast_utils.Cmp -> assert false
-     | Ast_utils.Lte -> assert false
-     | Ast_utils.Gte -> assert false
-     | Ast_utils.Neq -> assert false
-     | Ast_utils.Mul -> assert false
-     | Ast_utils.Div -> assert false
-     | Ast_utils.Mod -> assert false
-     | Ast_utils.Plus -> assert false
-     | Ast_utils.Minus -> assert false
+     | `Lt -> assert false
+     | `Gt -> assert false
+     | `Cmp -> assert false
+     | `Lte -> assert false
+     | `Gte -> assert false
+     | `Neq -> assert false
+     | `Mul -> assert false
+     | `Div -> assert false
+     | `Mod -> assert false
+     | `Plus -> assert false
+     | `Minus -> assert false)
 
-     (* maybe we should get rid of these?? *)
-     | Ast_utils.And -> assert false
-     | Ast_utils.Or -> assert false)
+  | FBinopE (_t, Varname (FloatRT, _l), o, Varname (FloatRT, _r)) ->
+    (* get_llv l >>= fun llvl -> get_llv r >>= fun llvr -> *)
+    (match o with
+     | `Lt -> assert false
+     | `Gt -> assert false
+     | `Cmp -> assert false
+     | `Lte -> assert false
+     | `Gte -> assert false
+     | `Neq -> assert false
+     | `Mul -> assert false
+     | `Div -> assert false
+     | `Mod -> assert false
+     | `Plus -> assert false
+     | `Minus -> assert false)
 
-  | UnopE (_t, _o, _vn) -> assert false
+  | IUnopE (_t, _o, _vn) -> assert false
+  | FUnopE (_t, _o, _vn) -> assert false
   (* type un_op =
    *   | Bang | Neg *)
   | CastE (_t, _vn) -> assert false
@@ -158,36 +170,14 @@ let rec gen_code_of_expr = function
   | ArrayLE (_t, _lbs, _es) -> assert false
   | SumLE (_t, _vn, _vns) -> assert false
   | AppE (_t, _vn, _vns) -> assert false
-
-
-
-
-
   (* previously seen as Stmts *)
   | LetE (Varname (_t, vn), e) -> gen_code_of_expr e
     >>= fun ll_ev -> modify_ (Env.store_llv vn ll_ev)
     >> return ll_ev
-
-
-
-
-
-
   | AssertE (_vn, _str) -> assert false
-
-
-
-
-
   | ReturnE (Varname (_t, vn)) -> get_llv vn
     >>= fun ll_v -> modify_ (Env.add_llv_ (Llvm.build_ret ll_v))
     >> return ll_v
-
-
-
-
-
-
   (* previously seen as Cmds *)
   | ReadimgE (_str, _vn) -> assert false
   | ReadvidE (_str, _vn) -> assert false
@@ -195,15 +185,14 @@ let rec gen_code_of_expr = function
   | WritevidE (_vn, _str) -> assert false
   | PrintE _str -> assert false
   | ShowE _vn -> assert false
+  | _ -> assert false (* TODO FIXME find the other cases later *)
 
 let gen_code_of_fn (fn : Fn.t) = get >>= fun env ->
   let Varname (fn_type, fn_name) = fn.name in
   let fn_type = llvm_t_of_runtime fn_type in
   let ll_f = Llvm.define_function fn_name fn_type env.ll_m in
   modify_ (Env.set_bldr_pos (Llvm.entry_block ll_f))
-  >>
-  (* let (_ : unit) = List.iter ~f:(fun s -> print_endline (Sexp.to_string (sexp_of_expr s))) fn.body in *)
-  map_m_ ~f:gen_code_of_expr fn.body
+  >> map_m_ ~f:gen_code_of_expr fn.body
 
 let gen_code_of_prog p =
   exec_state (map_m p ~f:gen_code_of_fn) (Env.mempty ())
