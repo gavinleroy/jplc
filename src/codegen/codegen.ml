@@ -14,7 +14,7 @@ open Flattening.Ast
  * + no functions have the same name. these should also have been desugared in the
  *   flattening phase.
  *
- * + the program is safely typed
+ * + the program is type safe
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 *)
 
@@ -37,12 +37,12 @@ module Env = struct
     assert false
   let set_bldr_pos bb t =
     Llvm.position_at_end bb t.ll_b
-  (* let add_llv f t =
-   *   f t.ll_b *)
   let add_llv_ f t : unit =
     let (_ : 'a) = f t.ll_b in ()
   let store_llv vn llv t =
     Hashtbl.add_exn ~key:vn ~data:llv t.tbl
+  let store_arith vn f t =
+    store_llv vn (f vn t.ll_b) t
 end
 
 module State = Utils.Functional.State(Env)
@@ -124,46 +124,61 @@ let rec gen_code_of_expr = function
   | FalseE -> assert false
 
   (* true means that the integer is signed *)
-  | IntE i -> return (Llvm.const_of_int64 i64_t i true)
-  | FloatE f -> return (Llvm.const_float f64_t f)
+  | IntE i -> return (`Terminal (Llvm.const_of_int64 i64_t i true))
+  | FloatE f -> return (`Terminal (Llvm.const_float f64_t f))
+  (* strings can only be arrays of chars at this point *)
   | StringE _str -> assert false
   | CrossE (_t, _vns) -> assert false
   | ArrayCE (_t, _vns) -> assert false
-  | IBinopE (_t, Varname (IntRT, _l), o, Varname (IntRT, _r)) ->
-    (* get_llv l >>= fun llvl -> get_llv r >>= fun llvr -> *)
-    (match o with
-     | `Lt -> assert false
-     | `Gt -> assert false
-     | `Cmp -> assert false
-     | `Lte -> assert false
-     | `Gte -> assert false
-     | `Neq -> assert false
-     | `Mul -> assert false
-     | `Div -> assert false
-     | `Mod -> assert false
-     | `Plus -> assert false
-     | `Minus -> assert false)
+  | IBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
+    get_llv l >>= fun llv_l -> get_llv r
+    >>= fun llv_r -> return (`Arithmetic (match o with
+        | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt llv_l llv_r
+        | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt llv_l llv_r
+        | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq llv_l llv_r
+        | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle llv_l llv_r
+        | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge llv_l llv_r
+        | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne llv_l llv_r
+        | `Mul -> Llvm.build_mul llv_l llv_r
+        | `Div -> Llvm.build_sdiv llv_l llv_r
+        | `Mod -> Llvm.build_srem llv_l llv_r
+        | `Plus -> Llvm.build_add llv_l llv_r
+        | `Minus -> Llvm.build_sub llv_l llv_r))
 
-  | FBinopE (_t, Varname (FloatRT, _l), o, Varname (FloatRT, _r)) ->
-    (* get_llv l >>= fun llvl -> get_llv r >>= fun llvr -> *)
-    (match o with
-     | `Lt -> assert false
-     | `Gt -> assert false
-     | `Cmp -> assert false
-     | `Lte -> assert false
-     | `Gte -> assert false
-     | `Neq -> assert false
-     | `Mul -> assert false
-     | `Div -> assert false
-     | `Mod -> assert false
-     | `Plus -> assert false
-     | `Minus -> assert false)
+  (* NOTE the floating point operations use the /unordered/ version as either of the
+   * operands /could/ be a QNAN *)
+  | FBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
+    get_llv l >>= fun llv_l -> get_llv r
+    >>= fun llv_r -> return (`Arithmetic (match o with
+        | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult llv_l llv_r
+        | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt llv_l llv_r
+        | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq llv_l llv_r
+        | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule llv_l llv_r
+        | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge llv_l llv_r
+        | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une llv_l llv_r
+        | `Mul -> Llvm.build_fmul llv_l llv_r
+        | `Div -> Llvm.build_fdiv llv_l llv_r
+        | `Mod -> Llvm.build_frem llv_l llv_r
+        | `Plus -> Llvm.build_fadd llv_l llv_r
+        | `Minus -> Llvm.build_fsub llv_l llv_r))
 
-  | IUnopE (_t, _o, _vn) -> assert false
-  | FUnopE (_t, _o, _vn) -> assert false
-  (* type un_op =
-   *   | Bang | Neg *)
+  (*******************************************************************************)
+  (* FIXME a negation is neither an integer or a floating point number,
+   * there could optionally be a third option of a BUnopE, or I
+   * should probably have some polymorphic variant (or just check the types frankly)
+   * to switch between the llvm instructions *)
+  | IUnopE (_t, o, Varname (_t', vn)) -> get_llv vn
+    >>= fun llv -> return (`Arithmetic (match o with
+        | `Neg -> Llvm.build_neg llv
+        | `Bang -> assert false))
+  | FUnopE (_t, o, Varname (_t', vn)) -> get_llv vn
+    >>= fun llv -> return (`Arithmetic (match o with
+        | `Neg -> Llvm.build_fneg llv
+        | `Bang -> assert false))
+  (*******************************************************************************)
+
   | CastE (_t, _vn) -> assert false
+
   | CrossidxE (_t, _vn, _idx) -> assert false
   | ArrayidxE (_t, _vn, _vns) -> assert false
   | IteE _ -> assert false
@@ -172,12 +187,14 @@ let rec gen_code_of_expr = function
   | AppE (_t, _vn, _vns) -> assert false
   (* previously seen as Stmts *)
   | LetE (Varname (_t, vn), e) -> gen_code_of_expr e
-    >>= fun ll_ev -> modify_ (Env.store_llv vn ll_ev)
+    >>= fun ll_ev ->  (match ll_ev with
+        | `Terminal ll_ev -> modify_ (Env.store_llv vn ll_ev)
+        | `Arithmetic creator -> modify_ (Env.store_arith vn creator))
     >> return ll_ev
   | AssertE (_vn, _str) -> assert false
   | ReturnE (Varname (_t, vn)) -> get_llv vn
     >>= fun ll_v -> modify_ (Env.add_llv_ (Llvm.build_ret ll_v))
-    >> return ll_v
+    >> return (`Terminal ll_v)
   (* previously seen as Cmds *)
   | ReadimgE (_str, _vn) -> assert false
   | ReadvidE (_str, _vn) -> assert false
@@ -185,7 +202,6 @@ let rec gen_code_of_expr = function
   | WritevidE (_vn, _str) -> assert false
   | PrintE _str -> assert false
   | ShowE _vn -> assert false
-  | _ -> assert false (* TODO FIXME find the other cases later *)
 
 let gen_code_of_fn (fn : Fn.t) = get >>= fun env ->
   let Varname (fn_type, fn_name) = fn.name in
@@ -197,7 +213,7 @@ let gen_code_of_fn (fn : Fn.t) = get >>= fun env ->
 let gen_code_of_prog p =
   exec_state (map_m p ~f:gen_code_of_fn) (Env.mempty ())
   |> fun env ->
-  (* Llvm_analysis.assert_valid_module jpl_module; (\* TODO remove later *\) *)
+  Llvm_analysis.assert_valid_module env.ll_m; (* TODO remove later *)
   Ok env.ll_m
 
 (* function for generating the string dump of a module *)
