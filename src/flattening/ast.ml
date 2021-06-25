@@ -35,8 +35,7 @@ type expr =
   | ArrayCE of runtime_type * var_name list
   | IBinopE of runtime_type * var_name * bin_op * var_name
   | FBinopE of runtime_type * var_name * bin_op * var_name
-  | IUnopE of runtime_type * un_op * var_name
-  | FUnopE of runtime_type * un_op * var_name
+  | UnopE of runtime_type * un_op * var_name
   | CastE of runtime_type * var_name
   | CrossidxE of runtime_type * var_name * int
   | ArrayidxE of runtime_type * var_name * var_name list
@@ -82,8 +81,7 @@ let rec sexp_of_expr = function
   | FBinopE (t,lhs,op,rhs) ->
     Sexp.(List [ Atom "BinopExpr"; sexp_of_rtype t
                ; sexp_of_varname lhs ; Ast_utils.sexp_of_binop op ; sexp_of_varname rhs ])
-  | IUnopE (t,op,e')
-  | FUnopE (t,op,e') ->
+  | UnopE (t,op,e') ->
     Sexp.(List [ Atom "UnopExpr"; sexp_of_rtype t; Ast_utils.sexp_of_unop op; sexp_of_varname e' ])
   | CastE(t,e') ->
     Sexp.(List [ Atom "CastExpr"; sexp_of_rtype t; sexp_of_varname e' ])
@@ -182,7 +180,7 @@ let get_expr_type = function
   (* other exprs return t *)
   | CrossE(t,_) | ArrayCE(t,_)
   | IBinopE(t,_,_,_) | FBinopE(t,_,_,_)
-  | IUnopE(t,_,_) | FUnopE(t,_,_)
+  | UnopE(t,_,_)
   | CastE(t,_) | CrossidxE(t,_,_) | ArrayidxE(t,_,_) | IteE(t,_,_,_)
   | ArrayLE(t,_,_) | SumLE(t,_,_) | AppE(t,_,_) -> t
   (* Stmt and Cmd don't return type *)

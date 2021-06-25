@@ -162,20 +162,12 @@ let rec gen_code_of_expr = function
         | `Plus -> Llvm.build_fadd llv_l llv_r
         | `Minus -> Llvm.build_fsub llv_l llv_r))
 
-  (*******************************************************************************)
-  (* FIXME a negation is neither an integer or a floating point number,
-   * there could optionally be a third option of a BUnopE, or I
-   * should probably have some polymorphic variant (or just check the types frankly)
-   * to switch between the llvm instructions *)
-  | IUnopE (_t, o, Varname (_t', vn)) -> get_llv vn
-    >>= fun llv -> return (`Arithmetic (match o with
-        | `Neg -> Llvm.build_neg llv
-        | `Bang -> assert false))
-  | FUnopE (_t, o, Varname (_t', vn)) -> get_llv vn
-    >>= fun llv -> return (`Arithmetic (match o with
-        | `Neg -> Llvm.build_fneg llv
-        | `Bang -> assert false))
-  (*******************************************************************************)
+  | UnopE (_t, o, Varname (t', vn)) -> get_llv vn
+    >>= fun llv -> return (`Arithmetic (match o, t' with
+        | `Neg, IntRT -> Llvm.build_neg llv
+        | `Neg, FloatRT -> Llvm.build_fneg llv
+        | `Bang, BoolRT -> Llvm.build_not llv
+        | _, _ -> assert false))
 
   | CastE (_t, _vn) -> assert false
 

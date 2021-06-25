@@ -82,13 +82,8 @@ let rec flatten_expr = function
         | _ -> assert false)
     >>= fun name -> return (Varname (t,name))
   | TA.UnopE(t,op,expr) -> flatten_expr expr
-    >>= fun vn -> let t = rt_of_t t in
-    extend_env_expr (match t with
-        | IntRT ->  IUnopE (t, op, vn)
-        | FloatRT -> FUnopE (t, op, vn)
-        | BoolRT -> assert false
-        | _ -> assert false)
-    >>= fun name -> return (Varname (t, name))
+    >>= fun vn -> extend_env_expr  (UnopE (rt_of_t t, op, vn))
+    >>= fun name -> return (Varname (rt_of_t t, name))
   | TA.CastE(_t,expr,ct) -> flatten_expr expr
     >>= fun vn -> extend_env_expr (CastE (rt_of_t ct, vn))
     >>= fun name -> return (Varname (rt_of_t ct, name))

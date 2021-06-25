@@ -30,8 +30,7 @@ type expr =
   | ArrayCE of runtime_type * var_name list
   | IBinopE of runtime_type * var_name * bin_op * var_name
   | FBinopE of runtime_type * var_name * bin_op * var_name
-  | IUnopE of runtime_type * un_op * var_name
-  | FUnopE of runtime_type * un_op * var_name
+  | UnopE of runtime_type * un_op * var_name
   | CastE of runtime_type * var_name
   | CrossidxE of runtime_type * var_name * int
   | ArrayidxE of runtime_type * var_name * var_name list
