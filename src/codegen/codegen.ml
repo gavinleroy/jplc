@@ -18,7 +18,6 @@ open Flattening.Ast
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 *)
 
-(* GLOBAL VARIABLES THAT NEED TO GO AWAY FIXME *)
 let ctx =
   Llvm.create_context ()
 
