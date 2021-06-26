@@ -15,9 +15,9 @@ module Monadic = Utils.Functional.Utils(State)
 open State
 open Monadic
 
-(*********************)
+(*~~~~~~~~~~~~~~~~~~~*)
 (* UTILITY FUNCTIONS *)
-(*********************)
+(*~~~~~~~~~~~~~~~~~~~*)
 
 let time_string =
   "time: "
@@ -27,14 +27,20 @@ let gen_new_var () =
   let (t, env') = Env.get_unique_var env in
   put env' >> return t
 
+let create_runtime_fn_expr (info: Runtime.interface_function) ps =
+  AppE (info.return_type, Varname (info.arrow_type, info.name), ps)
+
 let get_time_call_expr () =
-  let info = Runtime.get_time_info in
-  AppE (info.return_type, Varname (info.arrow_type, info.name), [])
+  create_runtime_fn_expr Runtime.get_time_info []
 
 let get_read_img_expr str_vn =
-  let info = Runtime.read_img_info in
-  AppE (info.return_type, Varname (info.arrow_type, info.name)
-       , [Varname(StringRT, str_vn)])
+  create_runtime_fn_expr Runtime.read_img_info [str_vn]
+
+let get_write_img_expr img_vn str_vn =
+  create_runtime_fn_expr Runtime.write_img_info [img_vn; str_vn]
+
+let get_print_expr str_vn =
+  create_runtime_fn_expr Runtime.print_info [str_vn]
 
 let new_expr_mod ?(name = "") e =
   if String.is_empty name then
@@ -153,22 +159,27 @@ let flatten_stmt = function
     put env >> return body
 
 let rec flatten_cmd = function
-  | TA.ReadimgC(fn, arg) -> (match flatten_arg arg with
-      | `Single vn ->
-        extend_env_expr (get_read_img_expr (Ast_utils.Filename.to_string fn))
-        >>= fun name -> modify (fun s -> Env.add_alias s vn name)
-        >> return []
-      | `Array(_base, _dims) -> assert false )
+  | TA.ReadimgC(fn, arg) -> extend_env_expr (StringE (Ast_utils.Filename.to_string fn))
+    >>= fun fn_vn -> (match flatten_arg arg with
+        | `Single vn -> extend_env_expr (get_read_img_expr (Varname (StringRT, fn_vn)))
+          >>= fun name -> modify (fun s -> Env.add_alias s vn name)
+          >> return []
+        | `Array(_base, _dims) -> assert false )
+
   | TA.WriteimgC(expr, fn) -> flatten_expr expr
-    >>= fun vn ->
-    modify (new_expr_mod (WriteimgE (vn, Ast_utils.Filename.to_string fn)))
+    >>= fun vn -> extend_env_expr (StringE (Ast_utils.Filename.to_string fn))
+    >>= fun fn_vn -> modify (new_expr_mod (get_write_img_expr vn (Varname (StringRT, fn_vn))))
     >> return []
+
   (* TODO not supported at the type level yet *)
   | TA.ReadvidC(_fn, _arg) -> assert false
   | TA.WritevidC(_expr, _fn) -> assert false
   (********************************************)
-  | TA.PrintC str -> modify (new_expr_mod (PrintE str))
+
+  | TA.PrintC str -> extend_env_expr (StringE str)
+    >>= fun str_vn -> modify (new_expr_mod (get_print_expr (Varname (StringRT, str_vn))))
     >> return []
+
   | TA.ShowC expr -> flatten_expr expr
     >>= fun vn -> modify (new_expr_mod (ShowE vn))
     >> return []
@@ -185,7 +196,7 @@ let rec flatten_cmd = function
     let rt = Runtime.get_time_info.return_type in
     modify (new_expr_mod ~name:time_var3
               (FBinopE (rt, Varname (rt, time_var1), `Minus, Varname (rt, time_var2))))
-    >> modify (new_expr_mod (PrintE time_string))
+    >> flatten_cmd (TA.PrintC time_string) (* FIXME injecting ast nodes into the process isn't good *)
     >> modify (new_expr_mod (ShowE (Varname (rt, time_var3))))
     >> return ret_val
   | TA.FnC(_te, _vn, _bs, _te', _ses) -> assert false

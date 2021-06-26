@@ -47,12 +47,6 @@ type expr =
   | LetE of var_name * expr
   | AssertE of var_name * string
   | ReturnE of var_name
-  (* previously seen as Cmds *)
-  | ReadimgE of string * var_name
-  | ReadvidE of string * var_name
-  | WriteimgE of var_name * string
-  | WritevidE of var_name * string
-  | PrintE of string
   | ShowE of var_name
   (* A returning_block is a list of expressions where the
    * final expressions must write a value to a variable.
@@ -118,16 +112,6 @@ let rec sexp_of_expr = function
   | ReturnE e ->
     Sexp.(List[Atom "ReturnExpr"; sexp_of_varname e ])
   (* CMD *)
-  | ReadimgE (fn,a) ->
-    Sexp.(List [ Atom "ReadImageExpr" ; Atom fn; sexp_of_varname a ])
-  | ReadvidE (fn,a) ->
-    Sexp.(List [ Atom  "ReadVideoExpr" ; Atom fn; sexp_of_varname a ])
-  | WriteimgE (e,fn) ->
-    Sexp.(List [ Atom "WriteImageExpr" ; sexp_of_varname e; Atom fn ])
-  | WritevidE (e,fn) ->
-    Sexp.(List [ Atom  "WriteVideoExpr" ; sexp_of_varname e; Atom fn ])
-  | PrintE s ->
-    Sexp.(List [ Atom "PrintExpr"; Atom s ])
   | ShowE e ->
     Sexp.(List [ Atom "ShowExpr"; sexp_of_varname e ])
 
@@ -184,5 +168,5 @@ let get_expr_type = function
   | CastE(t,_) | CrossidxE(t,_,_) | ArrayidxE(t,_,_) | IteE(t,_,_,_)
   | ArrayLE(t,_,_) | SumLE(t,_,_) | AppE(t,_,_) -> t
   (* Stmt and Cmd don't return type *)
-  | LetE _ | AssertE _ | ReturnE _ | ReadimgE _ | ReadvidE _
-  | WriteimgE _ | WritevidE _ | PrintE _ | ShowE _ -> UnitRT
+  | LetE _ | AssertE _ | ReturnE _
+  | ShowE _ -> UnitRT

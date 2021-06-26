@@ -43,15 +43,11 @@ type expr =
   | AssertE of var_name * string
   | ReturnE of var_name
   (* previously seen as Cmds *)
-  | ReadimgE of string * var_name
-  | ReadvidE of string * var_name
-  | WriteimgE of var_name * string
-  | WritevidE of var_name * string
-  | PrintE of string
   | ShowE of var_name
-  (* A returning_block is a list of expressions where the
-   * final expressions must write a value to a variable.
-   * Examples include: function bodies, if/else bodies, etc ... *)
+
+(* A returning_block is a list of expressions where the
+ * final expressions must write a value to a variable.
+ * Examples include: function bodies, if/else bodies, etc ... *)
 and returning_block = expr list
 
 module Fn : sig
