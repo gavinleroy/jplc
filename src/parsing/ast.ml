@@ -18,11 +18,11 @@ type bin_op =
   | `Plus
   | `Minus ]
 
-type un_op =
+and un_op =
   [ `Bang
   | `Neg ]
 
-type expr =
+and expr =
   | IntE of loc * Int64.t
   | FloatE of loc * float
   | TrueE of loc
@@ -41,35 +41,24 @@ type expr =
   | SumLE of loc * (Varname.t * expr) list * expr
   | AppE of loc * Varname.t * expr list
 
-(* return the position of the ast expr *)
-let extract_expr_pos = function
-  | IntE (l,_) | FloatE (l,_)
-  | FalseE l | TrueE l
-  | VarE(l,_) | CrossE(l,_)
-  | ArrayCE(l,_) | BinopE(l,_,_,_)
-  | UnopE(l,_,_) | CastE(l,_,_)
-  | CrossidxE(l,_,_) | ArrayidxE(l,_,_)
-  | IteE(l,_,_,_) | ArrayLE(l,_,_)
-  | SumLE(l,_,_) | AppE(l,_,_) -> l
-
-type arg =
+and arg =
   | VarA of loc * Varname.t
   | ArraybindA of loc * Varname.t * Varname.t list
 
-type lvalue =
+and lvalue =
   | ArgLV of loc * arg
   | CrossbindLV of loc * lvalue list
 
-type binding =
+and binding =
   | ArgB of loc * arg * type_expr
   | CrossbindB of loc * binding list
 
-type stmt =
+and stmt =
   | LetS of loc * lvalue * expr
   | AssertS of loc * expr * string
   | ReturnS of loc * expr
 
-type cmd =
+and cmd =
   | ReadimgC of loc * Filename.t * arg
   | ReadvidC of loc * Filename.t * arg
   | WriteimgC of loc * expr * Filename.t
@@ -80,5 +69,15 @@ type cmd =
   | FnC of loc * Varname.t * binding list * type_expr * stmt list
   | StmtC of loc * stmt
 
-type prog = cmd list
+and prog = cmd list
 
+(* return the position of the ast expr *)
+let extract_expr_pos = function
+  | IntE (l,_) | FloatE (l,_)
+  | FalseE l | TrueE l
+  | VarE(l,_) | CrossE(l,_)
+  | ArrayCE(l,_) | BinopE(l,_,_,_)
+  | UnopE(l,_,_) | CastE(l,_,_)
+  | CrossidxE(l,_,_) | ArrayidxE(l,_,_)
+  | IteE(l,_,_,_) | ArrayLE(l,_,_)
+  | SumLE(l,_,_) | AppE(l,_,_) -> l
