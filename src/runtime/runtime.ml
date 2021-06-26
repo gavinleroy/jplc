@@ -83,7 +83,20 @@ let read_img_info =
   { name          = "read_image"
   ; arrow_type    = ArrowRT ( pict, [StringRT] )
   ; return_type   = pict
-  ; params        = [StringRT]}
+  ; params        = [StringRT] }
+
+(* function for writing an image *)
+let write_img_info =
+  { name           = "write_image"
+  ; arrow_type     = ArrowRT ( UnitRT, [pict; StringRT] )
+  ; return_type    = UnitRT
+  ; params         = [pict; StringRT]}
+
+let print_info    =
+  { name          = "print"
+  ; arrow_type    = ArrowRT ( UnitRT, [StringRT] )
+  ; return_type   = UnitRT
+  ; params        = [StringRT] }
 
 (****************************)
 (* Full C Library Interface *)

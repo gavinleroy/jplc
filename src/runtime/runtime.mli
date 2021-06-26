@@ -34,4 +34,8 @@ type interface_function =
 
 val read_img_info: interface_function
 
+val write_img_info: interface_function
+
+val print_info: interface_function
+
 val get_time_info: interface_function
