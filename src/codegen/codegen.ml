@@ -162,11 +162,11 @@ let rec gen_code_of_expr = function
         | `Minus -> Llvm.build_fsub) llv_l llv_r))
 
   | UnopE (_t, o, Varname (t', vn)) -> get_llv vn
-    >>= fun llv -> return (`Arithmetic (match o, t' with
-        | `Neg, IntRT -> Llvm.build_neg llv
-        | `Neg, FloatRT -> Llvm.build_fneg llv
-        | `Bang, BoolRT -> Llvm.build_not llv
-        | _, _ -> assert false))
+    >>= fun llv -> return (`Arithmetic ((match o, t' with
+        | `Neg, IntRT -> Llvm.build_neg
+        | `Neg, FloatRT -> Llvm.build_fneg
+        | `Bang, BoolRT -> Llvm.build_not
+        | _, _ -> assert false) llv))
 
   | CastE (t, Varname (t_expr, vn)) -> get_llv vn
     >>= fun llv -> return (`Terminal ((match t_expr with
@@ -180,22 +180,21 @@ let rec gen_code_of_expr = function
   | ArrayLE (_t, _lbs, _es) -> assert false
   | SumLE (_t, _vn, _vns) -> assert false
   | AppE (_t, _vn, _vns) -> assert false
+
   (* previously seen as Stmts *)
   | LetE (Varname (_t, vn), e) -> gen_code_of_expr e
-    >>= fun ll_ev ->  (match ll_ev with
-        | `Terminal ll_ev -> modify_ (Env.store_llv vn ll_ev)
-        | `Arithmetic creator -> modify_ (Env.store_arith vn creator))
+    >>= fun ll_ev ->  modify_ (match ll_ev with
+        | `Terminal ll_ev -> (Env.store_llv vn ll_ev)
+        | `Arithmetic creator -> (Env.store_arith vn creator))
     >> return ll_ev
+
   | AssertE (_vn, _str) -> assert false
+
   | ReturnE (Varname (_t, vn)) -> get_llv vn
     >>= fun ll_v -> modify_ (Env.add_llv_ (Llvm.build_ret ll_v))
     >> return (`Terminal ll_v)
+
   (* previously seen as Cmds *)
-  | ReadimgE (_str, _vn) -> assert false
-  | ReadvidE (_str, _vn) -> assert false
-  | WriteimgE (_vn, _str) -> assert false
-  | WritevidE (_vn, _str) -> assert false
-  | PrintE _str -> assert false
   | ShowE _vn -> assert false
 
 let gen_code_of_fn (fn : Fn.t) = get >>= fun env ->
