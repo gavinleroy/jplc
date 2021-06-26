@@ -26,24 +26,24 @@ type expr =
   | SumLE of type_expr * (Varname.t * expr) list * expr
   | AppE of type_expr * Varname.t * expr list
 
-type arg =
+and arg =
   | VarA of type_expr * Varname.t
   | ArraybindA of type_expr * Varname.t * Varname.t list
 
-type lvalue =
+and lvalue =
   | ArgLV of type_expr * arg
   | CrossbindLV of type_expr * lvalue list
 
-type binding =
+and binding =
   | ArgB of type_expr * arg
   | CrossbindB of type_expr * binding list
 
-type stmt =
+and stmt =
   | LetS of lvalue * expr
   | AssertS of expr * string
   | ReturnS of type_expr * expr
 
-type cmd =
+and cmd =
   | ReadimgC of Filename.t * arg
   | ReadvidC of Filename.t * arg
   | WriteimgC of expr * Filename.t
@@ -54,7 +54,7 @@ type cmd =
   | FnC of type_expr * Varname.t * binding list * type_expr * stmt list
   | StmtC of stmt
 
-type prog = cmd list
+and prog = cmd list
 
 val extract_expr_type: expr -> type_expr
 
