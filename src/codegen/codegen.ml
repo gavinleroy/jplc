@@ -131,35 +131,35 @@ let rec gen_code_of_expr = function
   | ArrayCE (_t, _vns) -> assert false
   | IBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
     get_llv l >>= fun llv_l -> get_llv r
-    >>= fun llv_r -> return (`Arithmetic (match o with
-        | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt llv_l llv_r
-        | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt llv_l llv_r
-        | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq llv_l llv_r
-        | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle llv_l llv_r
-        | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge llv_l llv_r
-        | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne llv_l llv_r
-        | `Mul -> Llvm.build_mul llv_l llv_r
-        | `Div -> Llvm.build_sdiv llv_l llv_r
-        | `Mod -> Llvm.build_srem llv_l llv_r
-        | `Plus -> Llvm.build_add llv_l llv_r
-        | `Minus -> Llvm.build_sub llv_l llv_r))
+    >>= fun llv_r -> return (`Arithmetic ((match o with
+        | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt
+        | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt
+        | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq
+        | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle
+        | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge
+        | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne
+        | `Mul -> Llvm.build_mul
+        | `Div -> Llvm.build_sdiv
+        | `Mod -> Llvm.build_srem
+        | `Plus -> Llvm.build_add
+        | `Minus -> Llvm.build_sub) llv_l llv_r))
 
   (* NOTE the floating point operations use the /unordered/ version as either of the
    * operands /could/ be a QNAN *)
   | FBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
     get_llv l >>= fun llv_l -> get_llv r
-    >>= fun llv_r -> return (`Arithmetic (match o with
-        | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult llv_l llv_r
-        | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt llv_l llv_r
-        | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq llv_l llv_r
-        | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule llv_l llv_r
-        | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge llv_l llv_r
-        | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une llv_l llv_r
-        | `Mul -> Llvm.build_fmul llv_l llv_r
-        | `Div -> Llvm.build_fdiv llv_l llv_r
-        | `Mod -> Llvm.build_frem llv_l llv_r
-        | `Plus -> Llvm.build_fadd llv_l llv_r
-        | `Minus -> Llvm.build_fsub llv_l llv_r))
+    >>= fun llv_r -> return (`Arithmetic ((match o with
+        | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
+        | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
+        | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq
+        | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule
+        | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge
+        | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une
+        | `Mul -> Llvm.build_fmul
+        | `Div -> Llvm.build_fdiv
+        | `Mod -> Llvm.build_frem
+        | `Plus -> Llvm.build_fadd
+        | `Minus -> Llvm.build_fsub) llv_l llv_r))
 
   | UnopE (_t, o, Varname (t', vn)) -> get_llv vn
     >>= fun llv -> return (`Arithmetic (match o, t' with
@@ -168,7 +168,11 @@ let rec gen_code_of_expr = function
         | `Bang, BoolRT -> Llvm.build_not llv
         | _, _ -> assert false))
 
-  | CastE (_t, _vn) -> assert false
+  | CastE (t, Varname (t_expr, vn)) -> get_llv vn
+    >>= fun llv -> return (`Terminal ((match t_expr with
+        | IntRT -> Llvm.const_sitofp
+        | FloatRT -> Llvm.const_fptosi
+        | _ -> assert false) llv (llvm_t_of_runtime t)))
 
   | CrossidxE (_t, _vn, _idx) -> assert false
   | ArrayidxE (_t, _vn, _vns) -> assert false
