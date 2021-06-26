@@ -6,7 +6,7 @@
 open Core
 open Utils
 
-(* this function is kind of a HACK it would be better to know
+(* this function is a HACK it would be better to know
  * when we bailed early or whether a read error occured.
  * maybe having some Result.t with three option
  * Ok | Error | Bail
@@ -20,7 +20,7 @@ let compile_prog
     ?(skip_typecheck = false)
     ?(skip_flatten = false)
     ?(skip_codegen = false)
-    ?(skip_assembler = true)
+    ?(skip_assembler = false)
     lexbuf =
   try let open Result in
     Parsing.Lex_parse.parse_prog lexbuf
@@ -37,9 +37,8 @@ let compile_prog
     | Error msg -> (* print the error message to the console *)
       Error.to_string_hum msg
       |> ANSITerminal.(eprintf [red; Bold] "%s\n")
-  with e ->
 
-    let msg = Exn.to_string e
+  with e -> let msg = Exn.to_string e
     and stack = Printexc.get_backtrace () in
     ANSITerminal.(eprintf [magenta; Bold]
                     "an error occured within jplc please file a bug report\n\n%s\n%s"
