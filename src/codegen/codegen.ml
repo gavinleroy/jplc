@@ -46,21 +46,10 @@ end
 
 module State = Utils.Functional.State(Env)
 module Monadic = Utils.Functional.Utils(State)
+
 open State
 open Monadic
 open Env
-
-(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
-(* DEFINITIONS OF LLVM IR TYPES IN JPL *)
-(* the following is from RUNTIME.ml
- *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *  type runtime_type =
- *   | UnitRT
- *   | StringRT
- *   | ArrayRT of runtime_type * int
- *   | CrossRT of runtime_type list
- *   | ArrowRT of runtime_type * runtime_type list *)
-(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 
 let i64_t =
   Llvm.i64_type ctx
@@ -82,12 +71,6 @@ let make_cross_t ts =
   Array.of_list ts
   |> Llvm.struct_type ctx
 
-(* a static array is one defined in JPL such as
- * let a = [1, 2, 3]
- * ! This is where we KNOW the size at runtime. *)
-(* let make_static_array_t base_t len =
- *   Llvm.array_type base_t len *)
-
 let make_arrow_t rett ps =
   Array.of_list ps
   |> Llvm.function_type rett
@@ -98,7 +81,8 @@ let rec llvm_t_of_runtime = function
   | Runtime.IntRT -> i64_t
   | Runtime.FloatRT -> f64_t
   | Runtime.StringRT -> str_t
-  | Runtime.ArrayRT (_base_t, _rank) -> assert false
+  | Runtime.ArrayRT (_base_t, _rank) ->
+    assert false
   | Runtime.CrossRT (rts) ->
     List.map rts ~f:llvm_t_of_runtime
     |> make_cross_t
@@ -114,6 +98,9 @@ let rec llvm_t_of_runtime = function
 let get_llv vn = get >>= fun env ->
   return (Hashtbl.find_exn env.tbl vn)
 
+let unwrap_vn = function
+  | Varname (_, vn) -> vn
+
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            CODE GENERATORS          *)
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
@@ -127,8 +114,19 @@ let rec gen_code_of_expr = function
   | FloatE f -> return (`Terminal (Llvm.const_float f64_t f))
   (* strings can only be arrays of chars at this point *)
   | StringE _str -> assert false
-  | CrossE (_t, _vns) -> assert false
-  | ArrayCE (_t, _vns) -> assert false
+
+  (* NOTE tuples should /probably/ be stored on the `stack` i.e. not in a virtual register.
+   * when passing a tuple to a function we will have to get a pointer to it anyways, might
+   * as well start with the pointer and use GEP to index into the struct. *)
+  | CrossE (_t, vns) -> (* let cross_t = llvm_t_of_runtime t in *)
+    map_m ~f:(get_llv <.> unwrap_vn) vns
+    >>= fun llvs -> return (`Terminal (Llvm.const_struct ctx (Array.of_list llvs)))
+
+  (* an array construction expression e.g. `let x = [1, 2, 3];` *)
+  (* NOTE arrays should be stored on the `stack` i.e. not in a virtual register. *)
+  | ArrayCE (_t, _vns) ->
+    assert false
+
   | IBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
     get_llv l >>= fun llv_l -> get_llv r
     >>= fun llv_r -> return (`Arithmetic ((match o with
@@ -174,8 +172,12 @@ let rec gen_code_of_expr = function
         | FloatRT -> Llvm.const_fptosi
         | _ -> assert false) llv (llvm_t_of_runtime t)))
 
-  | CrossidxE (_t, _vn, _idx) -> assert false
+  | CrossidxE (_t, vn, idx) -> (get_llv <.> unwrap_vn) vn
+    >>= fun base_llv ->
+    return (`Terminal (Llvm.const_extractvalue base_llv [| idx |]))
+
   | ArrayidxE (_t, _vn, _vns) -> assert false
+
   | IteE _ -> assert false
   | ArrayLE (_t, _lbs, _es) -> assert false
   | SumLE (_t, _vn, _vns) -> assert false
