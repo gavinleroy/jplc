@@ -98,6 +98,18 @@ let print_info    =
   ; return_type   = UnitRT
   ; params        = [StringRT] }
 
+(* NOTE show was /supposed/ to simply take a
+ * void* type with a type_string and then would
+ * be broken down. I don't like this structure
+ * and will rethink how it's done. *)
+
+(* let show_int_info =
+ *   { name          = "show_int"
+ *   ; arrow_type    = ArrowRT ( UnitRT, [IntRT] )
+ *   ; return_type   = UnitRT
+ *   ; params        = [StringRT] } *)
+
+
 (****************************)
 (* Full C Library Interface *)
 (****************************)

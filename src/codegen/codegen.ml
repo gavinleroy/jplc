@@ -38,9 +38,11 @@ module Env = struct
     Llvm.position_at_end bb t.ll_b
   let add_llv_ f t : unit =
     let (_ : 'a) = f t.ll_b in ()
+  (* let add_llv_partial_ vn f t =
+   *   add_llv_ (f vn t.ll_b) t *)
   let store_llv vn llv t =
     Hashtbl.add_exn ~key:vn ~data:llv t.tbl
-  let store_arith vn f t =
+  let store_partial vn f t =
     store_llv vn (f vn t.ll_b) t
 end
 
@@ -98,113 +100,202 @@ let rec llvm_t_of_runtime = function
 let get_llv vn = get >>= fun env ->
   return (Hashtbl.find_exn env.tbl vn)
 
-let unwrap_vn = function
-  | Varname (_, vn) -> vn
+(* let unwrap_vn = function
+ *   | Varname (_, vn) -> vn *)
+
+(* let get_llv_vn =
+ *   get_llv <.> unwrap_vn *)
+
+(* let ( <^ ) (Varname (_, vn)) str =
+ *   vn ^ str *)
+
+(* let ( ^> ) str (Varname (_, vn)) =
+ *   vn ^ str *)
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            CODE GENERATORS          *)
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 
-let rec gen_code_of_expr = function
-  | TrueE -> assert false
-  | FalseE -> assert false
+(* NOTE all variables are allocated on the **stack**
+ * afterwards, the LLVM mem2reg optimization pass can be used
+ * to get variables allocated as registers instead. This will make
+ * things easier. Therefore, when referenceing a variable, you need
+ * to load it from memory :)  *)
+
+let rec gen_code_of_expr opt_vn expr =
+  match opt_vn, expr with
+  | Some _vn, TrueE -> assert false
+  | Some _vn,FalseE -> assert false
 
   (* true means that the integer is signed *)
-  | IntE i -> return (`Terminal (Llvm.const_of_int64 i64_t i true))
-  | FloatE f -> return (`Terminal (Llvm.const_float f64_t f))
+  (* | IntE i -> return (`Terminal (Llvm.const_of_int64 i64_t i true)) *)
+  | Some vn, IntE i ->
+    modify_ (Env.store_partial vn (Llvm.build_alloca i64_t))
+    >> get_llv vn
+    >>= fun ptr_llv ->
+    modify_ (Env.add_llv_ (Llvm.build_store (Llvm.const_of_int64 i64_t i true) ptr_llv))
+  (* | `AllocaTerminal (alloca_t, store_v) ->
+   *   modify_ (Env.store_partial vn (Llvm.build_alloca alloca_t))
+   *   >> get_llv vn
+   *   >>= fun ptr_llv ->
+   *   modify_ (Env.add_llv_ (Llvm.build_store store_v ptr_llv)) *)
+
+  | Some vn, FloatE f ->
+    modify_ (Env.store_partial vn (Llvm.build_alloca f64_t))
+    >> get_llv vn
+    >>= fun ptr_llv ->
+    modify_ (Env.add_llv_ (Llvm.build_store (Llvm.const_float f64_t f) ptr_llv))
+
   (* strings can only be arrays of chars at this point *)
-  | StringE _str -> assert false
+  | Some _vn,StringE _str -> assert false
 
   (* NOTE tuples should /probably/ be stored on the `stack` i.e. not in a virtual register.
    * when passing a tuple to a function we will have to get a pointer to it anyways, might
    * as well start with the pointer and use GEP to index into the struct. *)
-  | CrossE (_t, vns) -> (* let cross_t = llvm_t_of_runtime t in *)
-    map_m ~f:(get_llv <.> unwrap_vn) vns
-    >>= fun llvs -> return (`Terminal (Llvm.const_struct ctx (Array.of_list llvs)))
+  | Some _vn,CrossE (_t, _vns) ->
+    (* let cross_t = llvm_t_of_runtime t in *)
+    (* map_m ~f:get_llv_vn vns
+     * >>= fun llvs ->
+     * return (`Terminal (Llvm.const_struct ctx (Array.of_list llvs))) *)
+    assert false
+
+  (* NOTE this stores the tuple in a temporary register rather than on the stack *)
+  (* map_m ~f:(get_llv <.> unwrap_vn) vns
+   * >>= fun llvs ->
+   * return (`Terminal (Llvm.const_struct ctx (Array.of_list llvs))) *)
 
   (* an array construction expression e.g. `let x = [1, 2, 3];` *)
   (* NOTE arrays should be stored on the `stack` i.e. not in a virtual register. *)
-  | ArrayCE (_t, _vns) ->
+  | Some _vn,ArrayCE (_t, _vns) ->
     assert false
+  (* (match t with
+   *   | Runtime.ArrayRT (base_t, _rank) ->
+   *     let array_t = Llvm.array_type (llvm_t_of_runtime base_t) (List.length vns) in
+   *     map_m vns ~f:get_llv_vn
+   *     >>= fun llvs ->
+   *     let ll_arr = Llvm.const_array array_t (Array.of_list llvs) in
+   *     return (`Partial (Llvm.build_array_alloca array_t ll_arr))
+   *   | _ -> assert false) *)
 
-  | IBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
-    get_llv l >>= fun llv_l -> get_llv r
-    >>= fun llv_r -> return (`Arithmetic ((match o with
-        | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt
-        | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt
-        | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq
-        | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle
-        | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge
-        | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne
-        | `Mul -> Llvm.build_mul
-        | `Div -> Llvm.build_sdiv
-        | `Mod -> Llvm.build_srem
-        | `Plus -> Llvm.build_add
-        | `Minus -> Llvm.build_sub) llv_l llv_r))
+  | Some _vn,IBinopE (_t, _l, _o, _r) ->
+    assert false
+  (* get_llv_vn l
+   * >>= fun ptr_l -> get_llv_vn r
+   * >>= fun ptr_r ->
+   *
+   * let (l, r) = l<^".load", r<^".load" in
+   * modify_ (Env.store_partial l (Llvm.build_load ptr_l))
+   * >> modify_ (Env.store_partial r (Llvm.build_load ptr_r))
+   * >> get_llv l
+   * >>= fun llv_l -> get_llv r
+   * >>= fun llv_r ->
+   *
+   * (\* FIXME here we can see that we need to store this in some variable.
+   *  * Following the rule above that all values are stored on the stack, this
+   *  * should have an allocated value for it and then stored there. For INT
+   *  * and FLOAT we use the `Alloca variant to do this. What we need, is to
+   *  * have some `AllocaPartial and an `AllocaConstant that will handle both
+   *  * of the cases. *\)
+   * return (`AllocaPartial (i64_t, ((match o with
+   *     | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt
+   *     | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt
+   *     | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq
+   *     | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle
+   *     | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge
+   *     | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne
+   *     | `Mul -> Llvm.build_mul
+   *     | `Div -> Llvm.build_sdiv
+   *     | `Mod -> Llvm.build_srem
+   *     | `Plus -> Llvm.build_add
+   *     | `Minus -> Llvm.build_sub) llv_l llv_r))) *)
 
   (* NOTE the floating point operations use the /unordered/ version as either of the
    * operands /could/ be a QNAN *)
-  | FBinopE (_t, Varname (_t', l), o, Varname (_t'', r)) ->
-    get_llv l >>= fun llv_l -> get_llv r
-    >>= fun llv_r -> return (`Arithmetic ((match o with
-        | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
-        | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
-        | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq
-        | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule
-        | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge
-        | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une
-        | `Mul -> Llvm.build_fmul
-        | `Div -> Llvm.build_fdiv
-        | `Mod -> Llvm.build_frem
-        | `Plus -> Llvm.build_fadd
-        | `Minus -> Llvm.build_fsub) llv_l llv_r))
+  | Some _vn, FBinopE (_t, _l, _o, _r) ->
+    assert false
+  (* get_llv_vn l
+   * >>= fun llv_l -> get_llv_vn r
+   * >>= fun llv_r -> return (`Partial ((match o with
+   *     | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
+   *     | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
+   *     | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq
+   *     | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule
+   *     | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge
+   *     | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une
+   *     | `Mul -> Llvm.build_fmul
+   *     | `Div -> Llvm.build_fdiv
+   *     | `Mod -> Llvm.build_frem
+   *     | `Plus -> Llvm.build_fadd
+   *     | `Minus -> Llvm.build_fsub) llv_l llv_r)) *)
 
-  | UnopE (_t, o, Varname (t', vn)) -> get_llv vn
-    >>= fun llv -> return (`Arithmetic ((match o, t' with
-        | `Neg, IntRT -> Llvm.build_neg
-        | `Neg, FloatRT -> Llvm.build_fneg
-        | `Bang, BoolRT -> Llvm.build_not
-        | _, _ -> assert false) llv))
+  | Some _vn,UnopE (_t, _o, Varname (_t', _vn')) ->
+    assert false
+  (* get_llv vn
+   * >>= fun llv -> return (`Partial ((match o, t' with
+   *     | `Neg, IntRT -> Llvm.build_neg
+   *     | `Neg, FloatRT -> Llvm.build_fneg
+   *     | `Bang, BoolRT -> Llvm.build_not
+   *     | _, _ -> assert false) llv)) *)
 
-  | CastE (t, Varname (t_expr, vn)) -> get_llv vn
-    >>= fun llv -> return (`Terminal ((match t_expr with
-        | IntRT -> Llvm.const_sitofp
-        | FloatRT -> Llvm.const_fptosi
-        | _ -> assert false) llv (llvm_t_of_runtime t)))
+  | Some _vn, CastE (_t, Varname (_t_expr, __vn)) ->
+    assert false
+  (* get_llv vn
+   * >>= fun llv -> return (`Terminal ((match t_expr with
+   *     | IntRT -> Llvm.const_sitofp
+   *     | FloatRT -> Llvm.const_fptosi
+   *     | _ -> assert false) llv (llvm_t_of_runtime t))) *)
 
-  | CrossidxE (_t, vn, idx) -> (get_llv <.> unwrap_vn) vn
-    >>= fun base_llv ->
-    return (`Terminal (Llvm.const_extractvalue base_llv [| idx |]))
+  | Some _vn, CrossidxE (_t, _vn', _idx) ->
+    assert false
+  (* get_llv_vn vn
+   * >>= fun base_llv ->
+   * return (`Terminal (Llvm.const_extractvalue base_llv [| idx |])) *)
 
-  | ArrayidxE (_t, _vn, _vns) -> assert false
+  | Some _vn,ArrayidxE (_t, __vn, _vns) ->
+    assert false
+  (* get_llv_vn vn
+   * >>= fun base_llv -> map_m vns ~f:get_llv_vn
+   * >>= fun idx_llvs -> get
+   * >>= fun env ->
+   * let arr_lv = Llvm.build_gep base_llv (Array.of_list idx_llvs) "arr_temparr" env.ll_b in
+   * return (`Partial (Llvm.build_load arr_lv)) *)
 
-  | IteE _ -> assert false
-  | ArrayLE (_t, _lbs, _es) -> assert false
-  | SumLE (_t, _vn, _vns) -> assert false
-  | AppE (_t, _vn, _vns) -> assert false
+  | None, IteE _ -> assert false
+  | Some _vn,ArrayLE (_t, _lbs, _es) -> assert false
+  | Some _vn,SumLE (_t, _vn', _vns) -> assert false
+  | Some _vn,AppE (_t, _vn', _vns) -> assert false
 
   (* previously seen as Stmts *)
-  | LetE (Varname (_t, vn), e) -> gen_code_of_expr e
-    >>= fun ll_ev ->  modify_ (match ll_ev with
-        | `Terminal ll_ev -> (Env.store_llv vn ll_ev)
-        | `Arithmetic creator -> (Env.store_arith vn creator))
-    >> return ll_ev
 
-  | AssertE (_vn, _str) -> assert false
+  | None, LetE (Varname (_t, vn), e) ->
+    gen_code_of_expr (Some vn) e
+    >>= fun ll_ev -> return ll_ev
 
-  | ReturnE (Varname (_t, vn)) -> get_llv vn
-    >>= fun ll_v -> modify_ (Env.add_llv_ (Llvm.build_ret ll_v))
-    >> return (`Terminal ll_v)
+  | None, AssertE (_vn, _str) -> assert false
+
+  (* NOTE we append ".ret" to the vn name here to keep SSA form
+   * when building the return instruction *)
+  | None, ReturnE (Varname (_t, vn)) -> get_llv vn
+    >>= fun ptr_llv ->
+    let vn = vn ^ ".ret" in
+    modify_ (Env.store_partial vn (Llvm.build_load ptr_llv))
+    >> get_llv vn
+    >>= fun llv -> modify_ (Env.add_llv_ (Llvm.build_ret llv))
+    >> return ()
 
   (* previously seen as Cmds *)
-  | ShowE _vn -> assert false
+  | None, ShowE _vn -> assert false
+
+  (* NOTE this means that a statement got a symbol to assign to or an
+   * expression didn't get a value to assign to *)
+  | _,_ -> assert false
 
 let gen_code_of_fn (fn : Fn.t) = get >>= fun env ->
   let Varname (fn_type, fn_name) = fn.name in
   let fn_type = llvm_t_of_runtime fn_type in
   let ll_f = Llvm.define_function fn_name fn_type env.ll_m in
   modify_ (Env.set_bldr_pos (Llvm.entry_block ll_f))
-  >> map_m_ ~f:gen_code_of_expr fn.body
+  >> map_m_ ~f:(gen_code_of_expr None) fn.body
 
 let gen_code_of_prog p =
   exec_state (map_m p ~f:gen_code_of_fn) (Env.mempty ())
