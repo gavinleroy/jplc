@@ -100,14 +100,14 @@ let rec llvm_t_of_runtime = function
 let get_llv vn = get >>= fun env ->
   return (Hashtbl.find_exn env.tbl vn)
 
-(* let unwrap_vn = function
- *   | Varname (_, vn) -> vn *)
+let unwrap_vn = function
+  | Varname (_, vn) -> vn
 
-(* let get_llv_vn =
- *   get_llv <.> unwrap_vn *)
+let get_llv_vn =
+  get_llv <.> unwrap_vn
 
-(* let ( <^ ) (Varname (_, vn)) str =
- *   vn ^ str *)
+let ( <^ ) (Varname (_, vn)) str =
+  vn ^ str
 
 (* let ( ^> ) str (Varname (_, vn)) =
  *   vn ^ str *)
@@ -177,59 +177,66 @@ let rec gen_code_of_expr opt_vn expr =
    *     return (`Partial (Llvm.build_array_alloca array_t ll_arr))
    *   | _ -> assert false) *)
 
-  | Some _vn,IBinopE (_t, _l, _o, _r) ->
-    assert false
-  (* get_llv_vn l
-   * >>= fun ptr_l -> get_llv_vn r
-   * >>= fun ptr_r ->
-   *
-   * let (l, r) = l<^".load", r<^".load" in
-   * modify_ (Env.store_partial l (Llvm.build_load ptr_l))
-   * >> modify_ (Env.store_partial r (Llvm.build_load ptr_r))
-   * >> get_llv l
-   * >>= fun llv_l -> get_llv r
-   * >>= fun llv_r ->
-   *
-   * (\* FIXME here we can see that we need to store this in some variable.
-   *  * Following the rule above that all values are stored on the stack, this
-   *  * should have an allocated value for it and then stored there. For INT
-   *  * and FLOAT we use the `Alloca variant to do this. What we need, is to
-   *  * have some `AllocaPartial and an `AllocaConstant that will handle both
-   *  * of the cases. *\)
-   * return (`AllocaPartial (i64_t, ((match o with
-   *     | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt
-   *     | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt
-   *     | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq
-   *     | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle
-   *     | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge
-   *     | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne
-   *     | `Mul -> Llvm.build_mul
-   *     | `Div -> Llvm.build_sdiv
-   *     | `Mod -> Llvm.build_srem
-   *     | `Plus -> Llvm.build_add
-   *     | `Minus -> Llvm.build_sub) llv_l llv_r))) *)
+  | Some vn, IBinopE (_t, l, o, r) -> get_llv_vn l
+    >>= fun ptr_l -> get_llv_vn r
+    >>= fun ptr_r -> let (l, r) = l<^".load", r<^".load" in
+    modify_ (Env.store_partial l (Llvm.build_load ptr_l))
+    >> modify_ (Env.store_partial r (Llvm.build_load ptr_r))
+    >> get_llv l
+    >>= fun llv_l -> get_llv r
+    >>= fun llv_r ->
+    modify_ (Env.store_partial vn (Llvm.build_alloca i64_t))
+    >> get_llv vn
+    >>= fun ptr_llv -> let vn_temp = vn ^ ".ibinop" in
+    modify_ (Env.store_partial vn_temp ((match o with
+        | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt
+        | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt
+        | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq
+        | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle
+        | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge
+        | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne
+        | `Mul -> Llvm.build_mul
+        | `Div -> Llvm.build_sdiv
+        | `Mod -> Llvm.build_srem
+        | `Plus -> Llvm.build_add
+        | `Minus -> Llvm.build_sub) llv_l llv_r))
+    >> get_llv vn_temp
+    >>= fun temp_llv ->
+    modify_ (Env.add_llv_ (Llvm.build_store temp_llv ptr_llv))
 
   (* NOTE the floating point operations use the /unordered/ version as either of the
    * operands /could/ be a QNAN *)
-  | Some _vn, FBinopE (_t, _l, _o, _r) ->
-    assert false
-  (* get_llv_vn l
-   * >>= fun llv_l -> get_llv_vn r
-   * >>= fun llv_r -> return (`Partial ((match o with
-   *     | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
-   *     | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
-   *     | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq
-   *     | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule
-   *     | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge
-   *     | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une
-   *     | `Mul -> Llvm.build_fmul
-   *     | `Div -> Llvm.build_fdiv
-   *     | `Mod -> Llvm.build_frem
-   *     | `Plus -> Llvm.build_fadd
-   *     | `Minus -> Llvm.build_fsub) llv_l llv_r)) *)
+  | Some vn, FBinopE (_t, l, o, r) -> get_llv_vn l
+    >>= fun ptr_l -> get_llv_vn r
+    >>= fun ptr_r -> let (l, r) = l <^ ".load", r <^ ".load" in
+    modify_ (Env.store_partial l (Llvm.build_load ptr_l))
+    >> modify_ (Env.store_partial r (Llvm.build_load ptr_r))
+    >> get_llv l
+    >>= fun llv_l -> get_llv r
+    >>= fun llv_r ->
+    modify_ (Env.store_partial vn (Llvm.build_alloca f64_t))
+    >> get_llv vn
+    >>= fun ptr_llv -> let vn_temp = vn ^ ".fbinop" in
 
-  | Some _vn,UnopE (_t, _o, Varname (_t', _vn')) ->
+    modify_ (Env.store_partial vn_temp ((match o with
+        | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
+        | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
+        | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq
+        | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule
+        | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge
+        | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une
+        | `Mul -> Llvm.build_fmul
+        | `Div -> Llvm.build_fdiv
+        | `Mod -> Llvm.build_frem
+        | `Plus -> Llvm.build_fadd
+        | `Minus -> Llvm.build_fsub) llv_l llv_r))
+    >> get_llv vn_temp
+    >>= fun temp_llv ->
+    modify_ (Env.add_llv_ (Llvm.build_store temp_llv ptr_llv))
+
+  | Some _vn, UnopE (_t, _o, Varname (_t', _vn')) ->
     assert false
+
   (* get_llv vn
    * >>= fun llv -> return (`Partial ((match o, t' with
    *     | `Neg, IntRT -> Llvm.build_neg
@@ -237,13 +244,22 @@ let rec gen_code_of_expr opt_vn expr =
    *     | `Bang, BoolRT -> Llvm.build_not
    *     | _, _ -> assert false) llv)) *)
 
-  | Some _vn, CastE (_t, Varname (_t_expr, __vn)) ->
-    assert false
-  (* get_llv vn
-   * >>= fun llv -> return (`Terminal ((match t_expr with
-   *     | IntRT -> Llvm.const_sitofp
-   *     | FloatRT -> Llvm.const_fptosi
-   *     | _ -> assert false) llv (llvm_t_of_runtime t))) *)
+  | Some vn, CastE (t, Varname (t_expr, vn')) ->
+    let rt_t = llvm_t_of_runtime t in
+    modify_ (Env.store_partial vn (Llvm.build_alloca rt_t))
+    >> get_llv vn'
+    >>= fun ptr_llv -> let vn_tmp = vn ^ ".load" in
+    modify_ (Env.store_partial vn_tmp (Llvm.build_load ptr_llv))
+    >> get_llv vn_tmp
+    >>= fun llv_tmp ->
+    let vn_cast = vn ^ ".cast" in
+    modify_ (Env.store_llv vn_cast ((match t_expr, t with
+        | IntRT, FloatRT -> Llvm.const_sitofp
+        | FloatRT, IntRT -> Llvm.const_fptosi
+        | _ -> assert false) llv_tmp rt_t))
+    >> get_llv vn_cast
+    >>= fun llv ->
+    modify_ (Env.add_llv_ (Llvm.build_store llv ptr_llv))
 
   | Some _vn, CrossidxE (_t, _vn', _idx) ->
     assert false
