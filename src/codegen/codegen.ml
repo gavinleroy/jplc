@@ -253,9 +253,9 @@ let rec gen_code_of_expr opt_vn expr =
     >> get_llv vn_tmp
     >>= fun llv_tmp ->
     let vn_cast = vn ^ ".cast" in
-    modify_ (Env.store_llv vn_cast ((match t_expr, t with
-        | IntRT, FloatRT -> Llvm.const_sitofp
-        | FloatRT, IntRT -> Llvm.const_fptosi
+    modify_ (Env.store_partial vn_cast ((match t_expr, t with
+        | IntRT, FloatRT -> Llvm.build_sitofp
+        | FloatRT, IntRT -> Llvm.build_fptosi
         | _ -> assert false) llv_tmp rt_t))
     >> get_llv vn_cast
     >>= fun llv ->
