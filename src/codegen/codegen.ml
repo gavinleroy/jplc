@@ -234,15 +234,26 @@ let rec gen_code_of_expr opt_vn expr =
     >>= fun temp_llv ->
     modify_ (Env.add_llv_ (Llvm.build_store temp_llv ptr_llv))
 
-  | Some _vn, UnopE (_t, _o, Varname (_t', _vn')) ->
-    assert false
+  | Some vn, UnopE (_t, o, Varname (t', vn')) -> get_llv vn'
+    >>= fun ptr_llv -> let vn_load = vn' ^ ".load" in
+    modify_ (Env.store_partial vn_load (Llvm.build_load ptr_llv))
+    >> get_llv vn_load
+    >>= fun llv ->
+    let ty = llvm_t_of_runtime t' in
+    modify_ (Env.store_partial vn (Llvm.build_alloca ty))
+    >> get_llv vn
+    >>= fun ptr_llv -> let vn_temp = vn ^ ".unop" in
+    modify_ (Env.store_partial vn_temp ((match o, t' with
+        | `Neg, IntRT -> Llvm.build_neg
+        | `Neg, FloatRT -> Llvm.build_fneg
+        | `Bang, BoolRT -> Llvm.build_not
+        | _, _ -> assert false) llv))
+    >> get_llv vn_temp
+    >>= fun temp_llv ->
+    modify_ (Env.add_llv_ (Llvm.build_store temp_llv ptr_llv))
 
   (* get_llv vn
-   * >>= fun llv -> return (`Partial ((match o, t' with
-   *     | `Neg, IntRT -> Llvm.build_neg
-   *     | `Neg, FloatRT -> Llvm.build_fneg
-   *     | `Bang, BoolRT -> Llvm.build_not
-   *     | _, _ -> assert false) llv)) *)
+   * >>= fun llv -> return  *)
 
   | Some vn, CastE (t, Varname (t_expr, vn')) ->
     let rt_t = llvm_t_of_runtime t in
