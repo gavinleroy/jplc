@@ -8,21 +8,46 @@ The most basic structure is a *Body*, this represents a function and contains a 
 
 *TODO* finisht the following
 ```txt
-Body = 
-    | [<BasicBlock> <BasicBlock> ...]
+JIR = 
+    FN( <TYPE ... > ) -> <TYPE> {
+        <BINDING> ... 
+        <BASIC_BLOCK> <BASIC_BLOCK> ...
+    }
     
-BasicBlock =
-    | <Statement> ... <Terminator>
+BASIC_BLOCK = 
+    <STATEMENT> ...  <TERMINATOR>
     
-Statement =
-    |
+// NOTE future statements will be introduced into the JIR
+STATEMENT =
+    // normal assign statement
+    | <LVALUE> = <RVALUE>
+
+TERMINATOR =
+    | GOTO <BASIC_BLOCK>                                              // jump to BASIC_BLOCK
+    | PANIC <BASIC_BLOCK>                                             // initiate stack unwinding going to BASIC_BLOCK
+    | IF( <LVALUE>, <BASIC_BLOCK~0>, <BASIC_BLOCK~1> )                // test LVALUE, if true, branch to 0 o.t. 1
+    | CALL ( <LVALUE~0> <LVALUE~1> ( <LVALUE> ...  ), <BASIC_BLOCK> ) // call LVALUE~1 with the list of LVALUEs storing the result in LVALUE~0
+                                                                      // after a successful return go to BASIC_BLOCK
+    | RETURN                                                          // return to the caller
     
-Terminator =
-    |
+LVALUE = 
+    | B              // reference to a user declared binidng
+    | TEMP           // compiler introduced temporary
+    | LVALUE.f       // project a tuple field
+    | RETURN         // fn return pointer
     
-RValue = 
-    |
+RVALUE = 
+    | <UNOP> <LVALUE>
+    | <LVALUE> <BINOP> <LVALUE>
+    | ( <LVALUE> <LVALUE> ... )
+    | [ <LVALUE> <LVALUE> ... ]
+    | <CONSTANT>
     
-LValue = 
-    |
+CONSTANT =
+    | INT 
+    | FLOAT 
+    | TRUE 
+    | FALSE
+    | STATIC_STRING
+
 ```
