@@ -2,11 +2,12 @@
 
 Just another Intermediate Representation, or *JIR* is the JPL IR that will be used to produce LLVM code. Previously, I tried using a simplified IR in the directory `../flattener/ast.ml` which was a flattened version of JPL. While JPL is a trivial language there *should* be a type of IR which represents a control flow graph (CFG). JIR will provide this control flow graph and made this explicit. 
 
+:warning: this document is mostly for my thought process and will get updated alongside changes to the JIR.
+
 ## grammar
 
 The most basic structure is a *Body*, this represents a function and contains a list of basic blocks:
 
-*TODO* finisht the following
 ```txt
 JIR = 
     FN( <TYPE ... > ) -> <TYPE> {
