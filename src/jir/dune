@@ -1,0 +1,4 @@
+(library
+ (name jir)
+ (libraries core ast_utils utils typing runtime)
+ (preprocess (pps ppx_jane)))
