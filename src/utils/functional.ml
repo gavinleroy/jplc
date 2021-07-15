@@ -91,6 +91,7 @@ module Basic = struct
   let uncurry f = fun (fst, snd) -> f fst snd [@@inline always]
   let ( <.> ) f g = fun x -> f (g x) [@@inline always]
   let ( <$> ) f v = f v [@@inline always]
+  let flip f = fun a b -> f b a [@@inline always]
 end
 
 module Utils (M : MONAD) = struct
