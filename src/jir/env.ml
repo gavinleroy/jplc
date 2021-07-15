@@ -7,17 +7,21 @@ open Core
 open Jir_lang
 
 type t =
-  { fns       : jir_fn list
-  (* ; exprs     : (string option * expr) list list *)
-  ; env       : (string * string) list list
-  ; new_count : int }
+  { fns : jir_fn list
+  ; stmts : statement list
+  ; bbs : basic_block list
+  ; env : (string * string) list list
+  ; var_count : int
+  ; bb_count : int }
 
 (* TODO account for the provided runtime env *)
 let mempty () =
-  { env       = [[]]
-  ; new_count = 0
-  ; fns       = []
-    (* ; exprs     = [[]] *) }
+  { env = [[]]
+  ; stmts = []
+  ; bbs = []
+  ; var_count = 0
+  ; bb_count = 0
+  ; fns = [] }
 
 let mappend _v1 _v2 =
   assert false
@@ -40,9 +44,22 @@ let lookup e vn =
         String.( = ) (fst tup) (Ast_utils.Varname.to_string vn))
   |> snd
 
-let get_unique_var e =
-  let newstr = Printf.sprintf "_%%%d" e.new_count in
-  newstr, { e with new_count = e.new_count + 1 }
+let fresh_var e =
+  let newstr = Printf.sprintf "_%%%d" e.var_count in
+  newstr, { e with var_count = e.var_count + 1 }
+
+let add_stmt e stmt =
+  { e with stmts = stmt :: e.stmts }
+
+(* adding a terminator means that the basic
+ * block is done, so we need to take the statements,
+ * reverse them, then push it all into a block *)
+(* let add_term e term =
+ *   let stmts_r = List.rev e.stmts in
+ *   let bb = BB (e.bb_count, stmts_r, term) in
+ *   { e with bb_count = e.bb_count + 1
+ *          ; stmts = []
+ *          ; bbs = bb :: e.bbs } *)
 
 (* let add_new_expr
  *     (e : t) (name : string option) (expr : expr) : t =

@@ -11,25 +11,42 @@ module TA = Typing.Ast
 
 type varname = string
 
+module State = Utils.Functional.State(Env)
+module Monadic = Utils.Functional.Utils(State)
+open State
+open Monadic
+
 (* ~~~~~~~~~~~~~~~~~ *)
 (* UTILITY FUNCTIONS *)
 (* ~~~~~~~~~~~~~~~~~ *)
+
+let push_stmt s =
+  modify (flip Env.add_stmt s)
+
+(* get the var_count from the
+ * environment and add one *)
+let fresh_int () = get
+  >>= fun env ->
+  modify (fun e ->
+      { e with var_count = e.var_count + 1 })
+  >> return env.var_count
 
 (* ~~~~~~~~~~~~~~~~~~~ *)
 (* FLATTENING FUNCTION *)
 (* ~~~~~~~~~~~~~~~~~~~ *)
 
-(* vn is the var_name that the expr will get bound to
- * when flattening a compiler intermediate is used *)
-
-(* NOTE expressions turn into RVALUES *)
-let flatten_expr _vn = function
+(* NOTE expressions turn into RVALUES
+ * lv represents the LVALUE that the RVALUE
+ * get's bound to. In the future this could change if
+ * we have different kinds of statements. *)
+let flatten_expr lv = function
 
   (* these all turn into STATEMENTS *)
-  | TA.TrueE -> assert false
-  | TA.FalseE -> assert false
-  | TA.IntE _i -> assert false
-  | TA.FloatE _f -> assert false
+  | TA.TrueE -> push_stmt (Bind (lv, (ConstantRV TRUE)))
+  | TA.FalseE -> push_stmt (Bind (lv, (ConstantRV FALSE)))
+  | TA.IntE i -> push_stmt (Bind (lv, (ConstantRV (INT i))))
+  | TA.FloatE f -> push_stmt (Bind (lv, (ConstantRV (FLOAT f))))
+  (* In what scenario is this happening *)
   | TA.VarE(_t, _vn) -> assert false
 
   (* constant tuple and array construction *)
@@ -68,6 +85,7 @@ let flatten_lvalue = function
 let flatten_stmt = function
   | TA.LetS(_lv, _expr) ->
     assert false
+
   | TA.AssertS(_expr, _str) ->
     (* generate a temp var and flatten expr
      * with the temp. *)
@@ -75,10 +93,14 @@ let flatten_stmt = function
      * panic when false and continue to next BB when
      * true *)
     assert false
-  | TA.ReturnS(_te, _expr) ->
-    (* introduce a temp value to bind with the flattened expr
-     *  and then return *)
-    assert false
+
+  | TA.ReturnS(_te, expr) -> fresh_int ()
+    >>= fun id -> let temp_v = Temp id in
+    flatten_expr temp_v expr
+    (* we want to push the return terminator to the
+     * environment, which will in turn trigger creating
+     * a new basic_block. *)
+    >> assert false
 
 let flatten_cmd = function
   | TA.ReadimgC(_fn, _arg) ->

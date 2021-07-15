@@ -8,6 +8,8 @@ open Core
 type bin_op = Typing.Ast.bin_op
 type un_op = Typing.Ast.un_op
 
+type bb_id = int
+
 (* HACK FIXME TODO this is under deep construction *)
 
 type constant =
@@ -26,20 +28,25 @@ and rvalue =
 
 and lvalue =
   | Binding of string
-  | TEMP of int
-  (* | Project of lvalue * LVALUE.f        *)
-  | RETURN
+  | Temp of int
+
+(* | Project of lvalue * LVALUE.f        *)
 
 and statement =
   | Bind of lvalue * rvalue
 
 and terminator =
-  | Goto of basic_block
+  | Goto of bb_id
   (* | Panic of basic_block *)
-  | Iet of lvalue * basic_block * basic_block
+  | Iet of { cond : lvalue
+           ; if_bb : bb_id
+           ; else_bb : bb_id }
+  | Return
 
 and basic_block =
-  | BB of int * statement list * terminator
+  | BB of { id : bb_id
+          ; stmts : statement list
+          ; term : terminator }
 
 and jir_fn =
   { signature : Runtime.runtime_type list * Runtime.runtime_type
