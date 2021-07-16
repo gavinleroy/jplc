@@ -27,13 +27,15 @@ and rvalue =
   | ConstantRV of constant
 
 and lvalue =
-  | Binding of string
+  | UserBinding of string * int
   | Temp of int
 
 (* | Project of lvalue * LVALUE.f        *)
 
 and statement =
-  | Bind of lvalue * rvalue
+  (* keep around the runtime type of the rvalue
+   * for bindings to make things easier later (maybe) *)
+  | Bind of lvalue * Runtime.runtime_type * rvalue
 
 and terminator =
   | Goto of bb_id
@@ -41,7 +43,7 @@ and terminator =
   | Iet of { cond : lvalue
            ; if_bb : bb_id
            ; else_bb : bb_id }
-  | Return
+  | Return of lvalue
 
 and basic_block =
   | BB of { id : bb_id
@@ -49,10 +51,10 @@ and basic_block =
           ; term : terminator }
 
 and jir_fn =
-  { signature : Runtime.runtime_type list * Runtime.runtime_type
-  ; user_bindings : (string * Runtime.runtime_type) list
-  ; temp_bindings : (int * Runtime.runtime_type) list
-  ; body : basic_block list }
+  { name : string
+  ; signature : Runtime.runtime_type list * Runtime.runtime_type
+  ; bindings : (lvalue * Runtime.runtime_type) list
+  ; body : basic_block Array.t }
 
 and jir =
   { main : jir_fn

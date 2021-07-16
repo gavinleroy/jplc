@@ -8,6 +8,7 @@ open Jir_lang
 
 type t =
   { fns : jir_fn list
+  ; bindings : (lvalue * Runtime.runtime_type) list
   ; stmts : statement list
   ; bbs : basic_block list
   ; env : (string * string) list list
@@ -17,6 +18,7 @@ type t =
 (* TODO account for the provided runtime env *)
 let mempty () =
   { env = [[]]
+  ; bindings = []
   ; stmts = []
   ; bbs = []
   ; var_count = 0
@@ -48,18 +50,44 @@ let fresh_var e =
   let newstr = Printf.sprintf "_%%%d" e.var_count in
   newstr, { e with var_count = e.var_count + 1 }
 
+let incr_var_count e =
+  { e with var_count = e.var_count + 1 }
+
 let add_stmt e stmt =
-  { e with stmts = stmt :: e.stmts }
+  match stmt with
+  | Bind (lv, ty, _) ->
+    let nbs = (lv, ty) :: e.bindings in
+    { e with stmts = stmt :: e.stmts
+           ; bindings = nbs }
 
 (* adding a terminator means that the basic
  * block is done, so we need to take the statements,
  * reverse them, then push it all into a block *)
-(* let add_term e term =
- *   let stmts_r = List.rev e.stmts in
- *   let bb = BB (e.bb_count, stmts_r, term) in
- *   { e with bb_count = e.bb_count + 1
- *          ; stmts = []
- *          ; bbs = bb :: e.bbs } *)
+let add_term e term =
+  let stmts_r = List.rev e.stmts in
+  let bb_id = e.bb_count + 1 in
+  let bb = BB { id = bb_id
+              ; stmts = stmts_r
+              ; term = term } in
+  { e with bb_count = bb_id
+         ; stmts = []
+         ; bbs = bb :: e.bbs }
+
+let finish_fn e name fn_sig =
+  let body' = List.rev e.bbs |> Array.of_list in
+  let fn = { name = name
+           ; signature = fn_sig
+           ; bindings = e.bindings
+           ; body = body' } in
+  { e with bbs = []
+         (* reset as each function
+          * should start with basic blocks
+          * from 0 *)
+         ; bb_count = 0
+         ; stmts = []
+         ; bindings = []
+         ; fns = fn :: e.fns }
+
 
 (* let add_new_expr
  *     (e : t) (name : string option) (expr : expr) : t =

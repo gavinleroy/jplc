@@ -4,8 +4,8 @@
 (************************)
 
 open Core
-
 open Jir_lang
+open Ast_utils
 
 module TA = Typing.Ast
 
@@ -42,10 +42,10 @@ let fresh_int () = get
 let flatten_expr lv = function
 
   (* these all turn into STATEMENTS *)
-  | TA.TrueE -> push_stmt (Bind (lv, (ConstantRV TRUE)))
-  | TA.FalseE -> push_stmt (Bind (lv, (ConstantRV FALSE)))
-  | TA.IntE i -> push_stmt (Bind (lv, (ConstantRV (INT i))))
-  | TA.FloatE f -> push_stmt (Bind (lv, (ConstantRV (FLOAT f))))
+  | TA.TrueE -> push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV TRUE)))
+  | TA.FalseE -> push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV FALSE)))
+  | TA.IntE i -> push_stmt (Bind (lv, Runtime.IntRT, (ConstantRV (INT i))))
+  | TA.FloatE f -> push_stmt (Bind (lv, Runtime.FloatRT, (ConstantRV (FLOAT f))))
   (* In what scenario is this happening *)
   | TA.VarE(_t, _vn) -> assert false
 
@@ -82,9 +82,24 @@ let flatten_lvalue = function
   | TA.ArgLV(_te, _arg) -> assert false
   | TA.CrossbindLV(_te, _lvs) -> assert false
 
-let flatten_stmt = function
-  | TA.LetS(_lv, _expr) ->
+let binding_of_vn vn = get
+  >>= fun env -> modify Env.incr_var_count
+  >> return (UserBinding (Varname.to_string vn, env.var_count))
+
+let unify_arg_expr arg expr = match arg, expr with
+  | TA.VarA (_, vn), expr -> binding_of_vn vn
+    >>= fun lv -> flatten_expr lv expr
+
+  | TA.ArraybindA (_, _base_vn, _vns), _expr ->
     assert false
+
+let unify_lv_expr lv expr = match lv, expr with
+  | TA.CrossbindLV (_, _lvs), _cross_e -> assert false
+  | ArgLV (_, arg), expr -> unify_arg_expr arg expr
+
+let flatten_stmt = function
+  | TA.LetS(lv, expr) ->
+    unify_lv_expr lv expr
 
   | TA.AssertS(_expr, _str) ->
     (* generate a temp var and flatten expr
@@ -97,10 +112,7 @@ let flatten_stmt = function
   | TA.ReturnS(_te, expr) -> fresh_int ()
     >>= fun id -> let temp_v = Temp id in
     flatten_expr temp_v expr
-    (* we want to push the return terminator to the
-     * environment, which will in turn trigger creating
-     * a new basic_block. *)
-    >> assert false
+    >> modify (flip Env.add_term (Return temp_v))
 
 let flatten_cmd = function
   | TA.ReadimgC(_fn, _arg) ->
