@@ -88,6 +88,12 @@ let finish_fn e name fn_sig =
          ; bindings = []
          ; fns = fn :: e.fns }
 
+let make_main e =
+  let env = finish_fn e "main" ([], Runtime.IntRT) in
+  let main_fn = List.find_exn env.fns ~f:(fun fn ->
+      String.equal fn.name "main") in
+  main_fn
+
 
 (* let add_new_expr
  *     (e : t) (name : string option) (expr : expr) : t =

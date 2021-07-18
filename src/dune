@@ -22,8 +22,11 @@
    ;; Optimizing librar to come XXX
    ;; this will most likely be easier at some other level of IR (LLVM or custom)
 
+   ;; the new CFG based IR for a simpler LLVM transformation
+   jir
+
    ;; Flatten the type AST to a SSA module of all functions (top level included in `main`)
-   flattening
+   ; flattening
 
    ;; Code Generation library to take a flattened AST and transorm this into LLVM IR
    ;; XXX additional optimizations should be done here (e.g. vectorization, ...)

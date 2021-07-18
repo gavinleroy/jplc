@@ -47,7 +47,7 @@ let command =
        ***************************************************************************)
       and skip_typecheck = flag "--emit-parse" no_arg ~doc:" emit the parsed AST and skip typechecking"
       and skip_flatten = flag "--emit-typed" no_arg ~doc:" emit the typed AST and skip flattening"
-      and skip_codegen = flag "--emit-flat" no_arg ~doc:" emit the flattened AST and skip codegen"
+      and skip_codegen = flag "--emit-jir" no_arg ~doc:" emit the human-readable JIR"
       and skip_assembler = flag "--emit-llvm" no_arg ~doc:" dump the generated LLVM IR"
       in
       fun () ->

@@ -132,11 +132,17 @@ let flatten_cmd = function
 
   (* expand into function calls *)
   | TA.ShowC _expr -> assert false
-  | TA.StmtC _s -> assert false
   | TA.TimeC _c -> assert false
   (* ~~~~~~~~~~~~~~~~~~~~~~~~~~ *)
 
+  | TA.StmtC s -> flatten_stmt s
+
   | TA.FnC(_te, _vn, _bs, _te', _ses) -> assert false
 
-let flatten_prog (_p : TA.prog) : jir Or_error.t =
-  assert false
+(* NOTE creating the JIR should never produce an `Error.t`
+ * as the program was already successfully typed. *)
+let jir_of_ty (p : TA.prog) : jir Or_error.t =
+  exec_state (map_m p ~f:flatten_cmd) (Env.mempty ())
+  |> fun env ->
+  Ok { main = Env.make_main env
+     ; prog = [] }

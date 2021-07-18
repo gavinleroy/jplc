@@ -27,16 +27,16 @@ let compile_prog
     >>= maybe_exit skip_typecheck Pp.print_sexp Parsing.Sexp_ast.sexp_of_prog
     >>= Typing.Typechecker.type_prog
     >>= maybe_exit skip_flatten Pp.print_sexp Typing.Sexp_ast.sexp_of_prog
-    >>= Flattening.Flattener.flatten_prog
-    >>= maybe_exit skip_codegen Pp.print_sexp Flattening.Ast.sexp_of_prog
-    >>= Codegen.gen_code_of_prog
-    >>= maybe_exit skip_assembler print_endline Codegen.emit_llvm_module
+    >>= Jir.Make_jir.jir_of_ty
+    >>= maybe_exit skip_codegen (Printf.printf "%s %!") Jir.Pp_jir.string_of_jir
+    (* >>= Codegen.gen_code_of_prog
+     * >>= maybe_exit skip_assembler print_endline Codegen.emit_llvm_module *)
     |> function
     | Ok _ -> (* TODO something *)
-      ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented codegen\n")
+      ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented codegen %b\n%!" skip_assembler)
     | Error msg -> (* print the error message to the console *)
       Error.to_string_hum msg
-      |> ANSITerminal.(eprintf [red; Bold] "%s\n")
+      |> ANSITerminal.(eprintf [red; Bold] "%s\n%!")
 
   with e -> let msg = Exn.to_string e
     and stack = Printexc.get_backtrace () in

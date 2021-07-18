@@ -1,5 +1,3 @@
 
 
-let a = 1 as float;
-let b = 2.;
-return (b + a as int);
+return 4;
