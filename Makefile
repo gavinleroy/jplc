@@ -19,9 +19,9 @@ type:
 	cd src/
 	dune exec $(EXEC) -- --emit-type $(TEST)
 
-flat:
+jir:
 	cd src/
-	dune exec $(EXEC) -- --emit-flat $(TEST)
+	dune exec $(EXEC) -- --emit-jir $(TEST)
 
 llvm:
 	cd src/
