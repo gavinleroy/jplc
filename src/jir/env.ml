@@ -102,7 +102,8 @@ let finish_fn e name fn_sig =
          ; fns = fn :: e.fns }
 
 let make_main e =
-  let env = finish_fn e "main" ([], Runtime.IntRT) in
+  let env = finish_fn e "main"
+      (Runtime.ArrowRT (Runtime.IntRT, [])) in
   List.find_exn env.fns ~f:(fun fn ->
       String.equal fn.name "main")
 

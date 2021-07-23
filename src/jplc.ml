@@ -22,6 +22,7 @@ let get_output_file filename =
   |> fun filename_without_ending ->
   String.concat ~sep:"." (filename_without_ending @ ["ir"])
 
+
 let jpl_file =
   let error_not_file filename =
     Printf.printf "'%s' is not a jpl file" filename;
@@ -40,11 +41,11 @@ let command =
     Command.Let_syntax.(
       let%map_open
         filename = anon (maybe_with_default "-" ("filename" %: jpl_file))
-      (***************************************************************************
+      (* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        * NOTE emission of parsed/typed/flattened AST currently is in Sexp format *
-       ***************************************************************************
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        * TODO add an option to dump the code back in a similar JPL foramt        *
-       ***************************************************************************)
+       * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *)
       and skip_typecheck = flag "--emit-parse" no_arg ~doc:" emit the parsed AST and skip typechecking"
       and skip_flatten = flag "--emit-typed" no_arg ~doc:" emit the typed AST and skip flattening"
       and skip_codegen = flag "--emit-jir" no_arg ~doc:" emit the human-readable JIR"

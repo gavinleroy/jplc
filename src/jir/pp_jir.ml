@@ -133,11 +133,15 @@ let pp_fn { name
           ; signature
           ; bindings
           ; body } =
+  (* the signature should /always/ be an arrow type *)
+  let (rt, ps) = (function
+      | ArrowRT (rt, ps) -> (rt, ps)
+      | _ -> assert false) signature in
   sprintf
     "%s ( %s ) -> %s { \n  %s\n\n  %s\n\n}"
     name
-    (concat_with ", " (List.map ~f:code_of_type (fst signature)))
-    (snd signature |> code_of_type)
+    (concat_with ", " (List.map ~f:code_of_type (ps)))
+    (rt |> code_of_type)
     (concat_with "\n" (List.map ~f:pp_binding bindings))
     (concat_with "\n\n" (Array.map ~f:pp_bb body |> Array.to_list))
 

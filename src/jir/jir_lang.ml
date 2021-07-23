@@ -52,7 +52,7 @@ and basic_block =
 
 and jir_fn =
   { name : string
-  ; signature : Runtime.runtime_type list * Runtime.runtime_type
+  ; signature : Runtime.runtime_type
   ; bindings : (lvalue * Runtime.runtime_type) list
   ; body : basic_block Array.t }
 

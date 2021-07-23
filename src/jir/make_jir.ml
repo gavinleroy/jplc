@@ -16,9 +16,23 @@ module Monadic = Utils.Functional.Utils(State)
 open State
 open Monadic
 
+(* FIXME how do you get rid of unnecessary basic blocks?
+ * For example, anything that comes after
+ *  a `return` terminator. *)
+
 (* ~~~~~~~~~~~~~~~~~ *)
 (* UTILITY FUNCTIONS *)
 (* ~~~~~~~~~~~~~~~~~ *)
+
+let take_until xs ~f =
+  let rec loop = function
+    | [] -> []
+    | y :: ys ->
+      if f y then
+        [y]
+      else y :: loop ys
+  in
+  loop xs
 
 let push_stmt s =
   modify (flip Env.add_stmt s)
@@ -142,6 +156,9 @@ let flatten_cmd = function
 (* NOTE creating the JIR should never produce an `Error.t`
  * as the program was already successfully typed. *)
 let jir_of_ty (p : TA.prog) : jir Or_error.t =
+  let p = take_until p ~f:(function
+      | TA.StmtC (TA.ReturnS _) -> true
+      | _ -> false) in
   exec_state (map_m p ~f:flatten_cmd) (Env.mempty ())
   |> fun env ->
   Ok { main = Env.make_main env
