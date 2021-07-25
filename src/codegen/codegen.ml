@@ -58,6 +58,7 @@ let fresh_v () =
   incr rnd_n;
   Printf.sprintf "_x.%d" !rnd_n
 
+(* LLVM type declarations  *)
 
 let i64_t =
   Llvm.i64_type ctx
@@ -113,24 +114,92 @@ let lv_to_str = function
 let get_llv vn = get >>= fun env ->
   return (Hashtbl.find_exn env.tbl vn)
 
+let get_llv_lv =
+  get_llv <.> lv_to_str
+
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            CODE GENERATORS          *)
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 
-let gen_code_of_constant = function
-  | INT i ->
-    return (Llvm.const_of_int64 i64_t i true)
+let gen_code_of_constant c =
+  return
+    (`ConstRV
+       (match c with
+        | TRUE
+        | FALSE -> assert false
 
-  | FLOAT _f -> assert false
-  | TRUE -> assert false
-  | FALSE -> assert false
-  | STATIC_STRING _s -> assert false
+        | INT i ->
+          (Llvm.const_of_int64 i64_t i true)
+
+        | FLOAT f ->
+          (Llvm.const_float f64_t f)
+
+        | STATIC_STRING s ->
+          (Llvm.const_string ctx s)))
 
 let gen_code_of_rvalue = function
-  | UnopRV (__op, _v) ->
-    assert false
-  | BinopRV (_lhs, _bin_op, _rhs) ->
-    assert false
+
+  | UnopRV (op, rhs) -> get_llv_lv rhs
+    >>= fun ptr_llv -> let temp = fresh_v () in
+    modify_ (Env.store_partial temp (Llvm.build_load ptr_llv))
+    >> get_llv temp
+    >>= fun llv ->
+    return (`DynRV ((match op, Llvm.type_of llv |> Llvm.classify_type with
+        | `Neg, Llvm.TypeKind.Integer -> Llvm.build_neg
+        | `Neg, Llvm.TypeKind.Float -> Llvm.build_fneg
+        | `Bang, Llvm.TypeKind.Integer -> Llvm.build_not
+        | _, _ -> assert false) llv (fresh_v ())))
+
+  | BinopRV (lhs, op, rhs) ->
+
+    get_llv_lv lhs
+    >>= fun ptr_lhs -> let templ = fresh_v () in
+    modify_ (Env.store_partial templ (Llvm.build_load ptr_lhs))
+    >> get_llv templ
+    >>= fun llvl ->
+
+    get_llv_lv rhs
+    >>= fun ptr_rhs -> let tempr = fresh_v () in
+    modify_ (Env.store_partial tempr (Llvm.build_load ptr_rhs))
+    >> get_llv tempr
+    >>= fun llvr ->
+
+    return
+      (`DynRV
+         ((match Llvm.type_of llvl |> Llvm.classify_type
+               , Llvm.type_of llvr |> Llvm.classify_type with
+
+          | Llvm.TypeKind.Integer, Llvm.TypeKind.Integer ->
+            (match op with
+             | `Lt -> Llvm.build_icmp Llvm.Icmp.Slt
+             | `Gt -> Llvm.build_icmp Llvm.Icmp.Sgt
+             | `Cmp -> Llvm.build_icmp Llvm.Icmp.Eq
+             | `Lte -> Llvm.build_icmp Llvm.Icmp.Sle
+             | `Gte -> Llvm.build_icmp Llvm.Icmp.Sge
+             | `Neq -> Llvm.build_icmp Llvm.Icmp.Ne
+             | `Mul -> Llvm.build_mul
+             | `Div -> Llvm.build_sdiv
+             | `Mod -> Llvm.build_srem
+             | `Plus -> Llvm.build_add
+             | `Minus -> Llvm.build_sub)
+
+          | Llvm.TypeKind.Float, Llvm.TypeKind.Float ->
+
+            (match op with
+             | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
+             | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
+             | `Cmp -> Llvm.build_fcmp Llvm.Fcmp.Ueq
+             | `Lte -> Llvm.build_fcmp Llvm.Fcmp.Ule
+             | `Gte -> Llvm.build_fcmp Llvm.Fcmp.Uge
+             | `Neq -> Llvm.build_fcmp Llvm.Fcmp.Une
+             | `Mul -> Llvm.build_fmul
+             | `Div -> Llvm.build_fdiv
+             | `Mod -> Llvm.build_frem
+             | `Plus -> Llvm.build_fadd
+             | `Minus -> Llvm.build_fsub)
+
+          | _, _ -> assert false) llvl llvr (fresh_v ())))
+
   | ConstantRV c -> gen_code_of_constant c
 
 let gen_code_of_term = function
@@ -138,7 +207,7 @@ let gen_code_of_term = function
   | Iet _r (* { cond
             * ; if_bb
             * ; else_bb } *) -> assert false
-  | Return l -> lv_to_str l |> get_llv
+  | Return l -> get_llv_lv l
     >>= fun ptr_llv -> let fsh = fresh_v () in
     modify_ (Env.store_partial fsh (Llvm.build_load ptr_llv ))
     >> get_llv fsh
@@ -147,10 +216,19 @@ let gen_code_of_term = function
 
 
 let gen_code_of_stmt = function
-  | Bind (lv, _ty, rv) -> gen_code_of_rvalue rv
-    >>= fun llv_rv -> lv_to_str lv |> get_llv
+  | Bind (lv, _ty, rv) ->
+    get_llv_lv lv
     >>= fun ptr_llv ->
-    modify_ (Env.add_llv_ (Llvm.build_store llv_rv ptr_llv))
+    gen_code_of_rvalue rv
+    >>= (function
+        | `ConstRV llv_rv ->
+          modify_
+            (Env.add_llv_
+               (Llvm.build_store llv_rv ptr_llv))
+        | `DynRV f -> get >>= fun env ->
+          modify_
+            (Env.add_llv_
+               (Llvm.build_store (f env.ll_b) ptr_llv)))
 
 (* NOTE generating a code block will generate a
  * basic block at the END of the function fn_llval.
@@ -179,7 +257,6 @@ let gen_code_of_fn { name
   >> map_m_ bindings ~f:gen_code_of_binding
   (* turn all the basic blocks into llvm *)
   >> map_m_ (Array.to_list body) ~f:(gen_code_of_bb ll_f)
-(* >> map_m_ ~f:(gen_code_of_expr None) fn.body *)
 
 let gen_code_of_prog { main; prog } =
   let ex =

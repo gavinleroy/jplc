@@ -60,7 +60,7 @@ let flatten_expr lv = function
   | TA.FalseE -> push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV FALSE)))
   | TA.IntE i -> push_stmt (Bind (lv, Runtime.IntRT, (ConstantRV (INT i))))
   | TA.FloatE f -> push_stmt (Bind (lv, Runtime.FloatRT, (ConstantRV (FLOAT f))))
-  (* In what scenario is this happening *)
+
   | TA.VarE(_t, _vn) -> assert false
 
   (* constant tuple and array construction *)
@@ -69,8 +69,11 @@ let flatten_expr lv = function
 
   (* bin/un-ops cannot cause a panic
    * because integers/floats wrap around *)
-  | TA.BinopE(_t,_lhs,_op,_rhs) -> assert false
-  | TA.UnopE(_t,_op,_expr) -> assert false
+  | TA.BinopE(_t,_lhs,_op,_rhs) ->
+    assert false
+
+  | TA.UnopE(_t,_op,_expr) ->
+    assert false
 
   | TA.CastE(_t,_expr,_ct) -> assert false
   | TA.CrossidxE(_t,_expr,_i) -> assert false

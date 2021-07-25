@@ -32,7 +32,9 @@ let compile_prog
     >>= Codegen.gen_code_of_prog
     >>= maybe_exit skip_assembler print_endline Codegen.emit_llvm_module
     |> function
-    | Ok _ -> (* TODO something *)
+    | Ok _llvm_module ->
+      (* output the LLVM Module to a file <filename>.ll *)
+      (* run a script that will take an LLVM Module and compile it with clang -O2 *)
       ANSITerminal.(printf [yellow; Bold] "WARNING: unimplemented codegen %b\n%!" skip_assembler)
     | Error msg -> (* print the error message to the console *)
       Error.to_string_hum msg
