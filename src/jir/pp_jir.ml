@@ -104,6 +104,7 @@ let pp_rvalue = function
     sprintf "%s %s" (pp_unop uop) (pp_lvalue lv)
   | BinopRV (lvl, bop, lvr) ->
     sprintf "%s %s %s" (pp_lvalue lvl) (pp_binop bop) (pp_lvalue lvr)
+  | VarRV lvl -> sprintf "%s" (pp_lvalue lvl)
   | ConstantRV const -> pp_const const
 
 let pp_binding (lv, ty) =
@@ -125,7 +126,7 @@ let pp_terminator = function
 
 let pp_bb = function
   | BB { id; stmts; term } ->
-    sprintf "BB.%d \n{\n\t%s\n%s\n}" id
+    sprintf "BB.%d {\n%s\n%s\n}" id
       (concat_with "\n" (List.map ~f:pp_statement stmts))
       (pp_terminator term)
 
@@ -143,7 +144,7 @@ let pp_fn { name
     (concat_with ", " (List.map ~f:code_of_type (ps)))
     (rt |> code_of_type)
     (concat_with "\n" (List.map ~f:pp_binding bindings))
-    (concat_with "\n\n" (Array.map ~f:pp_bb body |> Array.to_list))
+    (concat_with "\n" (Array.map ~f:pp_bb body |> Array.to_list))
 
 let pp_jir { main; prog; } =
   concat_with "\n\n" (List.map ~f:pp_fn (main :: prog))

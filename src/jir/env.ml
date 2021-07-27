@@ -48,11 +48,16 @@ let add_alias e lhs rhs =
   { e with env = env' }
 
 (* NOTE should never fail if program is typechecked  *)
-(* let lookup e vn =
- *   List.find_exn (List.join e.env)
- *     ~f:(fun tup ->
- *         String.( = ) (fst tup) (Ast_utils.Varname.to_string vn))
- *   |> snd *)
+let lookup e (vn : string) =
+  List.find_exn (List.join e.bindings)
+    ~f:(function
+        | UserBinding (stem, _), _ ->
+          String.( = ) stem vn
+        | Temp _, _ -> false)
+  (* get the LVALUE out of the tuple *)
+  |> fst
+
+let bind = append_to_hd
 
 let fresh_var e =
   let newstr = Printf.sprintf "_%%%d" e.var_count in
@@ -64,7 +69,7 @@ let incr_var_count e =
 let add_stmt e stmt =
   match stmt with
   | Bind (lv, ty, _) ->
-    let nbs = append_to_hd (lv, ty) e.bindings in
+    let nbs = bind (lv, ty) e.bindings in
     { e with stmts = append_to_hd stmt e.stmts
            ; bindings = nbs }
 

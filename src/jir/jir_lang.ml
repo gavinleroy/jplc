@@ -22,6 +22,7 @@ type constant =
 and rvalue =
   | UnopRV of un_op * lvalue
   | BinopRV of lvalue * bin_op * lvalue
+  | VarRV of lvalue
   (* | CrossRV of lvalue list
    * | ArrayRV of lvalue list *)
   | ConstantRV of constant

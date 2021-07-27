@@ -37,6 +37,12 @@ let take_until xs ~f =
 let push_stmt s =
   modify (flip Env.add_stmt s)
 
+let lookup vn =
+  let s = Varname.to_string vn in
+  Printf.printf "Looking for %s\n" s;
+  get >>= fun e ->
+  return <$> Env.lookup e s
+
 (* get the var_count from the
  * environment and add one *)
 let fresh_int () = get
@@ -44,6 +50,22 @@ let fresh_int () = get
   modify (fun e ->
       { e with var_count = e.var_count + 1 })
   >> return env.var_count
+
+let rec rt_of_t = function
+  | Ast_utils.Unit ->
+    Runtime.UnitRT
+  | Ast_utils.BoolT ->
+    Runtime.BoolRT
+  | Ast_utils.IntT ->
+    Runtime.IntRT
+  | Ast_utils.FloatT ->
+    Runtime.FloatRT
+  | Ast_utils.ArrayT(b,r) ->
+    Runtime.ArrayRT (rt_of_t b, Int64.to_int_exn r)
+  | Ast_utils.CrossT ls ->
+    Runtime.CrossRT (List.map ~f:rt_of_t ls)
+  | Ast_utils.ArrowT(r,ps) ->
+    Runtime.ArrowRT (rt_of_t r, List.map ~f:rt_of_t ps)
 
 (* ~~~~~~~~~~~~~~~~~~~ *)
 (* FLATTENING FUNCTION *)
@@ -53,15 +75,24 @@ let fresh_int () = get
  * lv represents the LVALUE that the RVALUE
  * get's bound to. In the future this could change if
  * we have different kinds of statements. *)
-let flatten_expr lv = function
+let rec flatten_expr lv = function
 
   (* these all turn into STATEMENTS *)
-  | TA.TrueE -> push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV TRUE)))
-  | TA.FalseE -> push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV FALSE)))
-  | TA.IntE i -> push_stmt (Bind (lv, Runtime.IntRT, (ConstantRV (INT i))))
-  | TA.FloatE f -> push_stmt (Bind (lv, Runtime.FloatRT, (ConstantRV (FLOAT f))))
+  | TA.TrueE ->
+    push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV TRUE)))
 
-  | TA.VarE(_t, _vn) -> assert false
+  | TA.FalseE ->
+    push_stmt (Bind (lv, Runtime.BoolRT, (ConstantRV FALSE)))
+
+  | TA.IntE i ->
+    push_stmt (Bind (lv, Runtime.IntRT, (ConstantRV (INT i))))
+
+  | TA.FloatE f ->
+    push_stmt (Bind (lv, Runtime.FloatRT, (ConstantRV (FLOAT f))))
+
+  | TA.VarE(t, vn) -> lookup vn
+    >>= fun rhs_var ->
+    push_stmt (Bind (lv, rt_of_t t, VarRV rhs_var))
 
   (* constant tuple and array construction *)
   | TA.CrossE(_t, _es) -> assert false
@@ -69,11 +100,18 @@ let flatten_expr lv = function
 
   (* bin/un-ops cannot cause a panic
    * because integers/floats wrap around *)
-  | TA.BinopE(_t,_lhs,_op,_rhs) ->
-    assert false
+  | TA.BinopE(t, lhs, op, rhs) -> fresh_int ()
+    >>= fun ni1 -> fresh_int ()
+    >>= fun ni2 ->
+    let (tlhs, trhs) = Temp ni1, Temp ni2 in
+    flatten_expr tlhs lhs
+    >> flatten_expr trhs rhs
+    >> push_stmt (Bind (lv, rt_of_t t, (BinopRV (tlhs, op, trhs))))
 
-  | TA.UnopE(_t,_op,_expr) ->
-    assert false
+  | TA.UnopE(t, op, expr) -> fresh_int ()
+    >>= fun ni -> let tlv = Temp ni in
+    flatten_expr tlv expr
+    >> push_stmt (Bind (lv, rt_of_t t, (UnopRV (op, tlv))))
 
   | TA.CastE(_t,_expr,_ct) -> assert false
   | TA.CrossidxE(_t,_expr,_i) -> assert false

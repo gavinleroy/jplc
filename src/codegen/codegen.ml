@@ -139,6 +139,8 @@ let gen_code_of_constant c =
 
 let gen_code_of_rvalue = function
 
+  | VarRV _lv -> assert false
+
   | UnopRV (op, rhs) -> get_llv_lv rhs
     >>= fun ptr_llv -> let temp = fresh_v () in
     modify_ (Env.store_partial temp (Llvm.build_load ptr_llv))
