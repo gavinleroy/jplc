@@ -28,7 +28,7 @@ let compile_prog
     >>= Typing.Typechecker.type_prog
     >>= maybe_exit skip_flatten Pp.print_sexp Typing.Sexp_ast.sexp_of_prog
     >>= Jir.Make_jir.jir_of_ty
-    >>= maybe_exit skip_codegen (Printf.printf "%s %!") Jir.Pp_jir.string_of_jir
+    >>= maybe_exit skip_codegen (Printf.printf "%s%!") Jir.Pp_jir.stdout_of_jir
     >>= Codegen.gen_code_of_prog
     >>= maybe_exit skip_assembler print_endline Codegen.emit_llvm_module
     |> function

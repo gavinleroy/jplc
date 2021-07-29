@@ -4,149 +4,134 @@
 (************************)
 
 open Core
-open Printf
+open Format
 open Jir_lang
 open Runtime
 
 let jir_msg =
-  "// JIR program dump, view at your own risk.
-// ~Gavin :)"
+  "// JIR program dump, view at your own risk. ~Gavin :)"
 
-(* type bin_op = Typing.Ast.bin_op
- * type un_op = Typing.Ast.un_op
- *
- * type bb_id = int
- *
- * (\* HACK FIXME TODO this is under deep construction *\)
- *
- * type constant =
- *   | INT of Int64.t
- *   | FLOAT of float
- *   | TRUE
- *   | FALSE
- *   | STATIC_STRING of string
- *
- * and rvalue =
- *   | UnopRV of un_op * lvalue
- *   | BinopRV of lvalue * bin_op * lvalue
- *   (\* | CrossRV of lvalue list
- *    * | ArrayRV of lvalue list *\)
- *   | ConstantRV of constant
- *
- * and lvalue =
- *   | UserBinding of string * int
- *   | Temp of int
- *
- * (\* | Project of lvalue * LVALUE.f        *\)
- *
- * and statement =
- *   (\* keep around the runtime type of the rvalue
- *    * for bindings to make things easier later (maybe) *\)
- *   | Bind of lvalue * Runtime.runtime_type * rvalue
- *
- * and terminator =
- *   | Goto of bb_id
- *   (\* | Panic of basic_block *\)
- *   | Iet of { cond : lvalue
- *            ; if_bb : bb_id
- *            ; else_bb : bb_id }
- *   | Return of lvalue
- *
- * and basic_block =
- *   | BB of { id : bb_id
- *           ; stmts : statement list
- *           ; term : terminator }
- *
- * and jir_fn =
- *   { name : string
- *   ; signature : Runtime.runtime_type list * Runtime.runtime_type
- *   ; bindings : (lvalue * Runtime.runtime_type) list
- *   ; body : basic_block Array.t }
- *
- * and jir =
- *   { main : jir_fn
- * ; prog : jir_fn list } *)
+let rec ident fmt s = fprintf fmt "%s" s
 
-let concat_with sep vs =
-  List.fold_left vs ~init:"" ~f:(fun acc v ->
-      acc ^ sep ^ v)
+and pp_binop fmt = function
+  | `Lt -> fprintf fmt "<"
+  | `Gt -> fprintf fmt ">"
+  | `Cmp -> fprintf fmt "=="
+  | `Lte -> fprintf fmt "<="
+  | `Gte -> fprintf fmt ">="
+  | `Neq -> fprintf fmt "!="
+  | `Mul -> fprintf fmt "*"
+  | `Div -> fprintf fmt "/"
+  | `Mod -> fprintf fmt "%%"
+  | `Plus -> fprintf fmt "+"
+  | `Minus -> fprintf fmt "-"
 
-let pp_binop = function
-  | `Lt -> "<"
-  | `Gt -> ">"
-  | `Cmp -> "=="
-  | `Lte -> "<="
-  | `Gte -> ">="
-  | `Neq -> "!="
-  | `Mul -> "*"
-  | `Div -> "/"
-  | `Mod -> "%%"
-  | `Plus -> "+"
-  | `Minus -> "-"
+and pp_unop fmt = function
+  | `Bang -> fprintf fmt "!"
+  | `Neg  -> fprintf fmt "-"
 
-let pp_unop = function
-  | `Bang -> "!"
-  | `Neg  -> "-"
+and pp_const fmt = function
+  | INT i64 -> fprintf fmt "%Li" i64
+  | FLOAT f -> fprintf fmt "%f" f
+  | TRUE -> fprintf fmt "true"
+  | FALSE -> fprintf fmt "false"
+  | STATIC_STRING str -> printf "\"%s\"" str
 
-let pp_const = function
-  | INT i64 -> sprintf "%Ld" i64
-  | FLOAT f -> sprintf "%f" f
-  | TRUE -> "true"
-  | FALSE -> "false"
-  | STATIC_STRING str -> sprintf "\"%s\"" str
+and pp_lvalue fmt = function
+  | UserBinding (str, i) -> fprintf fmt "%s.%i" str i
+  | Temp i -> fprintf fmt "temp.%d" i
 
-let pp_lvalue = function
-  | UserBinding (str, i) -> sprintf "%s.%d" str i
-  | Temp i -> sprintf "temp.%d" i
-
-let pp_rvalue = function
+and pp_rvalue fmt = function
   | UnopRV (uop, lv) ->
-    sprintf "%s %s" (pp_unop uop) (pp_lvalue lv)
+    fprintf fmt "%a %a"
+      pp_unop uop
+      pp_lvalue lv
   | BinopRV (lvl, bop, lvr) ->
-    sprintf "%s %s %s" (pp_lvalue lvl) (pp_binop bop) (pp_lvalue lvr)
-  | VarRV lvl -> sprintf "%s" (pp_lvalue lvl)
-  | ConstantRV const -> pp_const const
+    fprintf fmt "%a %a %a"
+      pp_lvalue lvl
+      pp_binop bop
+      pp_lvalue lvr
+  | VarRV lvl -> pp_lvalue fmt lvl
+  | ConstantRV const -> pp_const fmt const
 
-let pp_binding (lv, ty) =
-  sprintf "%s : %s" (pp_lvalue lv) (code_of_type ty)
+and pp_binding fmt (lv, ty) =
+  fprintf fmt "@[%a : %s@]"
+    pp_lvalue lv
+    (code_of_type ty)
 
-let pp_statement = function
+and pp_bindings fmt ls =
+  pp_print_list
+    ~pp_sep:pp_force_newline
+    pp_binding fmt ls
+
+and pp_statement fmt = function
   | Bind (lv, ty, rv) ->
-    sprintf "%s : %s = %s;"
-      (pp_lvalue lv)
+    fprintf fmt "@[%a@ :@ %s@ =@ %a;@]"
+      pp_lvalue lv
       (code_of_type ty)
-      (pp_rvalue rv)
+      pp_rvalue rv
 
-let pp_terminator = function
-  | Goto i -> sprintf "goto BB.%d;" i
+and pp_bb_tag fmt i = fprintf fmt "BB.%i" i
+
+and pp_terminator fmt = function
+  | Goto i -> fprintf fmt "@[goto@ %a;@]" pp_bb_tag i
+
   | Iet { cond; if_bb; else_bb } ->
-    sprintf "if( %s | true -> BB.%d | BB.%d )"
-      (pp_lvalue cond) if_bb else_bb
-  | Return lv -> sprintf "return %s" (pp_lvalue lv)
+    fprintf fmt "@[if(%a@ |@ true@ ->@ %a@ |@ %a)@]"
+      pp_lvalue cond
+      pp_bb_tag if_bb
+      pp_bb_tag else_bb
 
-let pp_bb = function
+  | Return lv -> fprintf fmt "@[return@ %a;@]" pp_lvalue lv
+
+and pp_ss fmt ls =
+  pp_print_list
+    ~pp_sep:pp_force_newline
+    pp_statement fmt ls
+
+and pp_bb fmt = function
   | BB { id; stmts; term } ->
-    sprintf "BB.%d {\n%s\n%s\n}" id
-      (concat_with "\n" (List.map ~f:pp_statement stmts))
-      (pp_terminator term)
+    fprintf fmt "@[<hov 2>%a@ {@\n%a@\n%a@\n}@]"
+      pp_bb_tag id
+      pp_ss stmts
+      pp_terminator term
 
-let pp_fn { name
-          ; signature
-          ; bindings
-          ; body } =
+and pp_bbs fmt bs =
+  pp_print_list
+    ~pp_sep:pp_force_newline
+    pp_bb fmt bs
+
+and pp_tys fmt ts =
+  pp_print_list ~pp_sep:(fun fm () -> fprintf fm ", ")
+    (fun fm a -> fprintf fm "%s" (code_of_type a) )
+    fmt ts
+
+and pp_fn fmt { name
+              ; signature
+              ; bindings
+              ; body } =
   (* the signature should /always/ be an arrow type *)
   let (rt, ps) = (function
       | ArrowRT (rt, ps) -> (rt, ps)
       | _ -> assert false) signature in
-  sprintf
-    "%s ( %s ) -> %s { \n  %s\n\n  %s\n\n}"
+  fprintf fmt
+    "@[%s@ (%a)@ ->@ %s@ {@\n%a@\n@\n%a@\n}@]"
     name
-    (concat_with ", " (List.map ~f:code_of_type (ps)))
+    pp_tys ps
     (rt |> code_of_type)
-    (concat_with "\n" (List.map ~f:pp_binding bindings))
-    (concat_with "\n" (Array.map ~f:pp_bb body |> Array.to_list))
+    pp_bindings bindings
+    pp_bbs (Array.to_list body)
 
-let pp_jir { main; prog; } =
-  concat_with "\n\n" (List.map ~f:pp_fn (main :: prog))
+and pp_jir fmt { main; prog; } =
+  let pp_jirs fmt js =
+    pp_print_list
+      ~pp_sep:pp_force_newline
+      pp_fn fmt js
+  in
+  fprintf fmt "@[%s@\n%a@]@.@?"
+    jir_msg
+    pp_jirs (main :: prog)
 
-let string_of_jir = pp_jir
+let stdout_of_jir p =
+  pp_jir std_formatter p;
+  ""
