@@ -219,25 +219,6 @@ let gen_code_of_rvalue = function
             Llvm.build_fptosi
           | _, _ -> assert false) llv nt (fresh_v ())))
 
-
-  (* Some vn, CastE (t, Varname (t_expr, vn')) ->
-   * let rt_t = llvm_t_of_runtime t in
-   * modify_ (Env.store_partial vn (Llvm.build_alloca rt_t))
-   * >> get_llv vn'
-   * >>= fun ptr_llv -> let vn_tmp = vn ^ ".load" in
-   * modify_ (Env.store_partial vn_tmp (Llvm.build_load ptr_llv))
-   * >> get_llv vn_tmp
-   * >>= fun llv_tmp ->
-   * let vn_cast = vn ^ ".cast" in
-   * modify_ (Env.store_partial vn_cast ((match t_expr, t with
-   *     | IntRT, FloatRT -> Llvm.build_sitofp
-   *     | FloatRT, IntRT -> Llvm.build_fptosi
-   *     | _ -> assert false) llv_tmp rt_t))
-   * >> get_llv vn_cast
-   * >>= fun llv ->
-   * modify_ (Env.add_llv_ (Llvm.build_store llv ptr_llv)) *)
-
-
   | ConstantRV c -> gen_code_of_constant c
 
 let gen_code_of_term = function
