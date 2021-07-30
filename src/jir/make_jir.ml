@@ -16,10 +16,6 @@ module Monadic = Utils.Functional.Utils(State)
 open State
 open Monadic
 
-(* FIXME how do you get rid of unnecessary basic blocks?
- * For example, anything that comes after
- *  a `return` terminator. *)
-
 (* ~~~~~~~~~~~~~~~~~ *)
 (* UTILITY FUNCTIONS *)
 (* ~~~~~~~~~~~~~~~~~ *)
@@ -134,30 +130,30 @@ let rec flatten_expr lv = function
   | TA.IteE(_t,_cnd,_ie,_ee) -> assert false
   | TA.AppE(_t,_vn,_es) -> assert false
 
-let flatten_arg = function
+and flatten_arg = function
   | TA.VarA(_t, _vn) -> assert false
   | TA.ArraybindA(_te, _vn, _vns) -> assert false
 
-let flatten_lvalue = function
+and flatten_lvalue = function
   | TA.ArgLV(_te, _arg) -> assert false
   | TA.CrossbindLV(_te, _lvs) -> assert false
 
-let binding_of_vn vn = get
+and binding_of_vn vn = get
   >>= fun env -> modify Env.incr_var_count
   >> return (UserBinding (Varname.to_string vn, env.var_count))
 
-let unify_arg_expr arg expr = match arg, expr with
+and unify_arg_expr arg expr = match arg, expr with
   | TA.VarA (_, vn), expr -> binding_of_vn vn
     >>= fun lv -> flatten_expr lv expr
 
   | TA.ArraybindA (_, _base_vn, _vns), _expr ->
     assert false
 
-let unify_lv_expr lv expr = match lv, expr with
+and unify_lv_expr lv expr = match lv, expr with
   | TA.CrossbindLV (_, _lvs), _cross_e -> assert false
   | ArgLV (_, arg), expr -> unify_arg_expr arg expr
 
-let flatten_stmt = function
+and flatten_stmt = function
   | TA.LetS(lv, expr) ->
     unify_lv_expr lv expr
 
@@ -174,7 +170,7 @@ let flatten_stmt = function
     flatten_expr temp_v expr
     >> modify (flip Env.add_term (Return temp_v))
 
-let flatten_cmd = function
+and flatten_cmd = function
   | TA.ReadimgC(_fn, _arg) ->
     (* reading an image should expand
      * into a function call (for now) *)
@@ -201,7 +197,7 @@ let flatten_cmd = function
 
 (* NOTE creating the JIR should never produce an `Error.t`
  * as the program was already successfully typed. *)
-let jir_of_ty (p : TA.prog) : jir Or_error.t =
+and jir_of_ty (p : TA.prog) : jir Or_error.t =
   let p = take_until p ~f:(function
       | TA.StmtC (TA.ReturnS _) -> true
       | _ -> false) in
