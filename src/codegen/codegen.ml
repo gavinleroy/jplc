@@ -202,6 +202,42 @@ let gen_code_of_rvalue = function
 
           | _, _ -> assert false) llvl llvr (fresh_v ())))
 
+  | CastRV (ty, lv) -> get_llv_lv lv
+    >>= fun ptrlv -> let temp = fresh_v () in
+    modify_ ((Env.store_partial temp (Llvm.build_load ptrlv)))
+    >> get_llv temp
+    >>= fun llv ->
+    let nt = llvm_t_of_runtime ty in
+    return
+      (`DynRV
+         ((match Llvm.type_of llv
+                 |> Llvm.classify_type, ty with
+          | Llvm.TypeKind.Integer, Runtime.FloatRT ->
+            Llvm.build_sitofp
+          (* NOTE we need a double type 64 bits *)
+          | Llvm.TypeKind.Double, Runtime.IntRT ->
+            Llvm.build_fptosi
+          | _, _ -> assert false) llv nt (fresh_v ())))
+
+
+  (* Some vn, CastE (t, Varname (t_expr, vn')) ->
+   * let rt_t = llvm_t_of_runtime t in
+   * modify_ (Env.store_partial vn (Llvm.build_alloca rt_t))
+   * >> get_llv vn'
+   * >>= fun ptr_llv -> let vn_tmp = vn ^ ".load" in
+   * modify_ (Env.store_partial vn_tmp (Llvm.build_load ptr_llv))
+   * >> get_llv vn_tmp
+   * >>= fun llv_tmp ->
+   * let vn_cast = vn ^ ".cast" in
+   * modify_ (Env.store_partial vn_cast ((match t_expr, t with
+   *     | IntRT, FloatRT -> Llvm.build_sitofp
+   *     | FloatRT, IntRT -> Llvm.build_fptosi
+   *     | _ -> assert false) llv_tmp rt_t))
+   * >> get_llv vn_cast
+   * >>= fun llv ->
+   * modify_ (Env.add_llv_ (Llvm.build_store llv ptr_llv)) *)
+
+
   | ConstantRV c -> gen_code_of_constant c
 
 let gen_code_of_term = function

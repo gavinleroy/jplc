@@ -51,6 +51,9 @@ let fresh_int () = get
       { e with var_count = e.var_count + 1 })
   >> return env.var_count
 
+let fresh_temp () = fresh_int ()
+  >>= fun i -> return (Temp i)
+
 let rec rt_of_t = function
   | Ast_utils.Unit ->
     Runtime.UnitRT
@@ -100,20 +103,22 @@ let rec flatten_expr lv = function
 
   (* bin/un-ops cannot cause a panic
    * because integers/floats wrap around *)
-  | TA.BinopE(t, lhs, op, rhs) -> fresh_int ()
-    >>= fun ni1 -> fresh_int ()
-    >>= fun ni2 ->
-    let (tlhs, trhs) = Temp ni1, Temp ni2 in
+  | TA.BinopE(t, lhs, op, rhs) -> fresh_temp ()
+    >>= fun tlhs -> fresh_temp ()
+    >>= fun trhs ->
     flatten_expr tlhs lhs
     >> flatten_expr trhs rhs
     >> push_stmt (Bind (lv, rt_of_t t, (BinopRV (tlhs, op, trhs))))
 
-  | TA.UnopE(t, op, expr) -> fresh_int ()
-    >>= fun ni -> let tlv = Temp ni in
-    flatten_expr tlv expr
+  | TA.UnopE(t, op, expr) -> fresh_temp ()
+    >>= fun tlv -> flatten_expr tlv expr
     >> push_stmt (Bind (lv, rt_of_t t, (UnopRV (op, tlv))))
 
-  | TA.CastE(_t,_expr,_ct) -> assert false
+  | TA.CastE(_t,expr, ct) -> fresh_temp ()
+    >>= fun tlv -> flatten_expr tlv expr
+    >> let ty = rt_of_t ct in
+    push_stmt (Bind (lv, ty, (CastRV (ty, tlv))))
+
   | TA.CrossidxE(_t,_expr,_i) -> assert false
 
   (* array indexing can cause a PANIC when the index

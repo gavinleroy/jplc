@@ -52,6 +52,10 @@ and pp_rvalue fmt = function
       pp_binop bop
       pp_lvalue lvr
   | VarRV lvl -> pp_lvalue fmt lvl
+  | CastRV (ty, lvl) ->
+    fprintf fmt "%a : %s"
+      pp_lvalue lvl
+      (code_of_type ty)
   | ConstantRV const -> pp_const fmt const
 
 and pp_binding fmt (lv, ty) =

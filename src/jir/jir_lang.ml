@@ -23,6 +23,7 @@ and rvalue =
   | UnopRV of un_op * lvalue
   | BinopRV of lvalue * bin_op * lvalue
   | VarRV of lvalue
+  | CastRV of Runtime.runtime_type * lvalue
   (* | CrossRV of lvalue list
    * | ArrayRV of lvalue list *)
   | ConstantRV of constant
