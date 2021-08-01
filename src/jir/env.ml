@@ -21,7 +21,8 @@ type t =
   ; bbs : basic_block list list
   ; env : (lvalue * lvalue) list list
   ; var_count : int
-  ; bb_count : int }
+  ; bb_count : int
+  ; curr_bb_id : bb_id option}
 
 (* TODO account for the provided runtime env *)
 let mempty () =
@@ -31,6 +32,7 @@ let mempty () =
   ; bbs = [[]]
   ; var_count = 0
   ; bb_count = 0
+  ; curr_bb_id = None
   ; fns = [] }
 
 let mappend _v1 _v2 =
@@ -66,6 +68,23 @@ let fresh_var e =
 let incr_var_count e =
   { e with var_count = e.var_count + 1 }
 
+let get_next_bb_id e =
+  match e.curr_bb_id with
+  | None ->
+    let bb_id = e.bb_count + 1 in
+    bb_id, { e with curr_bb_id = Some bb_id }
+  | Some tag -> tag, e
+
+let finish_bb e tag term =
+  let stmts_r =  List.hd_exn e.stmts |> List.rev in
+  let bb = BB { id = tag
+              ; stmts = stmts_r
+              ; term = term } in
+  { e with stmts = List.tl_exn e.stmts
+         ; bbs = append_to_hd bb e.bbs
+         (* reset the bb_id *)
+         ; curr_bb_id = None }
+
 let add_stmt e stmt =
   match stmt with
   | Bind (lv, ty, _) ->
@@ -77,14 +96,8 @@ let add_stmt e stmt =
  * block is done, so we need to take the statements,
  * reverse them, then push it all into a block *)
 let add_term e term =
-  let stmts_r =  List.hd_exn e.stmts |> List.rev in
-  let bb_id = e.bb_count + 1 in
-  let bb = BB { id = bb_id
-              ; stmts = stmts_r
-              ; term = term } in
-  { e with bb_count = bb_id
-         ; stmts = List.tl_exn e.stmts
-         ; bbs = append_to_hd bb e.bbs }
+  let (bb_id, e') = get_next_bb_id e in
+  finish_bb e' bb_id term
 
 let tl_or ls ~default =
   match List.tl ls with
@@ -111,33 +124,3 @@ let make_main e =
       (Runtime.ArrowRT (Runtime.IntRT, [])) in
   List.find_exn env.fns ~f:(fun fn ->
       String.equal fn.name "main")
-
-(* let add_new_expr
- *     (e : t) (name : string option) (expr : expr) : t =
- *   let exprs' = append_to_hd (name, expr)  e.exprs in
- *   { e with exprs = exprs' }
- *
- * let clear_exprs (e : t) : (expr list * t) =
- *   let exprs = List.hd_exn e.exprs
- *               |> List.map
- *                 ~f:(fun (so, e) ->
- *                     match so with
- *                     | Some s -> LetE(Varname (get_expr_type e, s), e)
- *                     | None -> e) in
- *   exprs, { e with exprs = List.tl_exn e.exprs }
- *
- * let open_scope v =
- *   let e = v.env in
- *   let ex = v.exprs in
- *   { v with env = [] :: e
- *          ; exprs = ex }
- *
- * let close_scope v =
- *   let e = v.env in
- *   let ex = v.exprs in
- *   try { v with env = List.tl_exn e
- *              ; exprs = List.tl_exn ex } with
- *   | _ -> v *)
-
-(* let get_fns e =
- *   Set.to_list e.fns *)

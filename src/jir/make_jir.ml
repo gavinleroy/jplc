@@ -127,7 +127,14 @@ let rec flatten_expr lv = function
   | TA.SumLE(_t,_bs,_e) -> assert false
 
   (* AppE/ITE turn into terminators *)
-  | TA.IteE(_t,_cnd,_ie,_ee) -> assert false
+  | TA.IteE(_t,_cnd,_ie,_ee) ->
+    (* stop (or pause) the current basic block COND *)
+    (* generate the IF block *)
+    (* generate the ELSE block *)
+    (* push the blocks in the following order
+     * COND ~> IF ~> ELSE *)
+    assert false
+
   | TA.AppE(_t,_vn,_es) -> assert false
 
 and flatten_arg = function
