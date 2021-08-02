@@ -50,6 +50,18 @@ let fresh_int () = get
 let fresh_temp () = fresh_int ()
   >>= fun i -> return (Temp i)
 
+let add_new_bb () = get
+  >>= fun env ->
+  let (id, env') = Env.add_fresh_bb env in
+  put env' >> return id
+
+let pause_bb () = get
+  >>= fun env ->
+  let (id, env') = Env.pause_bb env in
+  put env' >> return id
+
+let resume_bb bbid = modify (flip Env.resume_bb bbid)
+
 let rec rt_of_t = function
   | Ast_utils.Unit ->
     Runtime.UnitRT
@@ -127,12 +139,33 @@ let rec flatten_expr lv = function
   | TA.SumLE(_t,_bs,_e) -> assert false
 
   (* AppE/ITE turn into terminators *)
-  | TA.IteE(_t,_cnd,_ie,_ee) ->
-    (* stop (or pause) the current basic block COND *)
-    (* generate the IF block *)
-    (* generate the ELSE block *)
-    (* push the blocks in the following order
-     * COND ~> IF ~> ELSE *)
+  | TA.IteE(_t, cnd, ie, ee) ->
+    (* generate a tag for each of the new basic_blocks *)
+    add_new_bb () >>= fun true_block ->
+    add_new_bb () >>= fun false_block ->
+    add_new_bb () >>= fun exit_block ->
+    (* gen new_lvs for each of the exprs *)
+    fresh_temp () >>= fun cnd_lv ->
+    fresh_temp () >>= fun true_lv ->
+    fresh_temp () >>= fun false_lv ->
+    (* generate the cnd *)
+    flatten_expr cnd_lv cnd
+    (* the block is done *)
+    >> modify (flip Env.add_term
+                 (Iet { cond = cnd_lv
+                      ; if_bb = true_block
+                      ; else_bb = false_block }))
+    (* flatten the true block *)
+    >> resume_bb true_block
+    >> flatten_expr true_lv ie
+    >> modify (flip Env.add_term (Goto exit_block))
+    (* flatten the false block *)
+    >> resume_bb false_block
+    >> flatten_expr false_lv ee
+    >> modify (flip Env.add_term (Goto exit_block))
+    (* resume the exit block *)
+    >> resume_bb exit_block
+    >> (* add in a PHI node to the 'exit' block *)
     assert false
 
   | TA.AppE(_t,_vn,_es) -> assert false
