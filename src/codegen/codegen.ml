@@ -58,6 +58,9 @@ let fresh_v () =
   incr rnd_n;
   Printf.sprintf "_x.%d" !rnd_n
 
+let bb_tag id =
+  Printf.sprintf "bb.%d" id
+
 (* LLVM type declarations  *)
 
 let i64_t =
@@ -219,20 +222,28 @@ let gen_code_of_rvalue = function
             Llvm.build_fptosi
           | _, _ -> assert false) llv nt (fresh_v ())))
 
+  | PhiRV { ty; paths } ->
+    ignore ty; (* FIXME *)
+    ignore paths; (* FIXME *)
+    assert false
+
   | ConstantRV c -> gen_code_of_constant c
 
 let gen_code_of_term = function
   | Goto _id -> assert false
-  | Iet _r (* { cond
-            * ; if_bb
-            * ; else_bb } *) -> assert false
+  | Iet { cond
+        ; if_bb
+        ; else_bb } ->
+    ignore cond; (* FIXME *)
+    ignore if_bb; (* FIXME *)
+    ignore else_bb; (* FIXME *)
+    assert false
   | Return l -> get_llv_lv l
     >>= fun ptr_llv -> let fsh = fresh_v () in
     modify_ (Env.store_partial fsh (Llvm.build_load ptr_llv ))
     >> get_llv fsh
     >>= fun llv ->
     modify_ (Env.add_llv_ (Llvm.build_ret llv))
-
 
 let gen_code_of_stmt = function
   | Bind (lv, _ty, rv) ->
@@ -252,10 +263,11 @@ let gen_code_of_stmt = function
 (* NOTE generating a code block will generate a
  * basic block at the END of the function fn_llval.
  * The name of the basic block will be BB.<id>. *)
-let gen_code_of_bb _fn_llval = function
+let gen_code_of_bb fn_llval = function
   | BB { id; stmts; term } ->
-    ignore id; (* FIXME *)
-    map_m_ stmts ~f:gen_code_of_stmt
+    let bb = Llvm.append_block ctx (bb_tag id) fn_llval in
+    modify_ (Env.set_bldr_pos bb)
+    >> map_m_ stmts ~f:gen_code_of_stmt
     >> gen_code_of_term term
 
 let gen_code_of_fn { name
