@@ -139,7 +139,7 @@ let rec flatten_expr lv = function
   | TA.SumLE(_t,_bs,_e) -> assert false
 
   (* AppE/ITE turn into terminators *)
-  | TA.IteE(_t, cnd, ie, ee) ->
+  | TA.IteE(t, cnd, ie, ee) ->
     (* generate a tag for each of the new basic_blocks *)
     add_new_bb () >>= fun true_block ->
     add_new_bb () >>= fun false_block ->
@@ -165,8 +165,13 @@ let rec flatten_expr lv = function
     >> modify (flip Env.add_term (Goto exit_block))
     (* resume the exit block *)
     >> resume_bb exit_block
-    >> (* add in a PHI node to the 'exit' block *)
-    assert false
+    >> let ty = rt_of_t t in
+    push_stmt
+      (Bind
+         (lv, ty
+         , (PhiRV { ty = ty
+                  ; paths = [(true_lv, true_block)
+                            ; (false_lv, false_block)]})))
 
   | TA.AppE(_t,_vn,_es) -> assert false
 

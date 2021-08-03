@@ -41,6 +41,16 @@ and pp_lvalue fmt = function
   | UserBinding (str, i) -> fprintf fmt "%s.%i" str i
   | Temp i -> fprintf fmt "temp.%d" i
 
+and pp_phi_vs fmt ls =
+  let pp_phi_vs' f (lv, tag) =
+    fprintf f "(%a %a)"
+      pp_lvalue lv
+      pp_bb_tag tag
+  in
+  pp_print_list
+    ~pp_sep:pp_print_space
+    pp_phi_vs' fmt ls
+
 and pp_rvalue fmt = function
   | UnopRV (uop, lv) ->
     fprintf fmt "%a %a"
@@ -56,6 +66,10 @@ and pp_rvalue fmt = function
     fprintf fmt "%a : %s"
       pp_lvalue lvl
       (code_of_type ty)
+  | PhiRV { ty; paths } ->
+    fprintf fmt "phi %a : %s"
+      pp_phi_vs paths
+      (code_of_type ty)
   | ConstantRV const -> pp_const fmt const
 
 and pp_binding fmt (lv, ty) =
@@ -70,7 +84,7 @@ and pp_bindings fmt ls =
 
 and pp_statement fmt = function
   | Bind (lv, ty, rv) ->
-    fprintf fmt "@[%a@ :@ %s@ =@ %a;@]"
+    fprintf fmt "@[<hov 2>%a@ :@ %s@ =@ %a;@]"
       pp_lvalue lv
       (code_of_type ty)
       pp_rvalue rv
@@ -78,15 +92,15 @@ and pp_statement fmt = function
 and pp_bb_tag fmt i = fprintf fmt "BB.%i" i
 
 and pp_terminator fmt = function
-  | Goto i -> fprintf fmt "@[goto@ %a;@]" pp_bb_tag i
+  | Goto i -> fprintf fmt "@[<hov 2>goto@ %a;@]" pp_bb_tag i
 
   | Iet { cond; if_bb; else_bb } ->
-    fprintf fmt "@[if(%a@ |@ true@ ->@ %a@ |@ %a)@]"
+    fprintf fmt "@[<hov 2>if(%a@ |@ true@ ->@ %a@ |@ false@ ->@ %a)@]"
       pp_lvalue cond
       pp_bb_tag if_bb
       pp_bb_tag else_bb
 
-  | Return lv -> fprintf fmt "@[return@ %a;@]" pp_lvalue lv
+  | Return lv -> fprintf fmt "@[<hov 2>return@ %a;@]" pp_lvalue lv
 
 and pp_ss fmt ls =
   pp_print_list
@@ -95,7 +109,7 @@ and pp_ss fmt ls =
 
 and pp_bb fmt = function
   | BB { id; stmts; term } ->
-    fprintf fmt "@[<hov 2>%a@ {@\n%a@\n%a@\n}@]"
+    fprintf fmt "@[<hov 2>%a {@\n%a@\n%a@\n}@]"
       pp_bb_tag id
       pp_ss stmts
       pp_terminator term
@@ -119,7 +133,7 @@ and pp_fn fmt { name
       | ArrowRT (rt, ps) -> (rt, ps)
       | _ -> assert false) signature in
   fprintf fmt
-    "@[%s@ (%a)@ ->@ %s@ {@\n%a@\n@\n%a@\n}@]"
+    "@[<hov 2>%s (%a) -> %s {@\n%a@\n@\n%a@\n}@]"
     name
     pp_tys ps
     (rt |> code_of_type)
@@ -132,7 +146,7 @@ and pp_jir fmt { main; prog; } =
       ~pp_sep:pp_force_newline
       pp_fn fmt js
   in
-  fprintf fmt "@[%s@\n%a@]@.@?"
+  fprintf fmt "@[<hov>%s@\n%a@]@.@?"
     jir_msg
     pp_jirs (main :: prog)
 

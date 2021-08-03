@@ -24,6 +24,8 @@ and rvalue =
   | BinopRV of lvalue * bin_op * lvalue
   | VarRV of lvalue
   | CastRV of Runtime.runtime_type * lvalue
+  | PhiRV of { ty : Runtime.runtime_type
+             ; paths : (lvalue * bb_id) list }
   (* | CrossRV of lvalue list
    * | ArrayRV of lvalue list *)
   | ConstantRV of constant

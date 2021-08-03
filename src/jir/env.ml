@@ -8,14 +8,12 @@ open Jir_lang
 
 type partial_bbs = (int, partial_bb, Int.comparator_witness) Map.t
 
-(* TODO reintroduce the optional current BB tag
- * to use when pausing and resuming BBs *)
-
 and t =
   { fns : jir_fn list
   ; bindings : (lvalue * Runtime.runtime_type) list list
   ; stmts : statement list list
   ; bbs : basic_block list list
+  ; curr_bb : bb_id option
   ; saved_bbs : partial_bbs
   ; env : (lvalue * lvalue) list list
   ; var_count : int
@@ -27,14 +25,13 @@ and partial_bb =
   ; p_env : (lvalue * lvalue) list
   ; tag : bb_id }
 
-
-
 (* TODO account for the provided runtime env *)
 let mempty () =
   { env = [[]]
   ; bindings = [[]]
   ; stmts = [[]]
   ; bbs = [[]]
+  ; curr_bb = None
   ; saved_bbs = Map.empty (module Int)
   ; var_count = 0
   ; bb_count = 0
@@ -48,9 +45,14 @@ let append_to_hd v xs =
   | (x) :: xs' -> (v :: x) :: xs'
   | _ -> [[v]]
 
-let tl_or ls ~default =
+let tl_or ?(default = []) ls =
   match List.tl ls with
   | Some ls' -> ls'
+  | None -> default
+
+let hd_or ?(default = []) ls =
+  match List.hd ls with
+  | Some f -> f
   | None -> default
 
 let add_alias e lhs rhs =
@@ -78,6 +80,11 @@ let fresh_var e =
 let incr_var_count e =
   { e with var_count = e.var_count + 1 }
 
+let get_bb_tags e =
+  match e.curr_bb with
+  | Some bbid -> bbid, e.bb_count
+  | None -> e.bb_count, e.bb_count + 1
+
 let add_fresh_bb e =
   let bbid = e.bb_count in
   let new_bb_c = bbid + 1 in
@@ -87,8 +94,7 @@ let add_fresh_bb e =
                ; saved_bbs = new_saved_bbs }
 
 let pause_bb ?(cscope = false) e =
-  let bbid = e.bb_count in
-  let new_bb_c = bbid + 1 in
+  let (bbid, new_bb_c) = get_bb_tags e in
   let new_saved_bbs = Map.add_exn e.saved_bbs
       ~key:bbid ~data:{ p_stmts = List.hd_exn e.stmts
                       ; p_env = List.hd_exn e.env
@@ -97,24 +103,29 @@ let pause_bb ?(cscope = false) e =
                ; saved_bbs = new_saved_bbs
                ; env = if cscope then
                      tl_or ~default:[] e.env
-                   else e.env}
+                   else e.env }
 
 let resume_bb ?(oscope = false) e bbid =
-  let { p_stmts; p_env; _ } = Map.find_exn e.saved_bbs bbid in
-  let new_map = Map.remove e.saved_bbs bbid in
-  { e with saved_bbs = new_map
-         ; stmts = p_stmts :: e.stmts
-         ; env = if oscope then
-               p_env :: e.env
-             else e.env }
+  match e.curr_bb with
+  | Some _ -> assert false
+  | None -> ();
+    let { p_stmts; p_env; _ } = Map.find_exn e.saved_bbs bbid in
+    let new_map = Map.remove e.saved_bbs bbid in
+    { e with saved_bbs = new_map
+           ; stmts = p_stmts :: e.stmts
+           ; curr_bb = Some bbid
+           ; env = if oscope then
+                 p_env :: e.env
+               else e.env }
 
 let finish_bb cscope e tag term =
-  let stmts_r =  List.hd_exn e.stmts |> List.rev in
+  let stmts_r =  hd_or e.stmts |> List.rev in
   let bb = BB { id = tag
               ; stmts = stmts_r
               ; term = term } in
-  { e with stmts = List.tl_exn e.stmts
+  { e with stmts = tl_or e.stmts
          ; bbs = append_to_hd bb e.bbs
+         ; curr_bb = None
          ; env = if cscope then
                (tl_or ~default:[] e.env)
              else e.env}
@@ -126,9 +137,11 @@ let add_stmt e stmt =
     { e with stmts = append_to_hd stmt e.stmts
            ; bindings = nbs }
 
-let add_term ?(cscope = false) _e term =
-  let (bb_id, e') = assert false in
-  finish_bb cscope e' bb_id term
+let add_term ?(cscope = false) e term =
+  let (bbid, new_bb_c) = get_bb_tags e in
+  finish_bb cscope
+    { e with bb_count = new_bb_c }
+    bbid term
 
 let finish_fn e name fn_sig =
   let body' = List.hd_exn e.bbs
