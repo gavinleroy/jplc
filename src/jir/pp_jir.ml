@@ -3,7 +3,6 @@
 (*       07.2021        *)
 (************************)
 
-open Core
 open Format
 open Jir_lang
 open Runtime
@@ -138,7 +137,7 @@ and pp_fn fmt { name
     pp_tys ps
     (rt |> code_of_type)
     pp_bindings bindings
-    pp_bbs (Array.to_list body)
+    pp_bbs body
 
 and pp_jir fmt { main; prog; } =
   let pp_jirs fmt js =

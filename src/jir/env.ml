@@ -145,7 +145,7 @@ let add_term ?(cscope = false) e term =
 
 let finish_fn e name fn_sig =
   let body' = List.hd_exn e.bbs
-              |> List.rev |> Array.of_list in
+              |> List.rev in
   let fn = { name = name
            ; signature = fn_sig
            ; bindings = List.hd_exn e.bindings

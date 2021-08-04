@@ -58,7 +58,7 @@ and jir_fn =
   { name : string
   ; signature : Runtime.runtime_type
   ; bindings : (lvalue * Runtime.runtime_type) list
-  ; body : basic_block Array.t }
+  ; body : basic_block list }
 
 and jir =
   { main : jir_fn
