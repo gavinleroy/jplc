@@ -23,27 +23,29 @@ let ctx =
 
 module Env = struct
   type t =
-    { ll_b   : Llvm.llbuilder
+    { ll_b : Llvm.llbuilder
     (* currently there is no support for modules/imports so all
      * code must be contained to one module *)
-    ; ll_m   : Llvm.llmodule
-    ; tbl    : (string, Llvm.llvalue) Hashtbl.t }
+    ; ll_m : Llvm.llmodule
+    ; tbl : (string, Llvm.llvalue) Hashtbl.t
+    ; bbs : (string, Llvm.llbasicblock) Hashtbl.t }
   let mempty () =
     { ll_b = Llvm.builder ctx
     ; ll_m = Llvm.create_module ctx "jplm"
-    ; tbl = Hashtbl.create(module String) }
+    ; tbl = Hashtbl.create(module String)
+    ; bbs = Hashtbl.create(module String) }
   let mappend _m1 _m2 =
     assert false
   let set_bldr_pos bb t =
     Llvm.position_at_end bb t.ll_b
   let add_llv_ f t : unit =
-    let (_ : 'a) = f t.ll_b in ()
-  (* let add_llv_partial_ vn f t =
-   *   add_llv_ (f vn t.ll_b) t *)
+    ignore (f t.ll_b : 'a)
   let store_llv vn llv t =
     Hashtbl.add_exn ~key:vn ~data:llv t.tbl
   let store_partial vn f t =
     store_llv vn (f vn t.ll_b) t
+  let store_bb id bbl t =
+    Hashtbl.add t.bbs ~key:id ~data:bbl
 end
 
 module State = Utils.Functional.State(Env)
@@ -231,13 +233,26 @@ let gen_code_of_rvalue = function
 
 let gen_code_of_term = function
   | Goto _id -> assert false
+
   | Iet { cond
         ; if_bb
-        ; else_bb } ->
-    ignore cond; (* FIXME *)
-    ignore if_bb; (* FIXME *)
-    ignore else_bb; (* FIXME *)
+        ; else_bb } -> get_llv_lv cond
+    >>= fun cond_ptr ->
+    (* TODO compare the conditional value to 1 *)
+    let (iftag, elsetag) = bb_tag if_bb, bb_tag else_bb in
+
+    (* NOTE s :
+     * at this point the if and else blocks haven't been
+     * generated yet. Thus the cooresponding llbasicblock doesn't exist!
+     * Similar to the JIR
+     * we need some way to `add` a basic block without actually computing it *)
+    ignore cond_ptr;
+    ignore iftag;
+    ignore elsetag;
+
     assert false
+  (* modify (Env.add_llv_ (Llvm.build_cond_br condllv (assert false) (assert false)) *)
+
   | Return l -> get_llv_lv l
     >>= fun ptr_llv -> let fsh = fresh_v () in
     modify_ (Env.store_partial fsh (Llvm.build_load ptr_llv ))
@@ -269,6 +284,7 @@ let gen_code_of_bb fn_llval = function
     modify_ (Env.set_bldr_pos bb)
     >> map_m_ stmts ~f:gen_code_of_stmt
     >> gen_code_of_term term
+    >> return bb
 
 let gen_code_of_fn { name
                    ; signature
@@ -287,7 +303,7 @@ let gen_code_of_fn { name
   (* allocate space for each used variable *)
   >> map_m_ bindings ~f:gen_code_of_binding
   (* turn all the basic blocks into llvm *)
-  >> map_m_ (Array.to_list body) ~f:(gen_code_of_bb ll_f)
+  >> map_m_ body ~f:(gen_code_of_bb ll_f)
 
 let gen_code_of_prog { main; prog } =
   let ex =
@@ -300,5 +316,4 @@ let gen_code_of_prog { main; prog } =
   Ok env.ll_m
 
 (* function for generating the string dump of a module *)
-let emit_llvm_module =
-  Llvm.string_of_llmodule
+let emit_llvm_module = Llvm.string_of_llmodule
