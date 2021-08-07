@@ -152,9 +152,10 @@ let rec flatten_expr lv = function
     flatten_expr cnd_lv cnd
     (* the block is done *)
     >> modify (flip Env.add_term
-                 (Iet { cond = cnd_lv
+                 (Ite { cond = cnd_lv
                       ; if_bb = true_block
-                      ; else_bb = false_block }))
+                      ; else_bb = false_block
+                      ; merge_bb = exit_block }))
     (* flatten the true block *)
     >> resume_bb true_block
     >> flatten_expr true_lv ie

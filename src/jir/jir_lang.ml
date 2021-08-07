@@ -44,9 +44,10 @@ and statement =
 and terminator =
   | Goto of bb_id
   (* | Panic of basic_block *)
-  | Iet of { cond : lvalue
+  | Ite of { cond : lvalue
            ; if_bb : bb_id
-           ; else_bb : bb_id }
+           ; else_bb : bb_id
+           ; merge_bb : bb_id }
   | Return of lvalue
 
 and basic_block =

@@ -93,11 +93,12 @@ and pp_bb_tag fmt i = fprintf fmt "BB.%i" i
 and pp_terminator fmt = function
   | Goto i -> fprintf fmt "@[<hov 2>goto@ %a;@]" pp_bb_tag i
 
-  | Iet { cond; if_bb; else_bb } ->
-    fprintf fmt "@[<hov 2>if(%a@ |@ true@ ->@ %a@ |@ false@ ->@ %a)@]"
+  | Ite { cond; if_bb; else_bb; merge_bb } ->
+    fprintf fmt "@[<hov 2>if(%a@ |@ true@ ->@ %a@ |@ false@ ->@ %a)@ ->@ %a@]"
       pp_lvalue cond
       pp_bb_tag if_bb
       pp_bb_tag else_bb
+      pp_bb_tag merge_bb
 
   | Return lv -> fprintf fmt "@[<hov 2>return@ %a;@]" pp_lvalue lv
 

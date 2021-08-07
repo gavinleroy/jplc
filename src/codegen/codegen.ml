@@ -45,7 +45,9 @@ module Env = struct
   let store_partial vn f t =
     store_llv vn (f vn t.ll_b) t
   let store_bb id bbl t =
-    Hashtbl.add t.bbs ~key:id ~data:bbl
+    match Hashtbl.add t.bbs ~key:id ~data:bbl with
+    | `Duplicate -> assert false
+    | `Ok -> ()
 end
 
 module State = Utils.Functional.State(Env)
@@ -65,15 +67,18 @@ let bb_tag id =
 
 (* LLVM type declarations  *)
 
+(* 32 bit integers are used solely for booleans at the moment *)
+(* let i32_t =
+ *   Llvm.i32_type ctx *)
+
+let bool_t =
+  Llvm.i1_type ctx
+
 let i64_t =
   Llvm.i64_type ctx
 
 let f64_t =
   Llvm.double_type ctx
-
-(* NOTE booleans are represented as 1 bit integers *)
-let bool_t =
-  Llvm.i1_type ctx
 
 (* NOTE strings are represented as character pointers
  * in LLVM IR *)
@@ -105,6 +110,12 @@ let rec llvm_t_of_runtime = function
     let ps = List.map ~f:llvm_t_of_runtime ps in
     make_arrow_t rt ps
 
+let llvm_true_v =
+  Llvm.const_int bool_t 1
+
+let llvm_false_v =
+  Llvm.const_int bool_t 0
+
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            UTILITY FUNCTIONS         *)
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
@@ -122,6 +133,20 @@ let get_llv vn = get >>= fun env ->
 let get_llv_lv =
   get_llv <.> lv_to_str
 
+let use_builder f = get
+  >>= fun env ->
+  return (f env.ll_b)
+
+let get_bb_of_tag f tag = get
+  >>= fun env ->
+  match Hashtbl.find env.bbs tag with
+  | Some bblv -> return bblv
+  | None ->
+    let lv = Llvm.append_block ctx tag f in
+    modify_ (Env.store_bb tag lv)
+    >> return lv
+
+
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            CODE GENERATORS          *)
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
@@ -130,21 +155,27 @@ let gen_code_of_constant c =
   return
     (`ConstRV
        (match c with
-        | TRUE
-        | FALSE -> assert false
+        | TRUE -> llvm_true_v
+
+        | FALSE -> llvm_false_v
 
         | INT i ->
-          (Llvm.const_of_int64 i64_t i true)
+          Llvm.const_of_int64 i64_t i true
 
         | FLOAT f ->
-          (Llvm.const_float f64_t f)
+          Llvm.const_float f64_t f
 
         | STATIC_STRING s ->
-          (Llvm.const_string ctx s)))
+          Llvm.const_string ctx s))
 
 let gen_code_of_rvalue = function
 
-  | VarRV _lv -> assert false
+  | VarRV lv -> get_llv_lv lv
+    >>= fun rv_ptr -> let temp = fresh_v () in
+    modify_ (Env.store_partial temp (Llvm.build_load rv_ptr))
+    >> get_llv temp
+    >>= fun rv ->
+    return (`ConstRV rv)
 
   | UnopRV (op, rhs) -> get_llv_lv rhs
     >>= fun ptr_llv -> let temp = fresh_v () in
@@ -226,32 +257,64 @@ let gen_code_of_rvalue = function
 
   | PhiRV { ty; paths } ->
     ignore ty; (* FIXME *)
-    ignore paths; (* FIXME *)
-    assert false
+    let rec loop ls ps =
+      match ls with
+      | [] -> return ps
+      | (lv, bb_id) :: ls' ->
+        use_builder Llvm.insertion_block
+        >>= fun curr_bb ->
+        let curr_f = Llvm.block_parent curr_bb in
+        get_llv_lv lv >>= fun lv ->
+        get_bb_of_tag curr_f (bb_tag bb_id)
+        >>= fun bblv ->
+        loop ls' ((lv, bblv) :: ps)
+    in
+    loop paths []
+    >>= fun p_llvs ->
+    use_builder (Llvm.build_phi p_llvs (fresh_v ()))
+    >>= fun phi_ptr -> let phi_temp = fresh_v () in
+    modify_ (Env.store_partial phi_temp (Llvm.build_load phi_ptr))
+    >> get_llv phi_temp
+    >>= fun phi ->
+    return (`ConstRV phi)
 
   | ConstantRV c -> gen_code_of_constant c
 
 let gen_code_of_term = function
-  | Goto _id -> assert false
+  | Goto id ->
+    (* potentially copy/pasted *)
+    use_builder Llvm.insertion_block
+    >>= fun curr_bb ->
+    let curr_f = Llvm.block_parent curr_bb in
+    get_bb_of_tag curr_f (bb_tag id)
+    >>= fun bb ->
+    modify_ (Env.add_llv_ (Llvm.build_br bb))
 
-  | Iet { cond
+  | Ite { cond
         ; if_bb
-        ; else_bb } -> get_llv_lv cond
-    >>= fun cond_ptr ->
-    (* TODO compare the conditional value to 1 *)
-    let (iftag, elsetag) = bb_tag if_bb, bb_tag else_bb in
-
-    (* NOTE s :
-     * at this point the if and else blocks haven't been
-     * generated yet. Thus the cooresponding llbasicblock doesn't exist!
-     * Similar to the JIR
-     * we need some way to `add` a basic block without actually computing it *)
-    ignore cond_ptr;
-    ignore iftag;
-    ignore elsetag;
-
-    assert false
-  (* modify (Env.add_llv_ (Llvm.build_cond_br condllv (assert false) (assert false)) *)
+        ; else_bb
+        ; merge_bb } -> get_llv_lv cond
+    >>= fun cnd_ptr -> let cnd_temp = fresh_v () in
+    modify_ (Env.store_partial cnd_temp (Llvm.build_load cnd_ptr ))
+    >> get_llv cnd_temp
+    >>= fun cnd_llv ->
+    let br_temp = fresh_v () in
+    modify_ (Env.store_partial br_temp
+               (Llvm.build_icmp Llvm.Icmp.Ne cnd_llv llvm_false_v))
+    >> get_llv br_temp
+    >>= fun br_llv ->
+    use_builder Llvm.insertion_block
+    >>= fun curr_bb -> let curr_f = Llvm.block_parent curr_bb in
+    let (if_tag, else_tag, merge_tag) = bb_tag if_bb
+                                      , bb_tag else_bb
+                                      , bb_tag merge_bb in
+    (* generate the future basic blocks so we can use them here *)
+    get_bb_of_tag curr_f if_tag
+    >>= fun if_bb -> get_bb_of_tag curr_f else_tag
+    >>= fun else_bb -> get_bb_of_tag curr_f merge_tag
+    (* ignore the merge tag, we just needed to generate it *)
+    >> modify_ (Env.set_bldr_pos curr_bb)
+    >> modify_ (Env.add_llv_ (Llvm.build_cond_br br_llv if_bb else_bb))
 
   | Return l -> get_llv_lv l
     >>= fun ptr_llv -> let fsh = fresh_v () in
@@ -280,7 +343,8 @@ let gen_code_of_stmt = function
  * The name of the basic block will be BB.<id>. *)
 let gen_code_of_bb fn_llval = function
   | BB { id; stmts; term } ->
-    let bb = Llvm.append_block ctx (bb_tag id) fn_llval in
+    get_bb_of_tag fn_llval (bb_tag id)
+    >>= fun bb ->
     modify_ (Env.set_bldr_pos bb)
     >> map_m_ stmts ~f:gen_code_of_stmt
     >> gen_code_of_term term
@@ -299,9 +363,17 @@ let gen_code_of_fn { name
   let fn_type = llvm_t_of_runtime signature in
   let ll_f = Llvm.define_function name fn_type env.ll_m in
   (* set the entry block for the function *)
-  modify_ (Env.set_bldr_pos (Llvm.entry_block ll_f))
+  let entry_bb = Llvm.entry_block ll_f in
+  modify_ (Env.set_bldr_pos entry_bb)
   (* allocate space for each used variable *)
   >> map_m_ bindings ~f:gen_code_of_binding
+  (* the bindings form a basic block and we need
+   * a terminator that goes to the next
+   * basic block *)
+  >> let (BB bb) = List.hd_exn body in
+  get_bb_of_tag ll_f (bb_tag bb.id)
+  >>= fun next_bb ->
+  modify_ (Env.add_llv_ (Llvm.build_br next_bb))
   (* turn all the basic blocks into llvm *)
   >> map_m_ body ~f:(gen_code_of_bb ll_f)
 
@@ -312,7 +384,7 @@ let gen_code_of_prog { main; prog } =
   in
   exec_state  ex (Env.mempty ())
   |> fun env ->
-  Llvm_analysis.assert_valid_module env.ll_m; (* TODO remove later *)
+  (* Llvm_analysis.assert_valid_module env.ll_m; (\* TODO remove later *\) *)
   Ok env.ll_m
 
 (* function for generating the string dump of a module *)
