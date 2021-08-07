@@ -121,7 +121,7 @@ let llvm_false_v =
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 
 let get_var ?(stem = "t") (n : int) =
-  Printf.sprintf "%%%s.%d" stem n
+  Printf.sprintf "_%s.%d" stem n
 
 let lv_to_str = function
   | UserBinding (str,i) -> get_var ~stem:str i
@@ -259,7 +259,7 @@ let gen_code_of_rvalue = function
     ignore ty; (* FIXME *)
     let rec loop ls ps =
       match ls with
-      | [] -> return ps
+      | [] -> return (List.rev ps)
       | (lv, bb_id) :: ls' ->
         use_builder Llvm.insertion_block
         >>= fun curr_bb ->
@@ -312,8 +312,16 @@ let gen_code_of_term = function
     get_bb_of_tag curr_f if_tag
     >>= fun if_bb -> get_bb_of_tag curr_f else_tag
     >>= fun else_bb -> get_bb_of_tag curr_f merge_tag
+    >>
+    (* FIXME below *)
+    (* >>= fun merge_bb -> *)
     (* ignore the merge tag, we just needed to generate it *)
-    >> modify_ (Env.set_bldr_pos curr_bb)
+    (* begin *)
+    (* Llvm.move_block_after curr_bb if_bb;
+     * Llvm.move_block_after if_bb else_bb;
+     * Llvm.move_block_after else_bb merge_bb; *)
+    modify_ (Env.set_bldr_pos curr_bb)
+    (* end *)
     >> modify_ (Env.add_llv_ (Llvm.build_cond_br br_llv if_bb else_bb))
 
   | Return l -> get_llv_lv l
@@ -384,7 +392,8 @@ let gen_code_of_prog { main; prog } =
   in
   exec_state  ex (Env.mempty ())
   |> fun env ->
-  (* Llvm_analysis.assert_valid_module env.ll_m; (\* TODO remove later *\) *)
+  (* TODO catch LLVM errors with this assertion *)
+  Llvm_analysis.assert_valid_module env.ll_m;
   Ok env.ll_m
 
 (* function for generating the string dump of a module *)
