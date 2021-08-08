@@ -164,6 +164,11 @@ let rec flatten_expr lv = function
     >> resume_bb false_block
     >> flatten_expr false_lv ee
     >> modify (flip Env.add_term (Goto exit_block))
+    (* NOTE the `true_block` and the `false_block` *could*
+     * have conditionals and re-written blocks. For this,
+     * the PHI node needs to get the basic_blocks that
+     * actually jump to it, so we need to follow the CFG
+     * until a BB jumps to `exit_block` *)
     (* resume the exit block *)
     >> resume_bb exit_block
     >> let ty = rt_of_t t in
@@ -209,6 +214,8 @@ and flatten_stmt = function
     (* generate an if terminator which branches to a
      * panic when false and continue to next BB when
      * true *)
+    (* TODO adding in a panic will require unwinding the LLVM stack,
+     * this unwinding stack should be kept in the JIR. *)
     assert false
 
   | TA.ReturnS(_te, expr) -> fresh_int ()
