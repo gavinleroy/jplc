@@ -16,6 +16,16 @@ module Monadic = Utils.Functional.Utils(State)
 open State
 open Monadic
 
+(* TODO
+ * this module is currently broken !
+ * and was written using the previous implementaion
+ * of the ENV.ml
+ *
+ * The new env requires a little more user interaction as
+ * far as setting when new function start, and when new
+ * basic blocks should begin. (e.g. setting the new name of a block)
+ **)
+
 (* ~~~~~~~~~~~~~~~~~ *)
 (* UTILITY FUNCTIONS *)
 (* ~~~~~~~~~~~~~~~~~ *)
