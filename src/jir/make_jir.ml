@@ -45,7 +45,6 @@ let push_stmt s =
 
 let lookup vn =
   let s = Varname.to_string vn in
-  Printf.printf "Looking for %s\n" s;
   get >>= fun e ->
   return <$> Env.lookup e s
 
@@ -65,12 +64,13 @@ let add_new_bb () = get
   let (id, env') = Env.add_fresh_bb env in
   put env' >> return id
 
-let pause_bb () = get
-  >>= fun env ->
-  let (id, env') = Env.pause_bb env in
-  put env' >> return id
+let set_bb bbid =
+  modify (flip Env.set_bb bbid)
 
-let resume_bb bbid = modify (flip Env.resume_bb bbid)
+let get_bb () = get
+  >>= fun env ->
+  Env.get_curr_bb env
+  |> return
 
 let rec rt_of_t = function
   | Ast_utils.Unit ->
@@ -167,20 +167,25 @@ let rec flatten_expr lv = function
                       ; else_bb = false_block
                       ; merge_bb = exit_block }))
     (* flatten the true block *)
-    >> resume_bb true_block
+    >> set_bb true_block
     >> flatten_expr true_lv ie
-    >> modify (flip Env.add_term (Goto exit_block))
-    (* flatten the false block *)
-    >> resume_bb false_block
-    >> flatten_expr false_lv ee
     >> modify (flip Env.add_term (Goto exit_block))
     (* NOTE the `true_block` and the `false_block` *could*
      * have conditionals and re-written blocks. For this,
      * the PHI node needs to get the basic_blocks that
      * actually jump to it, so we need to follow the CFG
-     * until a BB jumps to `exit_block` *)
+     * until a BB jumps to `exit_block`
+     *
+     * For this reason the true and false blocks are
+     * shadowed in this env. *)
+    >> get_bb () >>= fun true_block ->
+    (* flatten the false block *)
+    set_bb false_block
+    >> flatten_expr false_lv ee
+    >> modify (flip Env.add_term (Goto exit_block))
+    >> get_bb () >>= fun false_block ->
     (* resume the exit block *)
-    >> resume_bb exit_block
+    set_bb exit_block
     >> let ty = rt_of_t t in
     push_stmt
       (Bind
@@ -261,9 +266,6 @@ and flatten_cmd = function
 (* NOTE creating the JIR should never produce an `Error.t`
  * as the program was already successfully typed. *)
 and jir_of_ty (p : TA.prog) : jir Or_error.t =
-  let p = take_until p ~f:(function
-      | TA.StmtC (TA.ReturnS _) -> true
-      | _ -> false) in
   exec_state (map_m p ~f:flatten_cmd) (Env.mempty ())
   |> fun env ->
   Ok { main = Env.make_main env

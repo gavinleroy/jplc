@@ -18,12 +18,10 @@ and t =
   (* the list of functions that represent
    * a JPL module *)
   { fns : jir_fn list
-
   (* Map of Basic Blocks, either `Done or `Partial *)
   ; bbs : bb_variants scoped_map
   ; bindings : (lvalue * Runtime.runtime_type) scoped_map
   ; env : lvalue scoped_map
-
   (* the current Basic Block name if it exists *)
   ; curr_bb : bb_id option
   (* the total variables count *)
@@ -56,7 +54,7 @@ and bb_variants =
   | `Partial of partial_bb ]
 
 (* TODO account for the provided runtime env *)
-let mempty () =
+let rec mempty () =
   { env = IntMap.empty
   ; bindings = IntMap.empty
   ; bbs = IntMap.empty
@@ -65,18 +63,28 @@ let mempty () =
   ; bb_count = 0
   ; scope_count = 0
   ; fns = [] }
+  |> add_fresh_bb
+  |> (fun (bbid, e) ->
+      set_bb e bbid)
 
-let mappend _v1 _v2 =
+and mappend _v1 _v2 =
   assert false
 
+and hash_lvalue = function
+  | UserBinding (str, _i) ->
+    String.hash str
+  | Temp i ->
+    Printf.sprintf "_t.%d" i
+    |> String.hash
+
 (* sort a list of scoped items by descending scope *)
-let sort_scoped ?(desc = true) ls =
+and sort_scoped ?(desc = true) ls =
   List.stable_sort ls ~compare:(fun (a, _) (a', _) ->
       Int.compare a a')
   |> (if desc then List.rev else ident)
 
 (* NOTE should never fail if program is typechecked  *)
-let lookup e (vn : string) =
+and lookup e (vn : string) =
   String.hash vn
   |> Map.find_multi e.bindings
   |> sort_scoped
@@ -85,19 +93,20 @@ let lookup e (vn : string) =
   |> fst (* return the LVALUE *)
 
 
-let fresh_var e =
+and fresh_var e =
   let newstr = Printf.sprintf "_%%%d" e.var_count in
   newstr, { e with var_count = e.var_count + 1 }
 
-let incr_var_count e =
+and incr_var_count e =
   { e with var_count = e.var_count + 1 }
 
-let get_bb_tags e =
-  match e.curr_bb with
-  | Some bbid -> bbid, e.bb_count
-  | None -> e.bb_count, e.bb_count + 1
+and get_bb_tags e =
+  e.bb_count, e.bb_count + 1
+(* match e.curr_bb with
+ * | Some bbid -> bbid, e.bb_count + 1
+ * | None -> e.bb_count, e.bb_count + 1 *)
 
-let add_fresh_bb e =
+and add_fresh_bb e =
   let (bbid, new_bb_c) = get_bb_tags e in
   let data = (e.scope_count , `Partial { p_stmts = []
                                        ; p_env = []
@@ -107,14 +116,14 @@ let add_fresh_bb e =
       ~data:data in
   bbid, { e with bb_count = new_bb_c; bbs = new_bbs }
 
-let get_curr_bb e =
+and get_curr_bb e =
   match e.curr_bb with
   | Some bbid -> bbid
   | None ->
     Printf.printf "expected current bb but None was found";
     assert false
 
-let get_partial_bb e id =
+and get_partial_bb e id =
   match Map.find_multi e.bbs id with
   | [(_, `Partial pbb)] ->
     pbb
@@ -132,7 +141,7 @@ let get_partial_bb e id =
     assert false
 
 
-let set_bb ?(oscope = false) e bbid =
+and set_bb ?(oscope = false) e bbid =
   ignore oscope;
   (* TODO REMOVE
    *  for safetly check that the BBID exists in our
@@ -140,52 +149,66 @@ let set_bb ?(oscope = false) e bbid =
   ignore (get_partial_bb e bbid : partial_bb);
   { e with curr_bb = Some bbid }
 
-let finish_bb cscope e bbid term =
+and finish_bb cscope e bbid term =
   ignore cscope;
   (* we must be finishing the current basic block *)
   assert (bbid = Option.value_exn e.curr_bb);
-
   let { p_stmts
       ; p_env
       ; tag } = get_partial_bb e bbid in
   ignore p_env;
   assert (bbid = tag);
   let finished_bb = BB { id = bbid
-                       ; stmts = p_stmts
+                       ; stmts = List.rev p_stmts
                        ; term = term } in
   let without = Map.remove_multi e.bbs bbid in
   let with_bb = Map.add_multi without ~key:bbid
       ~data:(e.scope_count, `Done finished_bb) in
   { e with bbs = with_bb }
 
-
-let add_stmt e stmt =
+and add_stmt e stmt =
   let bbid = get_curr_bb e in
+  let (bindings', env') = (match stmt with
+      | Bind (lv, rt, rv) ->
+        ignore rv;
+        Map.add_multi e.bindings
+          ~key:(hash_lvalue lv)
+          ~data:(e.scope_count, (lv, rt))
+      , e.env)
+  in
   let new_map = Map.update e.bbs bbid ~f:(function
-      | None ->
-        Printf.printf "inserting a stmt into a BB that doesn't exist";
-        assert false
       | Some [(sc, `Partial pbb)] ->
         [(sc, `Partial
             { pbb with
               p_stmts = stmt :: pbb.p_stmts })]
-      | _ -> Printf.printf "";
-        assert false) in
-  { e with bbs = new_map }
 
-let add_term ?(cscope = false) e term =
-  let (bbid, new_bb_c) = get_bb_tags e in
-  finish_bb cscope
-    { e with bb_count = new_bb_c }
-    bbid term
+      (* problems *)
+      | None ->
+        Printf.printf "inserting a stmt into a BB that doesn't exist";
+        assert false
+      | Some [(_sc, `Done _bb)] ->
+        Printf.printf "Done bb found for BB.%d" bbid;
+        assert false
+      | Some (_ :: _) ->
+        Printf.printf "multiple entries in bb hash!";
+        assert false
+      | Some [] ->
+        Printf.printf "empty list found!";
+        assert false)
+  in
+  { e with bbs = new_map
+         ; bindings = bindings'
+         ; env = env' }
+
+and add_term ?(cscope = false) e term =
+  finish_bb cscope e (get_curr_bb e) term
 
 (* TODO clean up this function and potentiall make it
  * faster *)
-let finish_fn e name fn_sig =
-  let bbid = get_curr_bb e in
-  let pbb = get_partial_bb e bbid in
-
-  assert (List.length pbb.p_stmts = 0);
+and finish_fn e name fn_sig =
+  (* let bbid = get_curr_bb e in
+   * let pbb = get_partial_bb e bbid in
+   * assert (List.length pbb.p_stmts = 0); *)
 
   let body' = Map.filter e.bbs ~f:(function
       | [(sc, `Done _)] ->
@@ -225,7 +248,7 @@ let finish_fn e name fn_sig =
     (* filter the bindings *)
     fns = fn :: e.fns }
 
-let make_main e =
+and make_main e =
   let env = finish_fn e "main"
       (Runtime.ArrowRT (Runtime.IntRT, [])) in
   List.find_exn env.fns ~f:(fun fn ->

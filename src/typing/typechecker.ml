@@ -323,7 +323,11 @@ let get_retstmt_type_c l = fun cmds ->
 let type_prog (p : prog) : TA.prog Or_error.t =
   let dp = Lexing.dummy_pos in
   (* make sure that the top-level has a return *)
-  let p = p @ [StmtC(dp, ReturnS(dp, IntE(dp, Int64.zero)))] in
+  let p = match (List.rev p |> List.hd) with
+    | Some (StmtC(_, ReturnS(_, _))) -> p
+    | Some _ -> p @ [StmtC(dp, ReturnS(dp, IntE(dp, Int64.zero)))]
+    | None -> [StmtC(dp, ReturnS(dp, IntE(dp, Int64.zero)))]
+  in
   eval_state_t (map_m p ~f:type_cmd
                 >>= fun program -> get_retstmt_type_c dp program
                 >>= expect dp ident IntT

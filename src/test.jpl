@@ -4,7 +4,8 @@ let x =
   if 0 > 5 then
     0
   else
-    if true then
-      0
-    else 1;
+    if 10 != 10 then
+      1
+    else
+      2;
 return x;
