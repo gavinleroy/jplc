@@ -44,6 +44,8 @@ module Env = struct
     Hashtbl.add_exn ~key:vn ~data:llv t.tbl
   let store_partial vn f t =
     store_llv vn (f vn t.ll_b) t
+  let store_partial_global vn vl f t =
+    store_llv vn (f vn vl t.ll_m) t
   let store_bb id bbl t =
     match Hashtbl.add t.bbs ~key:id ~data:bbl with
     | `Duplicate -> assert false
@@ -115,6 +117,17 @@ let llvm_true_v =
 
 let llvm_false_v =
   Llvm.const_int bool_t 0
+
+let default_llv_of_type = function
+  | Runtime.IntRT ->
+    Llvm.const_of_int64 i64_t 0L true
+  | Runtime.FloatRT ->
+    Llvm.const_float f64_t 0.0
+  | Runtime.BoolRT ->
+    llvm_false_v
+  (* NOTE not matching Arrow | Array | Cross | Unit | String | ETC ... *)
+  | _ -> assert false
+
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            UTILITY FUNCTIONS         *)
@@ -362,7 +375,7 @@ let gen_code_of_fn { name
                    ; signature
                    ; bindings
                    ; body } =
-  let gen_code_of_binding (lv, ty) =
+  let gen_code_of_local_binding (lv, ty) =
     let llvm_ty = llvm_t_of_runtime ty in
     let lv_str =  lv_to_str lv in
     modify_ (Env.store_partial lv_str (Llvm.build_alloca llvm_ty))
@@ -374,7 +387,7 @@ let gen_code_of_fn { name
   let entry_bb = Llvm.entry_block ll_f in
   modify_ (Env.set_bldr_pos entry_bb)
   (* allocate space for each used variable *)
-  >> map_m_ bindings ~f:gen_code_of_binding
+  >> map_m_ bindings ~f:gen_code_of_local_binding
   (* the bindings form a basic block and we need
    * a terminator that goes to the next
    * basic block *)
@@ -385,12 +398,20 @@ let gen_code_of_fn { name
   (* turn all the basic blocks into llvm *)
   >> map_m_ body ~f:(gen_code_of_bb ll_f)
 
-let gen_code_of_prog { main; prog } =
+let gen_code_of_global (lv, ty) =
+  let lv_str =  lv_to_str lv in
+  modify_ (Env.store_partial_global lv_str
+             (* store the defaultl type in the global position *)
+             (default_llv_of_type ty)
+             Llvm.define_global)
+
+let gen_code_of_prog { main; globals; prog } =
   let ex =
-    map_m prog ~f:gen_code_of_fn
+    map_m globals ~f:gen_code_of_global
+    >> map_m prog ~f:gen_code_of_fn
     >> gen_code_of_fn main
   in
-  exec_state  ex (Env.mempty ())
+  exec_state ex (Env.mempty ())
   |> fun env ->
   (* TODO catch LLVM errors with this assertion *)
   Llvm_analysis.assert_valid_module env.ll_m;

@@ -16,16 +16,6 @@ module Monadic = Utils.Functional.Utils(State)
 open State
 open Monadic
 
-(* TODO
- * this module is currently broken !
- * and was written using the previous implementaion
- * of the ENV.ml
- *
- * The new env requires a little more user interaction as
- * far as setting when new function start, and when new
- * basic blocks should begin. (e.g. setting the new name of a block)
- **)
-
 (* ~~~~~~~~~~~~~~~~~ *)
 (* UTILITY FUNCTIONS *)
 (* ~~~~~~~~~~~~~~~~~ *)
@@ -65,7 +55,7 @@ let add_new_bb () = get
   put env' >> return id
 
 let set_bb bbid =
-  modify (flip Env.set_bb bbid)
+  modify <$> flip Env.set_bb bbid
 
 let get_bb () = get
   >>= fun env ->
@@ -150,26 +140,6 @@ let rec flatten_expr lv = function
 
   (* AppE/ITE turn into terminators *)
   | TA.IteE(t, cnd, ie, ee) ->
-    (* generate a tag for each of the new basic_blocks *)
-    add_new_bb () >>= fun true_block ->
-    add_new_bb () >>= fun false_block ->
-    add_new_bb () >>= fun exit_block ->
-    (* gen new_lvs for each of the exprs *)
-    fresh_temp () >>= fun cnd_lv ->
-    fresh_temp () >>= fun true_lv ->
-    fresh_temp () >>= fun false_lv ->
-    (* generate the cnd *)
-    flatten_expr cnd_lv cnd
-    (* the block is done *)
-    >> modify (flip Env.add_term
-                 (Ite { cond = cnd_lv
-                      ; if_bb = true_block
-                      ; else_bb = false_block
-                      ; merge_bb = exit_block }))
-    (* flatten the true block *)
-    >> set_bb true_block
-    >> flatten_expr true_lv ie
-    >> modify (flip Env.add_term (Goto exit_block))
     (* NOTE the `true_block` and the `false_block` *could*
      * have conditionals and re-written blocks. For this,
      * the PHI node needs to get the basic_blocks that
@@ -178,21 +148,50 @@ let rec flatten_expr lv = function
      *
      * For this reason the true and false blocks are
      * shadowed in this env. *)
-    >> get_bb () >>= fun true_block ->
+
+    (* generate a tag for each of the new basic_blocks *)
+    get_bb () >>= fun curr_block ->
+    (* gen new_lvs for each of the exprs *)
+    fresh_temp () >>= fun cnd_lv ->
+    fresh_temp () >>= fun true_lv ->
+    fresh_temp () >>= fun false_lv ->
+    (* generate the cnd *)
+    flatten_expr cnd_lv cnd
+    (* the block is done *)
+    (* flatten the true block *)
+    >> add_new_bb () >>= fun true_block ->
+    set_bb true_block
+    >> flatten_expr true_lv ie
+    >> get_bb () >>= fun true_block' ->
+
     (* flatten the false block *)
+    add_new_bb () >>= fun false_block ->
     set_bb false_block
     >> flatten_expr false_lv ee
+    >> get_bb () >>= fun false_block' ->
+
+    (* finish the basic blocks  *)
+    add_new_bb () >>= fun exit_block ->
+    set_bb curr_block
+    >> modify (flip Env.add_term
+                 (Ite { cond = cnd_lv
+                      ; if_bb = true_block
+                      ; else_bb = false_block
+                      ; merge_bb = exit_block }))
+    >> set_bb true_block'
     >> modify (flip Env.add_term (Goto exit_block))
-    >> get_bb () >>= fun false_block ->
+    >> set_bb false_block'
+    >> modify (flip Env.add_term (Goto exit_block))
+
     (* resume the exit block *)
-    set_bb exit_block
+    >> set_bb exit_block
     >> let ty = rt_of_t t in
     push_stmt
       (Bind
          (lv, ty
          , (PhiRV { ty = ty
-                  ; paths = [(true_lv, true_block)
-                            ; (false_lv, false_block)]})))
+                  ; paths = [(true_lv, true_block')
+                            ; (false_lv, false_block')]})))
 
   | TA.AppE(_t,_vn,_es) -> assert false
 
@@ -268,5 +267,7 @@ and flatten_cmd = function
 and jir_of_ty (p : TA.prog) : jir Or_error.t =
   exec_state (map_m p ~f:flatten_cmd) (Env.mempty ())
   |> fun env ->
-  Ok { main = Env.make_main env
+  let (main_fn, glbls) = Env.make_main env in
+  Ok { main = main_fn
+     ; globals = glbls
      ; prog = [] }

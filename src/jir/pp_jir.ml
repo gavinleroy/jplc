@@ -140,14 +140,15 @@ and pp_fn fmt { name
     pp_bindings bindings
     pp_bbs body
 
-and pp_jir fmt { main; prog; } =
+and pp_jir fmt { main; globals; prog; } =
   let pp_jirs fmt js =
     pp_print_list
       ~pp_sep:pp_force_newline
       pp_fn fmt js
   in
-  fprintf fmt "@[<hov>%s@\n%a@]@.@?"
+  fprintf fmt "@[<hov>%s@\n%a@\n%a@]@.@?"
     jir_msg
+    pp_bindings globals
     pp_jirs (main :: prog)
 
 let stdout_of_jir p =

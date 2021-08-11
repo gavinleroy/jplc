@@ -251,5 +251,19 @@ and finish_fn e name fn_sig =
 and make_main e =
   let env = finish_fn e "main"
       (Runtime.ArrowRT (Runtime.IntRT, [])) in
-  List.find_exn env.fns ~f:(fun fn ->
-      String.equal fn.name "main")
+  let mn = List.find_exn env.fns ~f:(fun fn ->
+      String.equal fn.name "main") in
+  (* separate the global from the local bindings *)
+  let match_userbnd (lv, _) = match lv with
+    | UserBinding _ -> true
+    | Temp _ -> false in
+  let globals = List.filter mn.bindings
+      ~f:match_userbnd in
+  let locals = List.filter mn.bindings
+      ~f:(fun x -> match_userbnd x |> not) in
+  { mn with bindings = locals }, globals
+
+and get_prog e =
+  List.filter e.fns ~f:(fun f ->
+      String.equal f.name "main"
+      |> not)

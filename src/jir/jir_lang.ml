@@ -12,7 +12,9 @@ type bb_id = int
 
 (* HACK FIXME TODO this is under deep construction *)
 
-type constant =
+type binding = (lvalue * Runtime.runtime_type)
+
+and constant =
   | INT of Int64.t
   | FLOAT of float
   | TRUE
@@ -58,10 +60,10 @@ and basic_block =
 and jir_fn =
   { name : string
   ; signature : Runtime.runtime_type
-  ; bindings : (lvalue * Runtime.runtime_type) list
+  ; bindings : binding list
   ; body : basic_block list }
 
 and jir =
   { main : jir_fn
+  ; globals : binding list
   ; prog : jir_fn list }
-
