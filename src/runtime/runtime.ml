@@ -37,19 +37,30 @@ let repeat s n =
 
 let rec code_of_type t =
   let open Printf in
-  let concat_with = fun sep ->
-    List.fold_left ~init:"" ~f:(fun a b -> a ^ sep ^ b) in
+  let  concat_with sep ls =
+    let rec loop ls acc = match ls with
+      | [] -> acc
+      | [x] -> x :: acc
+      | x :: y :: ls' ->
+        loop (y :: ls') (sep :: x :: acc)
+    in
+    loop ls []
+    |> List.fold_right ~init:"" ~f:(^)
+  in
   match t with
   | UnitRT -> "unit"
   | BoolRT -> "bool"
   | IntRT -> "int"
   | FloatRT -> "float"
   | StringRT -> "string"
-  | ArrayRT(rt, i) -> sprintf "%s[%s]" (code_of_type rt) (repeat "," (i-1))
-  | CrossRT(rts) -> sprintf "{ %s }" (List.map rts ~f:code_of_type
-                                      |> concat_with ", ")
-  | ArrowRT(rt, rts) -> sprintf "( %s )" (List.map (rts @ [rt]) ~f:code_of_type
-                                          |> concat_with " -> ")
+  | ArrayRT(rt, i) ->
+    sprintf "%s[%s]" (code_of_type rt) (repeat "," (i-1))
+  | CrossRT(rts) ->
+    sprintf "{ %s }" (List.map rts ~f:code_of_type
+                      |> concat_with ", ")
+  | ArrowRT(rt, rts) ->
+    sprintf "( %s )" (List.map (rts @ [rt]) ~f:code_of_type
+                      |> concat_with " -> ")
 
 (* The PICT type is something that is commonly passed around
  * and used in functions. This is just a shorthand for referencing

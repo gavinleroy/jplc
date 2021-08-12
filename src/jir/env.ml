@@ -31,18 +31,6 @@ and t =
   (* the number of scopes made *)
   ; scope_count : int }
 
-(* TODO notes
- * 1. What if we stored all basic blocks in a map rather than a list
- *    - you could bind to a finished or partial block and if
- *      an insertion attempt is made for the finished block just
- *      crash the program
- * 2. Adding a terminator to the list will still close out the
- *    basic block but it will no longer start another right away
- *    meaning that we can still access the name of the bb once it's
- *    finished.
- * 3. Some things will be a little more manual than they were before
- *    e.g. setting the current block *)
-
 (* a Partial Basic Block can be opened or stored and resumed at a later time *)
 and partial_bb =
   { p_stmts : statement list
@@ -76,6 +64,12 @@ and hash_lvalue = function
   | Temp i ->
     Printf.sprintf "_t.%d" i
     |> String.hash
+
+and open_scope e =
+  { e with scope_count = e.scope_count + 1 }
+
+and close_scope e =
+  { e with scope_count = e.scope_count - 1 }
 
 (* sort a list of scoped items by descending scope *)
 and sort_scoped ?(desc = true) ls =
@@ -166,22 +160,23 @@ and finish_bb cscope e bbid term =
       ~data:(e.scope_count, `Done finished_bb) in
   { e with bbs = with_bb }
 
+and bind e lv rt =
+  let bindings' = Map.add_multi e.bindings
+      ~key:(hash_lvalue lv)
+      ~data:(e.scope_count, (lv, rt))
+  in { e with bindings = bindings' }
+
 and add_stmt e stmt =
   let bbid = get_curr_bb e in
-  let (bindings', env') = (match stmt with
-      | Bind (lv, rt, rv) ->
-        ignore rv;
-        Map.add_multi e.bindings
-          ~key:(hash_lvalue lv)
-          ~data:(e.scope_count, (lv, rt))
-      , e.env)
+  let e_w_bindings' = (match stmt with
+      | Bind (lv, rt, _rv) ->
+        bind e lv rt)
   in
   let new_map = Map.update e.bbs bbid ~f:(function
       | Some [(sc, `Partial pbb)] ->
         [(sc, `Partial
             { pbb with
               p_stmts = stmt :: pbb.p_stmts })]
-
       (* problems *)
       | None ->
         Printf.printf "inserting a stmt into a BB that doesn't exist";
@@ -195,24 +190,17 @@ and add_stmt e stmt =
       | Some [] ->
         Printf.printf "empty list found!";
         assert false)
-  in
-  { e with bbs = new_map
-         ; bindings = bindings'
-         ; env = env' }
+  in { e_w_bindings' with bbs = new_map }
 
 and add_term ?(cscope = false) e term =
   finish_bb cscope e (get_curr_bb e) term
 
-(* TODO clean up this function and potentiall make it
- * faster *)
+(* TODO clean up this function and
+ *  potentially make it faster *)
 and finish_fn e name fn_sig =
-  (* let bbid = get_curr_bb e in
-   * let pbb = get_partial_bb e bbid in
-   * assert (List.length pbb.p_stmts = 0); *)
-
   let body' = Map.filter e.bbs ~f:(function
       | [(sc, `Done _)] ->
-        sc= e.scope_count
+        sc = e.scope_count
       | _ -> false)
               |> Map.to_alist
               |> List.map ~f:(fun t ->

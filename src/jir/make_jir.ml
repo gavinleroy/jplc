@@ -203,13 +203,28 @@ and flatten_lvalue = function
   | TA.ArgLV(_te, _arg) -> assert false
   | TA.CrossbindLV(_te, _lvs) -> assert false
 
+and flatten_bind = function
+  | TA.ArgB (te, TA.VarA (_, vn)) ->
+    let rt = rt_of_t te in
+    binding_of_vn vn
+    >>= fun lv ->
+    modify (fun e -> Env.bind e lv rt)
+  | TA.ArgB (_, _) ->
+    assert false
+  | TA.CrossbindB (te, bds) ->
+    ignore te;
+    ignore bds;
+    assert false
+
 and binding_of_vn vn = get
   >>= fun env -> modify Env.incr_var_count
   >> return (UserBinding (Varname.to_string vn, env.var_count))
 
 and unify_arg_expr arg expr = match arg, expr with
-  | TA.VarA (_, vn), expr -> binding_of_vn vn
-    >>= fun lv -> flatten_expr lv expr
+  | TA.VarA (_, vn), expr ->
+    binding_of_vn vn
+    >>= fun lv ->
+    flatten_expr lv expr
 
   | TA.ArraybindA (_, _base_vn, _vns), _expr ->
     assert false
@@ -260,7 +275,21 @@ and flatten_cmd = function
 
   | TA.StmtC s -> flatten_stmt s
 
-  | TA.FnC(_te, _vn, _bs, _te', _ses) -> assert false
+  | TA.FnC(te, vn, bs, _te', sts) ->
+    let arrow_rt = rt_of_t te in
+    get_bb () >>= fun curr_bb ->
+    add_new_bb () >>= fun new_bb ->
+    set_bb new_bb
+    (* open a new scope *)
+    >> modify Env.open_scope
+    >> map_m_ bs ~f:flatten_bind
+    >> map_m_ sts ~f:flatten_stmt
+    (* finish_fn ... name fn_sig *)
+    >> modify (fun e ->
+        Env.finish_fn e (Varname.to_string vn) arrow_rt)
+    (* close the new function scope *)
+    >> modify Env.close_scope
+    >> set_bb curr_bb
 
 (* NOTE creating the JIR should never produce an `Error.t`
  * as the program was already successfully typed. *)
@@ -270,4 +299,4 @@ and jir_of_ty (p : TA.prog) : jir Or_error.t =
   let (main_fn, glbls) = Env.make_main env in
   Ok { main = main_fn
      ; globals = glbls
-     ; prog = [] }
+     ; prog = env.fns }
