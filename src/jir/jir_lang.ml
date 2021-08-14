@@ -50,6 +50,15 @@ and terminator =
            ; if_bb : bb_id
            ; else_bb : bb_id
            ; merge_bb : bb_id }
+
+  | Call of { fn_name : lvalue
+            ; params : lvalue list
+            (* where do you write the result of the call *)
+            ; write_to : lvalue
+            (* on success, which block do you jump to *)
+            ; success_jump_to : bb_id
+    (* TODO add block for jumping to on unwind *) }
+
   | Return of lvalue
 
 and basic_block =

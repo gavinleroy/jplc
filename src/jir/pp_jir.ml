@@ -36,6 +36,11 @@ and pp_const fmt = function
   | FALSE -> fprintf fmt "false"
   | STATIC_STRING str -> printf "\"%s\"" str
 
+and pp_lvalues fmt ls =
+  pp_print_list
+    ~pp_sep:(fun ft () -> fprintf ft ", ")
+    pp_lvalue fmt ls
+
 and pp_lvalue fmt = function
   | UserBinding (str, i) -> fprintf fmt "%s.%i" str i
   | Temp i -> fprintf fmt "temp.%d" i
@@ -99,6 +104,13 @@ and pp_terminator fmt = function
       pp_bb_tag if_bb
       pp_bb_tag else_bb
       pp_bb_tag merge_bb
+
+  | Call { fn_name; params; write_to; success_jump_to } ->
+    fprintf fmt "@[<hov 2>call(%a@ =@ %a(%a))@ ->@ %a@]"
+      pp_lvalue write_to
+      pp_lvalue fn_name
+      pp_lvalues params
+      pp_bb_tag success_jump_to
 
   | Return lv -> fprintf fmt "@[<hov 2>return@ %a;@]" pp_lvalue lv
 

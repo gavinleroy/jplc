@@ -344,6 +344,9 @@ let gen_code_of_term = function
     >>= fun llv ->
     modify_ (Env.add_llv_ (Llvm.build_ret llv))
 
+  | Call _ ->
+    assert false
+
 let gen_code_of_stmt = function
   | Bind (lv, _ty, rv) ->
     get_llv_lv lv

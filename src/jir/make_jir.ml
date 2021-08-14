@@ -193,7 +193,23 @@ let rec flatten_expr lv = function
                   ; paths = [(true_lv, true_block')
                             ; (false_lv, false_block')]})))
 
-  | TA.AppE(_t,_vn,_es) -> assert false
+  | TA.AppE(_t, vn, es) ->
+    let rec loop ps acc = match ps with
+      | [] -> List.rev acc |> return
+      | x :: xs -> fresh_temp () >>= fun newt ->
+        flatten_expr newt x
+        >> loop xs (newt :: acc)
+    in
+    loop es [] >>= fun param_lvs ->
+    binding_of_vn vn >>= fun fn_lv ->
+    add_new_bb () >>= fun next_bb ->
+    modify (flip Env.add_term
+              (Call { fn_name = fn_lv
+                    ; params = param_lvs
+                    ; write_to = lv
+                    ; success_jump_to = next_bb }))
+    (* start the next basic block *)
+    >> set_bb next_bb
 
 and flatten_arg = function
   | TA.VarA(_t, _vn) -> assert false

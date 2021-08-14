@@ -1,6 +1,6 @@
 
-fn ident(x : int) : int {
-   return x;
+fn ident(x : int, y : int) : int {
+   return x * y;
 }
 
-return 1;
+return ident(6, 10);
