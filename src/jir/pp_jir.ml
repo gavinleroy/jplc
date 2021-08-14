@@ -44,6 +44,7 @@ and pp_lvalues fmt ls =
 and pp_lvalue fmt = function
   | UserBinding (str, i) -> fprintf fmt "%s.%i" str i
   | Temp i -> fprintf fmt "temp.%d" i
+  | Symbol s -> fprintf fmt "%s" s
 
 and pp_phi_vs fmt ls =
   let pp_phi_vs' f (lv, tag) =
@@ -145,8 +146,8 @@ and pp_fn fmt { name
       | ArrowRT (rt, ps) -> (rt, ps)
       | _ -> assert false) signature in
   fprintf fmt
-    "@[<hov 2>%s (%a) -> %s {@\n%a@\n@\n%a@\n}@]"
-    name
+    "@[<hov 2>%a (%a) -> %s {@\n%a@\n@\n%a@\n}@]"
+    pp_lvalue name
     pp_tys ps
     (rt |> code_of_type)
     pp_bindings bindings

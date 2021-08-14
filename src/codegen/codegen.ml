@@ -139,6 +139,7 @@ let get_var ?(stem = "t") (n : int) =
 let lv_to_str = function
   | UserBinding (str,i) -> get_var ~stem:str i
   | Temp i -> get_var i
+  | Symbol s -> s
 
 let get_llv vn = get >>= fun env ->
   return (Hashtbl.find_exn env.tbl vn)
@@ -344,7 +345,11 @@ let gen_code_of_term = function
     >>= fun llv ->
     modify_ (Env.add_llv_ (Llvm.build_ret llv))
 
-  | Call _ ->
+  | Call { fn_name; params; write_to; success_jump_to } ->
+    ignore fn_name;
+    ignore params;
+    ignore write_to;
+    ignore success_jump_to;
     assert false
 
 let gen_code_of_stmt = function
@@ -385,7 +390,7 @@ let gen_code_of_fn { name
   in
   get >>= fun env ->
   let fn_type = llvm_t_of_runtime signature in
-  let ll_f = Llvm.define_function name fn_type env.ll_m in
+  let ll_f = Llvm.define_function (lv_to_str name) fn_type env.ll_m in
   (* set the entry block for the function *)
   let entry_bb = Llvm.entry_block ll_f in
   modify_ (Env.set_bldr_pos entry_bb)

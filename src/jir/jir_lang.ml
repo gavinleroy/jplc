@@ -35,6 +35,7 @@ and rvalue =
 and lvalue =
   | UserBinding of string * int
   | Temp of int
+  | Symbol of string
 
 (* | Project of lvalue * LVALUE.f        *)
 
@@ -67,7 +68,7 @@ and basic_block =
           ; term : terminator }
 
 and jir_fn =
-  { name : string
+  { name : lvalue
   ; signature : Runtime.runtime_type
   ; bindings : binding list
   ; body : basic_block list }

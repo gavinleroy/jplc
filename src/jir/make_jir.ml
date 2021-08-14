@@ -201,7 +201,7 @@ let rec flatten_expr lv = function
         >> loop xs (newt :: acc)
     in
     loop es [] >>= fun param_lvs ->
-    binding_of_vn vn >>= fun fn_lv ->
+    lookup vn >>= fun fn_lv ->
     add_new_bb () >>= fun next_bb ->
     modify (flip Env.add_term
               (Call { fn_name = fn_lv
@@ -294,7 +294,9 @@ and flatten_cmd = function
   | TA.FnC(te, vn, bs, _te', sts) ->
     let arrow_rt = rt_of_t te in
     get_bb () >>= fun curr_bb ->
-    add_new_bb () >>= fun new_bb ->
+    binding_of_vn vn >>= fun vnb ->
+    modify (fun e -> Env.bind e vnb arrow_rt)
+    >> add_new_bb () >>= fun new_bb ->
     set_bb new_bb
     (* open a new scope *)
     >> modify Env.open_scope
@@ -302,7 +304,7 @@ and flatten_cmd = function
     >> map_m_ sts ~f:flatten_stmt
     (* finish_fn ... name fn_sig *)
     >> modify (fun e ->
-        Env.finish_fn e (Varname.to_string vn) arrow_rt)
+        Env.finish_fn e vnb arrow_rt)
     (* close the new function scope *)
     >> modify Env.close_scope
     >> set_bb curr_bb

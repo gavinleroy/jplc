@@ -59,7 +59,8 @@ and mappend _v1 _v2 =
   assert false
 
 and hash_lvalue = function
-  | UserBinding (str, _i) ->
+  | Symbol str
+  | UserBinding (str, _) ->
     String.hash str
   | Temp i ->
     Printf.sprintf "_t.%d" i
@@ -237,14 +238,17 @@ and finish_fn e name fn_sig =
     fns = fn :: e.fns }
 
 and make_main e =
-  let env = finish_fn e "main"
+  let env = finish_fn e (Symbol "main")
       (Runtime.ArrowRT (Runtime.IntRT, [])) in
-  let mn = List.find_exn env.fns ~f:(fun fn ->
-      String.equal fn.name "main") in
+  let mn = List.find_exn env.fns ~f:(fun f ->
+      match f.name with
+      | Symbol "main" -> true
+      | _ -> false) in
   (* separate the global from the local bindings *)
   let match_userbnd (lv, _) = match lv with
     | UserBinding _ -> true
-    | Temp _ -> false in
+    | Symbol _ | Temp _ -> false
+  in
   let globals = List.filter mn.bindings
       ~f:match_userbnd in
   let locals = List.filter mn.bindings
@@ -253,5 +257,6 @@ and make_main e =
 
 and get_prog e =
   List.filter e.fns ~f:(fun f ->
-      String.equal f.name "main"
-      |> not)
+      match f.name with
+      | Symbol "main" -> false
+      | __ -> true)
