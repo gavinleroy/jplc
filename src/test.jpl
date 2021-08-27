@@ -1,6 +1,31 @@
 
-fn ident(x : int, y : int) : int {
-   return x * y;
+fn some_long_name(x : int, y : int, z : int) : int {
+   let a = x + y;
+   let b = x - y;
+   let c = x + z;
+   let d = x - z;
+   let e = y + z;
+   let f = y - z;
+   let g = a * b;
+   let h = b * c;
+   let i = c * d;
+   let j = d * e;
+   let k = f / h;
+   let l = h / i;
+   let m = i / j;
+   let n = j / k;
+   return a + b + c + d + e + f + g + h + i + j + k + l + m + n;
 }
 
-return ident(6, 10);
+fn random(img[H, W] : float[,]) : float[,] {
+   let a = H * W;
+   return img;
+}
+
+let a = some_long_name(1, 2, 3);
+let b = some_long_name(4, 5, 6);
+let d = 5.;
+let c = (a as float) + (b as float) + d;
+return if - (c as int) == 0 && true then
+    0
+  else 1;

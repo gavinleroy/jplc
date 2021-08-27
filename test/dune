@@ -1,0 +1,3 @@
+
+;; avoid running tests right now
+(dirs :standard \ parser typechecker)

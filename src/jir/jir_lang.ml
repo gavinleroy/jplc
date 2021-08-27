@@ -3,8 +3,6 @@
 (*       07.2021        *)
 (************************)
 
-open Core
-
 type bin_op = Typing.Ast.bin_op
 type un_op = Typing.Ast.un_op
 

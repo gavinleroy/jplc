@@ -3,7 +3,6 @@
 (*       05.2021        *)
 (************************)
 
-open Core
 open Ast_utils
 
 type t = (Varname.t * type_expr)  list

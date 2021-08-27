@@ -3,8 +3,6 @@
 (*       05.2021        *)
 (************************)
 
-open Base
-
 type loc = Lexing.position
 
 module type IDENTIFIER = sig
@@ -36,17 +34,16 @@ type type_expr =
   | CrossT of type_expr list
   | ArrowT of type_expr * type_expr list
 
-let rec sexp_of_type = function
-  | Unit -> Sexp.Atom "UnitType"
-  | IntT -> Sexp.Atom "IntType"
-  | BoolT -> Sexp.Atom "BoolType"
-  | FloatT -> Sexp.Atom "FloatType"
-  | ArrayT (te, r) ->
-    Sexp.(List[Atom "ArrayType"; sexp_of_type te; Int64.sexp_of_t r])
-  | CrossT tes ->
-    Sexp.(List[Atom "CrossType"; List.sexp_of_t sexp_of_type tes])
-  | ArrowT (rt, ats) ->
-    Sexp.(List[Atom "ArrowType"; sexp_of_type rt; List.sexp_of_t sexp_of_type ats])
+let list_equal (f : 'a -> 'a -> bool) l r =
+  List.map2 f l r
+  |> (fun vs -> List.fold_left (&&) true vs)
+
+let repeat (s : string) (n : int) =
+  let rec helper (s1 : string) (n1 : int) =
+    if n1 = 0 then
+      s1
+    else helper (s1 ^ s) (n1 - 1)
+  in helper "" n
 
 (* XXX the catch all is troublesome *)
 let rec ( = ) lhs rhs =
@@ -56,34 +53,109 @@ let rec ( = ) lhs rhs =
   | BoolT, BoolT
   | FloatT, FloatT -> true
   | ArrayT(te1,r1), ArrayT(te2, r2) ->
-    Int64.(=) r1 r2 && te1=te2
+    Int64.equal r1 r2 && te1=te2
   | CrossT tes1, CrossT tes2 ->
-    List.equal (=) tes1 tes2
+    list_equal (=) tes1 tes2
   | ArrowT(t1,ts1), ArrowT(t2,ts2) ->
-    t1=t2 && List.equal (=) ts1 ts2
+    t1=t2 && list_equal (=) ts1 ts2
   | _, _ -> false
 
-let type_to_s t =
-  Sexp.to_string (sexp_of_type t)
+let rec pp_types fmt tys =
+  let open Format in
+  let f = fun fmt v ->
+    pp_print_list
+      pp_type fmt v
+  in fprintf fmt "(%a)"
+    f tys
+
+and pp_type fmt ty =
+  let open Format in
+  match ty with
+  | Unit -> fprintf fmt "unit-ty"
+  | IntT -> fprintf fmt "int-ty"
+  | BoolT -> fprintf fmt "bool-ty"
+  | FloatT -> fprintf fmt "float-ty"
+  | ArrayT (ty, rnk) ->
+    fprintf fmt "(array-ty@ %a@ %Ld)"
+      pp_type ty
+      rnk
+  | CrossT tys ->
+    fprintf fmt "(cross-ty@ %a)"
+      pp_types tys
+  | ArrowT (ty, tys) ->
+    fprintf fmt "(arrow-ty@ %a@ ->@ %a)"
+      pp_types tys
+      pp_type ty
+
+let string_of_binop = function
+  | `Lt -> "<"
+  | `Gt -> ">"
+  | `Cmp -> "=="
+  | `Lte -> "<="
+  | `Gte -> ">="
+  | `Neq -> "!="
+  | `Mul -> "*"
+  | `Div -> "/"
+  | `Mod -> "%"
+  | `Plus -> "+"
+  | `Minus -> "-"
+
+and string_of_unop = function
+  | `Bang -> "!"
+  | `Neg -> "-"
+
+let pp_binop fmt bo =
+  let open Format in
+  match bo with
+  | `Lt -> fprintf fmt "<"
+  | `Gt -> fprintf fmt ">"
+  | `Cmp -> fprintf fmt "=="
+  | `Lte -> fprintf fmt "<="
+  | `Gte -> fprintf fmt ">="
+  | `Neq -> fprintf fmt "!="
+  | `Mul -> fprintf fmt "*"
+  | `Div -> fprintf fmt "/"
+  | `Mod -> fprintf fmt "%%"
+  | `Plus -> fprintf fmt "+"
+  | `Minus -> fprintf fmt "-"
+
+let pp_unop fmt uo =
+  let open Format in
+  match uo with
+  | `Bang -> fprintf fmt "!"
+  | `Neg  -> fprintf fmt "-"
+
+let  concat_with sep ls =
+  let rec loop ls acc = match ls with
+    | [] -> acc
+    | [x] -> x :: acc
+    | x :: y :: ls' ->
+      loop (y :: ls') (sep :: x :: acc)
+  in
+  loop ls []
+  |> (fun ls ->
+      List.fold_right (^) ls "")
+let rec code_of_type t =
+  let open Printf in
+  match t with
+  | Unit -> "unit"
+  | IntT -> "int"
+  | BoolT -> "bool"
+  | FloatT -> "float"
+  | ArrayT (rt, i) ->
+    let i = Int64.to_int i in
+    sprintf "%s[%s]" (code_of_type rt) (repeat "," (i - 1))
+  | CrossT (rts) ->
+    sprintf "{ %s }" (List.map code_of_type rts
+                      |> concat_with ", ")
+  | ArrowT (rt, rts) ->
+    sprintf "( %s )" (List.map code_of_type (rts @ [rt])
+                      |> concat_with " -> ")
+
+let type_to_s = code_of_type
+
+let string_of_type = type_to_s
 
 let type_list_to_s ts =
-  Sexp.to_string (List.sexp_of_t sexp_of_type ts)
-
-let sexp_of_binop o =
-  Sexp.Atom (match o with
-      | `Lt -> "<"
-      | `Gt -> ">"
-      | `Cmp -> "=="
-      | `Lte -> "<="
-      | `Gte -> ">="
-      | `Neq -> "!="
-      | `Mul -> "*"
-      | `Div -> "/"
-      | `Mod -> "%"
-      | `Plus -> "+"
-      | `Minus -> "-")
-
-let sexp_of_unop o =
-  Sexp.Atom
-    (match o with
-     | `Bang -> "!" | `Neg -> "-")
+  List.map type_to_s ts
+  |> (concat_with " ")

@@ -3,63 +3,92 @@
 (*       05.2021        *)
 (************************)
 
-open Core
+open Cmdliner
+
+let list_last ls ~default =
+  try List.rev ls |> List.hd
+  with Failure _ -> default
 
 let get_file_extension filename =
-  String.split_on_chars filename ~on:['.']
-  |> List.last |> Option.value ~default:""
+  String.split_on_char '.' filename
+  |> list_last ~default:""
 
 let rec remove_last_elem_list = function
-  | []      -> []
-  | [_]     -> []
+  | [] | [_] -> []
   | x :: xs -> x :: remove_last_elem_list xs
 
 let get_output_file filename =
-  String.split_on_chars filename ~on:['.']
+  String.split_on_char '.' filename
   |> fun split_filename ->
   remove_last_elem_list split_filename
   (* remove file ending *)
   |> fun filename_without_ending ->
-  String.concat ~sep:"." (filename_without_ending @ ["ir"])
+  String.concat "." (filename_without_ending @ ["ir"])
 
-
-let jpl_file =
-  let error_not_file filename =
-    Printf.printf "'%s' is not a jpl file" filename;
+(* check whether or not a given 'filename' is a real file and
+ * defined with a JPL extension. *)
+let is_jpl_file filename =
+  let error_not_file fn =
+    Printf.printf "'%s' is not a jpl file" fn;
     exit 1 in
-  Command.Spec.Arg_type.create (fun filename ->
-      match Sys.is_file filename with
-      | `Yes ->
-        if String.equal (get_file_extension filename) "jpl"
-        then filename
-        else error_not_file filename
-      | `No | `Unknown -> error_not_file filename)
+  if Sys.file_exists filename then
+    if String.equal (get_file_extension filename) "jpl" then
+      ()
+    else error_not_file filename
+  else error_not_file filename
 
-let command =
-  Command.basic ~summary:"compile jpl programs"
-    ~readme:(fun () -> "~~ TODO ~~")
-    Command.Let_syntax.(
-      let%map_open
-        filename = anon (maybe_with_default "-" ("filename" %: jpl_file))
-      (* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       * NOTE emission of parsed/typed/flattened AST currently is in Sexp format *
-         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       * TODO add an option to dump the code back in a similar JPL foramt        *
-       * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *)
-      and skip_typecheck = flag "--emit-parse" no_arg ~doc:" emit the parsed AST and skip typechecking"
-      and skip_flatten = flag "--emit-typed" no_arg ~doc:" emit the typed AST and skip flattening"
-      and skip_codegen = flag "--emit-jir" no_arg ~doc:" emit the human-readable JIR"
-      and skip_assembler = flag "--emit-llvm" no_arg ~doc:" dump the generated LLVM IR"
-      in
-      fun () ->
-        In_channel.with_file filename ~f:(fun file_ic ->
-            let lexbuf = Lexing.from_channel file_ic in
-            Compiler.compile_prog
-              ~skip_typecheck
-              ~skip_flatten
-              ~skip_codegen
-              ~skip_assembler
-              lexbuf))
+(* command line optional arguments *)
 
-let () =
-  Command.run ~version:"1.0" ~build_info:"JPLC" command
+let emit_parsed =
+  let doc = "Emit the parsed AST and skip typechecking." in
+  Arg.(value & flag & info ["p"; "emit-parsed"] ~doc)
+
+let emit_typed =
+  let doc = "Emit the typed AST and skip JIR conversion." in
+  Arg.(value & flag & info ["t"; "emit-typed"] ~doc)
+
+let emit_jir =
+  let doc = "Emit the JIR and skip code generation." in
+  Arg.(value & flag & info ["j"; "emit-jir"] ~doc)
+
+let emit_llvm =
+  let doc = "Emit the LLVM IR and assembly." in
+  Arg.(value & flag & info ["l"; "emit-llvm"] ~doc)
+
+(* command line required arguments *)
+
+let filename =
+  let doc = "$(docv) containing the JPL source to be compiled." in
+  Arg.(value & pos 0 string "" & info [] ~docv:"FILENAME" ~doc)
+
+(* program info *)
+
+let info =
+  let doc = "Compile JPL programs!" in
+  let man =  [ `S Manpage.s_bugs;
+               `P "Report bugs at github.com/gavinleroy/jplc." ]
+  in
+  Term.info "jplc" ~version:"0.0.1" ~doc ~exits:Term.default_exits ~man
+
+let run_jplc' filename emit_parse emit_type emit_jir emit_llvm =
+  is_jpl_file filename;
+  open_in filename
+  |> (fun file_ic ->
+      let lexbuf = Lexing.from_channel file_ic in
+      Compiler.compile_prog
+        ~emit_parse
+        ~emit_type
+        ~emit_jir
+        ~emit_llvm
+        (* the file_stem turns into the module name *)
+        "temp-jpl-module"
+        lexbuf)
+
+let run_jplc = Term.( const run_jplc'
+                      $ filename
+                      $ emit_parsed
+                      $ emit_typed
+                      $ emit_jir
+                      $ emit_llvm )
+
+let () = Term.exit @@ Term.eval (run_jplc, info)

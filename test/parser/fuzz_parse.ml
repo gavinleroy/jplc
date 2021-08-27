@@ -3,8 +3,6 @@
 (*       05.2021        *)
 (************************)
 
-open Core
-
 let%expect_test "fuzz-1" =
   Ppp.ppp_ast
     "

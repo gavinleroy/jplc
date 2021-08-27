@@ -12,23 +12,6 @@ let jir_msg =
 
 let rec ident fmt s = fprintf fmt "%s" s
 
-and pp_binop fmt = function
-  | `Lt -> fprintf fmt "<"
-  | `Gt -> fprintf fmt ">"
-  | `Cmp -> fprintf fmt "=="
-  | `Lte -> fprintf fmt "<="
-  | `Gte -> fprintf fmt ">="
-  | `Neq -> fprintf fmt "!="
-  | `Mul -> fprintf fmt "*"
-  | `Div -> fprintf fmt "/"
-  | `Mod -> fprintf fmt "%%"
-  | `Plus -> fprintf fmt "+"
-  | `Minus -> fprintf fmt "-"
-
-and pp_unop fmt = function
-  | `Bang -> fprintf fmt "!"
-  | `Neg  -> fprintf fmt "-"
-
 and pp_const fmt = function
   | INT i64 -> fprintf fmt "%Li" i64
   | FLOAT f -> fprintf fmt "%f" f
@@ -59,12 +42,12 @@ and pp_phi_vs fmt ls =
 and pp_rvalue fmt = function
   | UnopRV (uop, lv) ->
     fprintf fmt "%a %a"
-      pp_unop uop
+      Ast_utils.pp_unop uop
       pp_lvalue lv
   | BinopRV (lvl, bop, lvr) ->
     fprintf fmt "%a %a %a"
       pp_lvalue lvl
-      pp_binop bop
+      Ast_utils.pp_binop bop
       pp_lvalue lvr
   | VarRV lvl -> pp_lvalue fmt lvl
   | CastRV (ty, lvl) ->
@@ -159,11 +142,7 @@ and pp_jir fmt { main; globals; prog; } =
       ~pp_sep:pp_force_newline
       pp_fn fmt js
   in
-  fprintf fmt "@[<hov>%s@\n%a@\n%a@]@.@?"
+  fprintf fmt "@[<hov>%s@\n%a@\n%a@]@?"
     jir_msg
     pp_bindings globals
     pp_jirs (main :: prog)
-
-let stdout_of_jir p =
-  pp_jir std_formatter p;
-  ""

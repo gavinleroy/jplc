@@ -41,7 +41,12 @@ module Env = struct
   let add_llv_ f t : unit =
     ignore (f t.ll_b : 'a)
   let store_llv vn llv t =
-    Hashtbl.add_exn ~key:vn ~data:llv t.tbl
+    Printf.printf "adding key %s\n" vn;
+    match Hashtbl.add ~key:vn ~data:llv t.tbl with
+    | `Duplicate ->
+      ()
+    | `Ok ->
+      ()
   let store_partial vn f t =
     store_llv vn (f vn t.ll_b) t
   let store_partial_global vn vl f t =
@@ -50,6 +55,12 @@ module Env = struct
     match Hashtbl.add t.bbs ~key:id ~data:bbl with
     | `Duplicate -> assert false
     | `Ok -> ()
+  let get_fn str t =
+    match Llvm.lookup_function str t.ll_m with
+    (* if the function isn't found there is a typechecking error
+     * or compiler error somewhere *)
+    | None -> assert false
+    | Some f -> f
 end
 
 module State = Utils.Functional.State(Env)
@@ -125,9 +136,7 @@ let default_llv_of_type = function
     Llvm.const_float f64_t 0.0
   | Runtime.BoolRT ->
     llvm_false_v
-  (* NOTE not matching Arrow | Array | Cross | Unit | String | ETC ... *)
   | _ -> assert false
-
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            UTILITY FUNCTIONS         *)
@@ -160,6 +169,10 @@ let get_bb_of_tag f tag = get
     modify_ (Env.store_bb tag lv)
     >> return lv
 
+let lookup_fn lv = get
+  >>= fun env ->
+  Env.get_fn (lv_to_str lv) env
+  |> return
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
 (*            CODE GENERATORS          *)
@@ -236,7 +249,6 @@ let gen_code_of_rvalue = function
              | `Minus -> Llvm.build_sub)
 
           | Llvm.TypeKind.Float, Llvm.TypeKind.Float ->
-
             (match op with
              | `Lt -> Llvm.build_fcmp Llvm.Fcmp.Ult
              | `Gt -> Llvm.build_fcmp Llvm.Fcmp.Ugt
@@ -326,15 +338,7 @@ let gen_code_of_term = function
     get_bb_of_tag curr_f if_tag
     >>= fun if_bb -> get_bb_of_tag curr_f else_tag
     >>= fun else_bb -> get_bb_of_tag curr_f merge_tag
-    >>
-    (* FIXME below *)
-    (* >>= fun merge_bb -> *)
-    (* ignore the merge tag, we just needed to generate it *)
-    (* begin *)
-    (* Llvm.move_block_after curr_bb if_bb;
-     * Llvm.move_block_after if_bb else_bb;
-     * Llvm.move_block_after else_bb merge_bb; *)
-    modify_ (Env.set_bldr_pos curr_bb)
+    >> modify_ (Env.set_bldr_pos curr_bb)
     (* end *)
     >> modify_ (Env.add_llv_ (Llvm.build_cond_br br_llv if_bb else_bb))
 
@@ -346,11 +350,38 @@ let gen_code_of_term = function
     modify_ (Env.add_llv_ (Llvm.build_ret llv))
 
   | Call { fn_name; params; write_to; success_jump_to } ->
-    ignore fn_name;
-    ignore params;
-    ignore write_to;
-    ignore success_jump_to;
-    assert false
+    (* get the function llv *)
+    lookup_fn fn_name >>= fun fn_lv ->
+    (* turn the params lvs into lvs with map *)
+    map_m params ~f:(fun plv -> get_llv_lv plv
+                      >>= fun ptr_llv -> let fsh = fresh_v () in
+                      modify_ (Env.store_partial fsh (Llvm.build_load ptr_llv))
+                      >> get_llv fsh)
+    (* get a new temp variable to store the result in *)
+    >>= fun param_lvs ->
+    let write_tmp = fresh_v () in
+    modify_ (Env.add_llv_ (Llvm.build_call fn_lv
+                             (List.to_array param_lvs)
+                             write_tmp))
+    (* we need to store the tmp value to the ptr ret value *)
+    (* get the llvalue of the return *)
+    >> get_llv write_tmp
+    >>= fun ret_lv ->
+    (* get the ptr to the write address *)
+    get_llv_lv write_to
+    >>= fun store_ptr ->
+    (* add the store instr *)
+    (Printf.printf "first\n";
+     modify_ (Env.add_llv_ (Llvm.build_store ret_lv store_ptr)))
+    (* jump to the next basic block as this is how we've structured the JIR *)
+    >>
+    (Printf.printf "second\n";
+     use_builder Llvm.insertion_block)
+    >>= fun curr_bb ->
+    let curr_f = Llvm.block_parent curr_bb in
+    get_bb_of_tag curr_f (bb_tag success_jump_to)
+    >>= fun bb ->
+    modify_ (Env.add_llv_ (Llvm.build_br bb))
 
 let gen_code_of_stmt = function
   | Bind (lv, _ty, rv) ->
@@ -386,8 +417,10 @@ let gen_code_of_fn { name
   let gen_code_of_local_binding (lv, ty) =
     let llvm_ty = llvm_t_of_runtime ty in
     let lv_str =  lv_to_str lv in
+    Printf.printf "through local binding?\n";
     modify_ (Env.store_partial lv_str (Llvm.build_alloca llvm_ty))
   in
+  Printf.printf "starting the fn %s\n" (lv_to_str name);
   get >>= fun env ->
   let fn_type = llvm_t_of_runtime signature in
   let ll_f = Llvm.define_function (lv_to_str name) fn_type env.ll_m in
@@ -404,16 +437,25 @@ let gen_code_of_fn { name
   >>= fun next_bb ->
   modify_ (Env.add_llv_ (Llvm.build_br next_bb))
   (* turn all the basic blocks into llvm *)
-  >> map_m_ body ~f:(gen_code_of_bb ll_f)
+  >>
+  (
+    Printf.printf "leaving the fn %s\n" (lv_to_str name);
+    map_m_ body ~f:(gen_code_of_bb ll_f))
 
 let gen_code_of_global (lv, ty) =
   let lv_str =  lv_to_str lv in
   modify_ (Env.store_partial_global lv_str
-             (* store the defaultl type in the global position *)
+             (* store the defaultl type in the
+              *  global position *)
              (default_llv_of_type ty)
              Llvm.define_global)
 
 let gen_code_of_prog { main; globals; prog } =
+
+  List.iter globals ~f:(fun (lv, _) ->
+      Printf.printf "global lv : %s found\n"
+        (lv_to_str lv));
+
   let ex =
     map_m globals ~f:gen_code_of_global
     >> map_m prog ~f:gen_code_of_fn
@@ -422,8 +464,15 @@ let gen_code_of_prog { main; globals; prog } =
   exec_state ex (Env.mempty ())
   |> fun env ->
   (* TODO catch LLVM errors with this assertion *)
-  Llvm_analysis.assert_valid_module env.ll_m;
+  (* Llvm_analysis.assert_valid_module env.ll_m; *)
   Ok env.ll_m
 
 (* function for generating the string dump of a module *)
 let emit_llvm_module = Llvm.string_of_llmodule
+
+(* FIXME TODO
+ * The functions when they are declared don't use their parameters.
+ *
+ * I am getting duplcate insertions when storing the llvm llvs
+ *
+ * function application is also not working :( *)

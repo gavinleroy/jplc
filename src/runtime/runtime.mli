@@ -3,8 +3,6 @@
 (*       06.2021        *)
 (************************)
 
-open Core
-
 type runtime_type =
   | UnitRT | BoolRT
   | IntRT
@@ -14,7 +12,7 @@ type runtime_type =
   | CrossRT of runtime_type list
   | ArrowRT of runtime_type * runtime_type list
 
-val sexp_of_rtype: runtime_type -> Sexp.t
+val string_of_rtype: runtime_type -> string
 
 val code_of_type: runtime_type -> string
 

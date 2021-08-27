@@ -3,6 +3,4 @@
 (*       05.2021        *)
 (************************)
 
-open Core
-
-val print_sexp: ?channel:Out_channel.t -> Sexp.t -> unit
+val pp_prog: Format.formatter -> Ast.prog -> unit

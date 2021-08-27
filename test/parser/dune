@@ -1,6 +1,6 @@
 (library
  (name test_parsing)
- (libraries core compiler)
+ (libraries compiler)
  (inline_tests
   ;; (flags) add flag for parsing -p
  )

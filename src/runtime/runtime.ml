@@ -3,8 +3,6 @@
 (*       06.2021        *)
 (************************)
 
-open Core
-
 type runtime_type =
   | UnitRT
   | BoolRT
@@ -14,21 +12,6 @@ type runtime_type =
   | ArrayRT of runtime_type * int
   | CrossRT of runtime_type list
   | ArrowRT of runtime_type * runtime_type list
-
-let rec sexp_of_rtype t =
-  let open Sexp in
-  match t with
-  | UnitRT -> Atom "UnitT"
-  | BoolRT -> Atom "BoolT"
-  | IntRT -> Atom "IntT"
-  | FloatRT -> Atom "FloatT"
-  | StringRT -> Atom "StringT"
-  | ArrayRT(rt, i) ->
-    List [ Atom "ArrayT"; sexp_of_rtype rt; Atom "rank ="; Atom (Int.to_string i) ]
-  | CrossRT(rts) ->
-    List [ Atom "CrossT"; List.sexp_of_t sexp_of_rtype rts ]
-  | ArrowRT(rt, rts) ->
-    List [ Atom "FnT"; sexp_of_rtype rt; List.sexp_of_t sexp_of_rtype rts ]
 
 let repeat s n =
   let rec helper s1 n1 =
@@ -45,7 +28,7 @@ let rec code_of_type t =
         loop (y :: ls') (sep :: x :: acc)
     in
     loop ls []
-    |> List.fold_right ~init:"" ~f:(^)
+    |> (fun vs -> List.fold_right (^) vs "")
   in
   match t with
   | UnitRT -> "unit"
@@ -56,11 +39,13 @@ let rec code_of_type t =
   | ArrayRT(rt, i) ->
     sprintf "%s[%s]" (code_of_type rt) (repeat "," (i-1))
   | CrossRT(rts) ->
-    sprintf "{ %s }" (List.map rts ~f:code_of_type
+    sprintf "{ %s }" (List.map code_of_type rts
                       |> concat_with ", ")
   | ArrowRT(rt, rts) ->
-    sprintf "( %s )" (List.map (rts @ [rt]) ~f:code_of_type
+    sprintf "( %s )" (List.map code_of_type (rts @ [rt])
                       |> concat_with " -> ")
+
+let string_of_rtype = code_of_type
 
 (* The PICT type is something that is commonly passed around
  * and used in functions. This is just a shorthand for referencing

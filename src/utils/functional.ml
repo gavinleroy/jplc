@@ -3,8 +3,6 @@
 (*       05.2021        *)
 (************************)
 
-open Core
-
 module type MONOID = sig
   type t
   val mempty: unit -> t
@@ -30,6 +28,28 @@ module Identity = struct
   let bind m ~f : 'b t = run m |> f
   let liftM m ~f = run m |> f |> return
   let ( >>= ) m f = bind m ~f:f
+  let ( >>| ) m f = liftM m ~f:f
+end
+
+(* FIXME earlier the JaneStreet Core 'Or_error' module
+ * was used but I am trying to get away from using he
+ * Core library.
+ * Instead of using 'string' for the error variant something
+ * a little smarter should be used. *)
+module Or_error = struct
+  include Result
+  type 'a t = ('a, string) Result.t
+  let return a = Ok a
+  let run = function
+    | Ok a -> a
+    (* NOTE run shouldn't be called in an Error_option *)
+    | Error _ -> assert false
+  let liftM m ~f = run m |> f |> return
+  let bind at ~f =
+    match at with
+    | Ok a -> f a
+    | Error msg -> Error msg
+  let ( >>= ) v f = bind v ~f:f
   let ( >>| ) m f = liftM m ~f:f
 end
 
@@ -92,6 +112,39 @@ module Basic = struct
   let ( <.> ) f g = fun x -> f (g x) [@@inline always]
   let ( <$> ) f v = f v [@@inline always]
   let flip f = fun a b -> f b a [@@inline always]
+  (* Basic Utilities *)
+  let list_zip ls rs =
+    let rec loop acc l r =
+      match l, r with
+      | [], [] -> `Ok (List.rev acc)
+      | [], _ | _, [] -> `Unequal_lengths
+      | (lv :: l'), (rv :: r') ->
+        loop ((lv, rv) :: acc) l' r'
+    in loop [] ls rs
+  let all_equal xs ~equal =
+    let all_equal' x xs ~equal =
+      List.fold_left (fun acc v ->
+          acc && equal x v)
+        true xs
+    in match xs with
+    | [] | [_] -> true
+    | x :: xs' ->
+      all_equal' x xs' ~equal:equal
+  let list_hd = function
+    | [] -> None
+    | hd :: _ -> Some hd
+  let list_find f ls =
+    try List.find f ls
+        |> Some
+    with Not_found -> None
+  let list_equal equal ls rs =
+    match list_zip ls rs with
+    | `Ok zipped ->
+      let zs = List.map (fun (a, b) ->
+          equal a b) zipped in
+      List.fold_right (&&) zs true
+    | `Unequal_lengths -> false
+  let ident x = x
 end
 
 module Utils (M : MONAD) = struct
@@ -101,7 +154,7 @@ module Utils (M : MONAD) = struct
   let fold_m (xs : 'a list)
       ~(f : 'b -> 'a -> 'b t) ~(init : 'b) : 'b t =
     let c = (fun x k z -> (f z x) >>= k) in
-    let go = List.fold_right xs ~f:c ~init:return in
+    let go = List.fold_right c xs return in
     go init
 
   let map_m (xs : 'a list) ~(f : 'a -> 'b t)
@@ -109,12 +162,12 @@ module Utils (M : MONAD) = struct
     let cons_f = (fun x ys ->
         f x >>= fun x' ->
         ys >>= fun ys' -> return (x' :: ys')) in
-    List.fold_right ~f:cons_f ~init:(return []) xs
+    List.fold_right cons_f xs (return [])
 
   let map_m_ (xs : 'a list) ~(f : 'a -> 'b t)
     : unit t =
     let c = (fun x k -> (f x) >>= fun _ -> k) in
-    List.fold_right xs ~f:c ~init:(return ())
+    List.fold_right c xs (return ())
 
   let ( >> ) (m : 'a t) (k : 'b t) : 'b t =
     m >>= fun _ -> k

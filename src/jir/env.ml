@@ -3,7 +3,6 @@
 (*       07.2021        *)
 (************************)
 
-open Core
 open Jir_lang
 
 module IntMap = Map.Make(Int)
@@ -238,21 +237,35 @@ and finish_fn e name fn_sig =
     fns = fn :: e.fns }
 
 and make_main e =
+  let match_name lv f = match lv, f.name with
+    | Symbol l, Symbol r -> String.(=) l r
+    | UserBinding (sl, il), UserBinding (sr, ir) ->
+      String.(=) sl sr && il = ir
+    | Temp l, Temp r -> l = r
+    | _, _ -> false
+  in
   let env = finish_fn e (Symbol "main")
       (Runtime.ArrowRT (Runtime.IntRT, [])) in
-  let mn = List.find_exn env.fns ~f:(fun f ->
-      match f.name with
-      | Symbol "main" -> true
-      | _ -> false) in
+  let mn = List.find_exn env.fns
+      ~f:(match_name (Symbol "main")) in
+
   (* separate the global from the local bindings *)
   let match_userbnd (lv, _) = match lv with
-    | UserBinding _ -> true
+    | UserBinding (t, i) ->
+      not (List.exists e.fns
+             ~f:(match_name (UserBinding (t, i))))
     | Symbol _ | Temp _ -> false
   in
+
   let globals = List.filter mn.bindings
       ~f:match_userbnd in
+
   let locals = List.filter mn.bindings
-      ~f:(fun x -> match_userbnd x |> not) in
+      ~f:(fun (lv, _) -> match lv with
+          | UserBinding _
+          | Symbol _ -> false
+          | _ -> true) in
+
   { mn with bindings = locals }, globals
 
 and get_prog e =

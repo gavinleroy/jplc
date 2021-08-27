@@ -1,4 +1,4 @@
 (library
  (name codegen)
- (libraries core jir llvm llvm.analysis ast_utils utils runtime)
+ (libraries jir llvm llvm.analysis ast_utils utils runtime)
  (preprocess (pps ppx_jane)))

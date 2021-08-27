@@ -4,9 +4,10 @@
 (************************)
 
 val compile_prog:
-  ?skip_typecheck:bool
-  -> ?skip_flatten:bool
-  -> ?skip_codegen:bool
-  -> ?skip_assembler:bool
+  ?emit_parse:bool
+  -> ?emit_type:bool
+  -> ?emit_jir:bool
+  -> ?emit_llvm:bool
+  -> string
   -> Lexing.lexbuf
   -> unit

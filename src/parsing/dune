@@ -1,6 +1,6 @@
 (library
  (name parsing)
- (libraries core utils ast_utils menhirLib)
+ (libraries utils ast_utils menhirLib)
  (preprocess (pps ppx_jane)))
 
 (ocamllex lexer)

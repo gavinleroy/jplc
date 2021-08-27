@@ -1,5 +1,5 @@
 (library
  (name ast_utils)
- (libraries core)
+ ;; (libraries)
  (preprocess (pps ppx_jane)))
 

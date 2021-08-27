@@ -3,7 +3,7 @@
 (*       05.2021        *)
 (************************)
 
-open Core
+open Result
 
 let print_error_pos (p : Lexing.position) =
   (* let pos = lexbuf.lex_curr_p in *)
@@ -18,4 +18,4 @@ let cerr_msg ~pos ~t ~msg =
   let m = Printf.sprintf "%s \n\t~~ %s: %s\n"
       (print_error_pos pos)
       t msg in
-  Error (Error.of_string m)
+  Error m

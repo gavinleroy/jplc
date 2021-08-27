@@ -3,6 +3,4 @@
 (*       05.2021        *)
 (************************)
 
-open Core
-
-val cerr_msg: pos:Lexing.position -> t:string -> msg:string -> (_, Error.t) Result.t
+val cerr_msg: pos:Lexing.position -> t:string -> msg:string -> (_, string) Result.t

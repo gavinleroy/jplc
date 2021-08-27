@@ -3,7 +3,4 @@
 (*       05.2021        *)
 (************************)
 
-open Core
-open Ast
-
-val sexp_of_prog: prog -> Sexp.t
+val pp_prog: Format.formatter -> Ast.prog -> unit

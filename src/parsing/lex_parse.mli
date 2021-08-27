@@ -3,6 +3,4 @@
 (*       05.2021        *)
 (************************)
 
-open Core
-
-val parse_prog: Lexing.lexbuf -> Ast.prog Or_error.t
+val parse_prog: Lexing.lexbuf -> (Ast.prog, string) Result.t

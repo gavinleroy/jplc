@@ -3,7 +3,6 @@
 (*       05.2021        *)
 (************************)
 
-open Core
 open Lexing
 open Utils
 
