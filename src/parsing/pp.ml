@@ -9,6 +9,7 @@ open Ast_utils
 
 let rec pp_loopbinds fmt lbs =
   pp_print_list
+    ~pp_sep:pp_print_space
     pp_loopbind fmt lbs
 
 and pp_loopbind fmt (a, b) =
@@ -19,6 +20,7 @@ and pp_loopbind fmt (a, b) =
 and pp_exprs fmt es =
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       pp_expr fmt v
   in fprintf fmt "(%a)"
     f es
@@ -82,6 +84,7 @@ and pp_expr fmt = function
 and pp_lvalues fmt lvs =
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       pp_lvalue fmt v
   in fprintf fmt "(%a)"
     f lvs
@@ -97,8 +100,11 @@ and pp_lvalue fmt = function
 and pp_vns fmt ls =
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       (fun fmt s ->
-         fprintf fmt "%s" (Varname.to_string s)) fmt v
+         fprintf fmt "%s"
+           (Varname.to_string s))
+      fmt v
   in fprintf fmt "(%a)"
     f ls
 
@@ -114,6 +120,7 @@ and pp_arg fmt = function
 and pp_bindings fmt bs =
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       pp_binding fmt v
   in fprintf fmt "@[<2>(%a)@]"
     f bs
@@ -130,6 +137,7 @@ and pp_binding fmt = function
 and pp_stmts fmt ss =
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       pp_stmt fmt v
   in fprintf fmt "(%a)"
     f ss
@@ -150,6 +158,7 @@ and pp_stmt fmt = function
 and pp_cmds fmt cs =
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       pp_cmd fmt v
   in fprintf fmt "(%a)"
     f cs
@@ -190,7 +199,5 @@ and pp_cmd fmt = function
       pp_stmt s
 
 and pp_prog fmt (p : Ast.prog) =
-  ignore p;
-  ignore fmt;
   fprintf fmt "@[<2>(jpl-prog@;%a)@]@?"
     pp_cmds p

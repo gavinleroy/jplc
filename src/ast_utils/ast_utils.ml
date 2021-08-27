@@ -64,6 +64,7 @@ let rec pp_types fmt tys =
   let open Format in
   let f = fun fmt v ->
     pp_print_list
+      ~pp_sep:pp_print_space
       pp_type fmt v
   in fprintf fmt "(%a)"
     f tys
