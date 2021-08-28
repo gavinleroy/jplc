@@ -66,7 +66,7 @@ let rec pp_types fmt tys =
     pp_print_list
       ~pp_sep:pp_print_space
       pp_type fmt v
-  in fprintf fmt "(%a)"
+  in fprintf fmt "@[<2>(%a)@]"
     f tys
 
 and pp_type fmt ty =
@@ -77,14 +77,14 @@ and pp_type fmt ty =
   | BoolT -> fprintf fmt "bool-ty"
   | FloatT -> fprintf fmt "float-ty"
   | ArrayT (ty, rnk) ->
-    fprintf fmt "(array-ty@ %a@ %Ld)"
+    fprintf fmt "@[<hov 2>(array-ty@ %a@ %Ld)@]"
       pp_type ty
       rnk
   | CrossT tys ->
-    fprintf fmt "(cross-ty@ %a)"
+    fprintf fmt "@[<hov 2>(cross-ty@ %a)@]"
       pp_types tys
   | ArrowT (ty, tys) ->
-    fprintf fmt "(arrow-ty@ %a@ ->@ %a)"
+    fprintf fmt "@[<hov 2>(arrow-ty@ %a@ ->@ %a)@]"
       pp_types tys
       pp_type ty
 
