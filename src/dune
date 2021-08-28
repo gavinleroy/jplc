@@ -1,7 +1,10 @@
 (executable
  (name jplc)
  (modules jplc)
- (libraries parsing utils compiler)
+ (libraries
+   ;; libraries for using MetaOCaml
+   dynlink metaocaml
+   parsing utils compiler)
  (preprocess (pps ppx_jane)))
 
 ;; while trying to untie the libraries from the core_kernal
