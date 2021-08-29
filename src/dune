@@ -5,7 +5,8 @@
    ;; libraries for using MetaOCaml
    dynlink metaocaml
    parsing utils compiler)
- (preprocess (pps ppx_jane)))
+ (preprocess (pps ppx_jane))
+ (modes exe))
 
 ;; while trying to untie the libraries from the core_kernal
 ;; dep simply ignore the 'jir' and 'codegen' libs until I

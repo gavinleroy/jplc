@@ -91,4 +91,5 @@ let run_jplc = Term.( const run_jplc'
                       $ emit_jir
                       $ emit_llvm )
 
-let () = Term.exit @@ Term.eval (run_jplc, info)
+let () =
+  Term.exit @@ Term.eval (run_jplc, info)
