@@ -23,6 +23,7 @@ let maybe_exit ok_exit pp_f ast =
 let compile_prog
     ?(emit_parse = false)
     ?(emit_type = false)
+    ?(interp_module = false)
     ?(emit_jir = false)
     ?(emit_llvm = false)
     (* the filename without the extension *)
@@ -30,6 +31,7 @@ let compile_prog
     lexbuf =
   (* FIXME *)
   ignore file_stem;
+  ignore interp_module;
   ignore emit_jir;
   ignore emit_llvm;
   (*********)

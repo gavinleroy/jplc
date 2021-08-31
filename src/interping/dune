@@ -1,0 +1,8 @@
+(library
+ (name interping)
+ (libraries
+   ;; libraries for using MetaOCaml
+   dynlink metaocaml
+
+   typing)
+ (preprocess (pps ppx_jane)))

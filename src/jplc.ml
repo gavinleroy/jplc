@@ -55,6 +55,10 @@ let emit_llvm =
   let doc = "Emit the LLVM IR and assembly." in
   Arg.(value & flag & info ["l"; "emit-llvm"] ~doc)
 
+let interp_prog =
+  let doc = "Interpret the JPL program skipping code generation." in
+  Arg.(value & flag & info ["i"; "interp"] ~doc)
+
 (* command line required arguments *)
 
 let filename =
@@ -70,7 +74,7 @@ let info =
   in
   Term.info "jplc" ~version:"0.0.1" ~doc ~exits:Term.default_exits ~man
 
-let run_jplc' filename emit_parse emit_type emit_jir emit_llvm =
+let run_jplc' filename emit_parse emit_type interp_prog emit_jir emit_llvm =
   is_jpl_file filename;
   open_in filename
   |> (fun file_ic ->
@@ -78,6 +82,11 @@ let run_jplc' filename emit_parse emit_type emit_jir emit_llvm =
       Compiler.compile_prog
         ~emit_parse
         ~emit_type
+        (* NOTE we can only interpet one module at a time
+         * but we will keep the naming convention
+         * 'interp_prog' in case support for cross-module
+         * evaluation is supported later. *)
+        ~interp_module:interp_prog
         ~emit_jir
         ~emit_llvm
         (* the file_stem turns into the module name *)
@@ -88,6 +97,7 @@ let run_jplc = Term.( const run_jplc'
                       $ filename
                       $ emit_parsed
                       $ emit_typed
+                      $ interp_prog
                       $ emit_jir
                       $ emit_llvm )
 
