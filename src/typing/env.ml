@@ -22,10 +22,12 @@ let extend e vn te = (vn, te) :: e
 let extend_img e vn =
   (vn, img_te) :: e
 
-let rec lookup (e : t) vn =
-  match e with
-  | [] -> None
-  | (vn', te) :: e' ->
-    if Varname.(=) vn' vn
-    then Some te
-    else lookup e' vn
+let lookup (e : t) vn =
+  let rec loop env =
+    match env with
+    | [] -> None
+    | (vn', te) :: e' ->
+      if Varname.(=) vn' vn
+      then Some te
+      else loop e'
+  in loop e
