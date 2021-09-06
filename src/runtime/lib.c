@@ -1,4 +1,4 @@
-/* Copyright John Regehr & Pavel Panchecka, University of Utah 2021 */
+/* Gavin Gray, 09.2021 */
 
 #include <math.h>
 #include <stdarg.h>
@@ -9,6 +9,8 @@
 #include <time.h>
 
 #include "lib.h"
+
+// #include <caml/mlvalues.h>
 
 int main();
 
@@ -565,6 +567,9 @@ struct pict crop(struct pict p, int x1, int y1, int x2, int y2) {
 struct pict _crop(struct pict p, int x1, int y1, int x2, int y2) {
   return crop(p, x1, y1, x2, y2);
 }
+
+/* CAMLprim value caml_read_image_c(value string) { return read_image(filename);
+ * } */
 
 struct pict read_image(char *filename) {
   struct pict out;

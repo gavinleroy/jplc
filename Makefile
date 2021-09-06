@@ -19,6 +19,10 @@ type:
 	cd src/
 	dune exec $(EXEC) -- --emit-type $(TEST)
 
+interp:
+	cd src/
+	dune exec $(EXEC) -- --interp $(TEST)
+
 jir:
 	cd src/
 	dune exec $(EXEC) -- --emit-jir $(TEST)

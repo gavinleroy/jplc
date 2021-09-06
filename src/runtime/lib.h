@@ -1,4 +1,4 @@
-/* Copyright John Regehr & Pavel Panchecka, University of Utah 2021 */
+/* Gavin Gray, 09.2021 */
 
 #ifndef RUNTIME_H_
 #define RUNTIME_H_

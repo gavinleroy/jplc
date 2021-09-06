@@ -2,8 +2,6 @@
  (name jplc)
  (modules jplc)
  (libraries
-   ;; libraries for using MetaOCaml
-   dynlink metaocaml
    parsing utils compiler)
  (preprocess (pps ppx_jane))
  (modes exe))
@@ -31,7 +29,7 @@
    typing
 
    ;; Staged Intepreter library for porting JPL to MetaOCaml
-   ;; staged-interp
+   interping
 
    ;; Optimizing librar to come XXX
    ;; this will most likely be easier at some other level of IR (LLVM or custom)
