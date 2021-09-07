@@ -4,43 +4,20 @@
 (************************)
 
 open Typing.Ast
-(* open Ast_utils *)
+open Ast_utils
 
-(* continuation
- *   val K: value -> interpable -> env -> fenv -> value *)
-
+(* NOTE this indicates a type checking error *)
 exception Unbound_symbol
 
 let empty_env _ = raise Unbound_symbol
 
 let empty_f_env = empty_env
 
-(* let bind env sym v =
- *   fun y -> if
- *     String.(sym = y) then
- *       v
- *     else env y *)
-
-(* unwrapping *)
-
-(* let expect_int = function
- *   | `IntV i -> Ok i
- *   | _ -> Error "Expected int" *)
-
-(* interp_loopbind (_, _) =
-   assert false *)
-
-(* and interp_arg = function
- *   | VarA (_,_) ->
- *     assert false
- *   | ArraybindA (_,_,_) ->
- *     assert false *)
-
-(* and interp_binding = function
- *   | ArgB (_,_) ->
- *     assert false
- *   | CrossbindB (_,_) ->
- *     assert false *)
+let bind env sym v =
+  fun y ->
+  if String.equal sym y then
+    v
+  else env y
 
 (* expect type functions
  * ~ the program should already be type safe *)
@@ -54,20 +31,19 @@ let exp_float = function
   | _ -> assert false
 
 let rec interp_expr e env fenv k =
-  ignore env; ignore fenv;
   match e with
   | IntE i ->
     (* FIXME integers need to stay 64 bits *)
     let i = Int64.to_int i in
-    k (`Int .<i>.)
+    k env fenv (`Int i)
   | FloatE f ->
-    k (`Float .<f>.)
+    k env fenv (`Float f)
   | TrueE ->
-    k (`Bool .<true>.)
+    k env fenv (`Bool true)
   | FalseE ->
-    k (`Bool .<false>.)
-  | VarE (_,_) ->
-    assert false
+    k env fenv (`Bool false)
+  | VarE (_,vn) ->
+    k env fenv (`Int ((Varname.to_string vn |> env)))
   | CrossE (_,_) ->
     assert false
   | ArrayCE (_,_) ->
@@ -78,12 +54,12 @@ let rec interp_expr e env fenv k =
     assert false
 
   | CastE (t, e, t') ->
-    interp_expr e env fenv (fun v ->
-        k (match t, t' with
+    interp_expr e env fenv (fun _ _ v ->
+        k env fenv (match t, t' with
             | IntT, FloatT ->
-              `Float .<(Int.to_float .~(exp_int v))>.
+              `Float (Int.to_float (exp_int v))
             | FloatT, IntT ->
-              `Int .<(Float.to_int .~(exp_float v))>.
+              `Int (Float.to_int (exp_float v))
             | _, _ -> assert false))
 
   | CrossidxE (_,_,_) ->
@@ -96,8 +72,30 @@ let rec interp_expr e env fenv k =
     assert false
   | SumLE (_,_,_) ->
     assert false
+
+  (* test appE *)
+  | AppE (_t , fn, [e]) ->
+    interp_expr e env fenv (fun _env fenv v ->
+        let f = Varname.to_string fn
+                |> fenv in
+        k env fenv (f v))
+
+  (* real appE *)
   | AppE (_,_,_) ->
     assert false
+
+
+(* and interp_binding = function
+ *   | ArgB (_,_) ->
+ *     assert false
+ *   | CrossbindB (_,_) ->
+ *     assert false *)
+
+(* and interp_arg = function
+ *   | VarA (_,_) ->
+ *     assert false
+ *   | ArraybindA (_,_,_) ->
+ *     assert false *)
 
 (* and interp_lvalue = function
  *   | ArgLV (_, _) ->
@@ -105,9 +103,26 @@ let rec interp_expr e env fenv k =
  *   | CrossbindLV (_, _) ->
  *     assert false *)
 
+and interp_fn_body ss env fenv k =
+  match ss with
+  (* this shouldn't happen *)
+  | [] -> assert false
+  (* last command /should be a return stmt/ *)
+  | [ x ] ->
+    interp_stmt x env fenv k
+  | s :: ss' ->
+    interp_stmt s env fenv (fun env _fenv _v ->
+        interp_fn_body ss' env fenv k)
+
 and interp_stmt s env fenv k =
   match s with
-  | LetS (_, _) ->
+  | LetS (ArgLV(_t, VarA(__t, _vn)), _e) ->
+    assert false
+  | LetS (ArgLV(_t, ArraybindA(__t, _vn, _vns)), _e) ->
+    assert false
+  (* | LetS (CrossbindLV(_t, _lvs), _e) ->
+   *   assert false *)
+  | LetS (_lv, _e) ->
     assert false
   | AssertS (_, _) ->
     assert false
@@ -127,16 +142,31 @@ and interp_cmd c env fenv k =
     assert false
   | PrintC _ ->
     assert false
-  | ShowC _ ->
-    assert false
+
+  (* FIXME *)
+  | ShowC e ->
+    interp_expr e env fenv (fun _ _ v ->
+        Printf.printf "SHOW : %d\n" (exp_int v);
+        k env fenv (`Int 0))
+
   | TimeC _ ->
     assert false
-  | FnC (_,_,_,_,_) ->
+
+  (* temporary test FnC
+   * FIXME this will not allow for recursive definitions *)
+  | FnC (_t, vn, [ArgB(__t, VarA(IntT, vna))], _rt, ss) ->
+    let name = Varname.to_string vn in
+    let arg = Varname.to_string vna in
+    let func a =
+      interp_fn_body ss (bind env arg (exp_int a))  fenv initial_k
+    in k env (bind fenv name func) (`Int 0 (* dummy value *))
+
+  | FnC (_t, _vn, _bs, _rt, _ss) ->
     assert false
   | StmtC s ->
     interp_stmt s env fenv k
 
-and interp_cmd_list cs env fenv k =
+and interp_cmd_list (cs : cmd list) env fenv k =
   match cs with
   (* this shouldn't happen *)
   | [] -> assert false
@@ -144,16 +174,16 @@ and interp_cmd_list cs env fenv k =
   | [ x ] ->
     interp_cmd x env fenv k
   | c :: cs' ->
-    interp_cmd c env fenv (fun v ->
+    interp_cmd c env fenv (fun env fenv v ->
         ignore v; (* we ignore the return value of all commands except:
                    * ~ the last return StmtCommand *)
         interp_cmd_list cs' env fenv k)
 
-and initial_k = (fun x -> x)
+and initial_k = (fun _ _ x -> x)
 
 and interp_prog (p : prog) =
   Ok (interp_cmd_list p empty_env empty_f_env initial_k
-      |> exp_int |> Runnative.run)
+      |> exp_int (* |> Runnative.run *))
 (* let string_of_code c =
  *   let () = Codelib.print_code Format.str_formatter c in
  *   Format.flush_str_formatter ()

@@ -1,6 +1,10 @@
 
 /* start of prog */
 
-return (2. as int);
+fn ident(x : int) : int {
+   return x;
+}
+
+show ident(3);
 
 /* end of prog */
