@@ -9,13 +9,19 @@ open Ast_utils
 (* NOTE this indicates a type checking error *)
 exception Unbound_symbol
 
+(* type rets =
+ *   [> `List of rets list
+ *   | `Int of int
+ *   | `Float of float
+ *   | `Bool of bool ] *)
+
 let empty_env _ = raise Unbound_symbol
 
 let empty_f_env = empty_env
 
 let bind env sym v =
   fun y ->
-  if String.equal sym y then
+  if Varname.(=) sym y then
     v
   else env y
 
@@ -30,6 +36,24 @@ let exp_float = function
   | `Float f -> f
   | _ -> assert false
 
+let exp_bool = function
+  | `Bool b -> b
+  | _ -> assert false
+
+let exp_list = function
+  | `List l -> l
+  | _ -> assert false
+
+let bind_with_type env ty sym v =
+  bind env sym (match ty with
+      | Unit -> assert false
+      | IntT -> exp_int v
+      | BoolT -> exp_bool v
+      | FloatT -> exp_float v
+      | ArrayT (_base_t, _r) -> assert false
+      | CrossT (_ts) -> assert false
+      | ArrowT (_rt, _ts) -> assert false)
+
 let rec interp_expr e env fenv k =
   match e with
   | IntE i ->
@@ -43,16 +67,42 @@ let rec interp_expr e env fenv k =
   | FalseE ->
     k env fenv (`Bool false)
   | VarE (_,vn) ->
-    k env fenv (`Int ((Varname.to_string vn |> env)))
+    k env fenv (`Int (env vn))
   | CrossE (_,_) ->
     assert false
   | ArrayCE (_,_) ->
     assert false
-  | BinopE (_,_,_,_) ->
-    assert false
+  | BinopE (_te, lhs, o, rhs) ->
+    interp_expr lhs env fenv (fun env fenv lv ->
+        interp_expr rhs env fenv (fun env fenv rv ->
+            k env fenv (match lv, rv, o with
+                | `Int il, `Int ir, `Lt -> `Bool (il < ir)
+                | `Int il, `Int ir, `Gt -> `Bool (il > ir)
+                | `Int il, `Int ir, `Cmp -> `Bool (Int.equal il ir)
+                | `Int il, `Int ir, `Lte -> `Bool (il <= ir)
+                | `Int il, `Int ir, `Gte -> `Bool (il >= ir)
+                | `Int il, `Int ir, `Neq -> `Bool (il <> ir)
+                | `Int il, `Int ir, `Mul -> `Int (il * ir)
+                | `Int il, `Int ir, `Div -> `Int (il / ir)
+                | `Int il, `Int ir, `Mod -> `Int (Int.rem il ir)
+                | `Int il, `Int ir, `Plus -> `Int (il + ir)
+                | `Int il, `Int ir, `Minus -> `Int (il - ir)
+
+                | `Float fl, `Float fr, `Lt -> `Bool (fl < fr)
+                | `Float fl, `Float fr, `Gt -> `Bool (fl > fr)
+                | `Float fl, `Float fr, `Cmp -> `Bool (Float.equal fl fr)
+                | `Float fl, `Float fr, `Lte -> `Bool (fl <= fr)
+                | `Float fl, `Float fr, `Gte -> `Bool (fl >= fr)
+                | `Float fl, `Float fr, `Neq -> `Bool (fl <> fr)
+                | `Float fl, `Float fr, `Mul -> `Float (fl *. fr)
+                | `Float fl, `Float fr, `Div -> `Float (fl /. fr)
+                | `Float fl, `Float fr, `Mod -> `Float (Float.rem fl fr)
+                | `Float fl, `Float fr, `Plus -> `Float (fl +. fr)
+                | `Float fl, `Float fr, `Minus -> `Float (fl -. fr)
+                (* NOTE indicates a bad typechecker *)
+                | _, _, _ -> assert false)))
   | UnopE (_,_,_) ->
     assert false
-
   | CastE (t, e, t') ->
     interp_expr e env fenv (fun _ _ v ->
         k env fenv (match t, t' with
@@ -66,24 +116,27 @@ let rec interp_expr e env fenv k =
     assert false
   | ArrayidxE (_,_,_) ->
     assert false
-  | IteE (_,_,_,_) ->
-    assert false
+  | IteE (_t, cnd, ie, ee) ->
+    interp_expr cnd env fenv (fun env fenv v ->
+        interp_expr (if (exp_bool v) then
+                       ie
+                     else ee) env fenv k)
   | ArrayLE (_,_,_) ->
     assert false
   | SumLE (_,_,_) ->
     assert false
 
-  (* test appE *)
-  | AppE (_t , fn, [e]) ->
-    interp_expr e env fenv (fun _env fenv v ->
-        let f = Varname.to_string fn
-                |> fenv in
-        k env fenv (f v))
+  | AppE (_t , fn, es) ->
+    interp_expr_list [] es env fenv
+      (fun _env _fenv v ->
+         k env fenv (fenv fn v))
 
-  (* real appE *)
-  | AppE (_,_,_) ->
-    assert false
-
+and interp_expr_list vs es env fenv k =
+  match es with
+  | [] -> k env fenv (`List (List.rev vs))
+  | e :: es' ->
+    interp_expr e env fenv (fun env fenv v ->
+        interp_expr_list (v :: vs) es' env fenv k)
 
 (* and interp_binding = function
  *   | ArgB (_,_) ->
@@ -151,20 +204,46 @@ and interp_cmd c env fenv k =
 
   | TimeC _ ->
     assert false
+  | StmtC s ->
+    interp_stmt s env fenv k
 
   (* temporary test FnC
    * FIXME this will not allow for recursive definitions *)
-  | FnC (_t, vn, [ArgB(__t, VarA(IntT, vna))], _rt, ss) ->
-    let name = Varname.to_string vn in
-    let arg = Varname.to_string vna in
-    let func a =
-      interp_fn_body ss (bind env arg (exp_int a))  fenv initial_k
-    in k env (bind fenv name func) (`Int 0 (* dummy value *))
+  | FnC (_t, name, bs, _rt, ss) ->
+    let rec repeat n f =
+      if Int.equal n 0 then
+        f
+      else fun x -> f (repeat (n - 1) f x)
+    in
 
-  | FnC (_t, _vn, _bs, _rt, _ss) ->
-    assert false
-  | StmtC s ->
-    interp_stmt s env fenv k
+    let rec bind_list env bs vs =
+      match bs, vs with
+      | [], [] -> env
+      | b :: bs', v :: vs' ->
+        (match b with
+         | ArgB (_, a) ->
+           (match a with
+            | VarA (t, vn) ->
+              bind_list
+                (bind_with_type env t vn v)
+                bs' vs'
+            | ArraybindA (_t, _vn, _vns) ->
+              assert false)
+         | CrossbindB (_t, _bs) ->
+           assert false)
+      (* NOTE this indicates a typechecker error *)
+      | _, _ -> assert false
+    in
+
+    let rec func x =
+      (let body cf x (* NOTE x is a list of values*) =
+         interp_fn_body ss
+           (* bind all arguments to the environment *)
+           (bind_list env bs x)
+           (bind fenv name cf)
+           initial_k
+       in repeat 1 body (fun y -> func y) x)
+    in k env (bind fenv name func) (`Int 0 (* dummy value *))
 
 and interp_cmd_list (cs : cmd list) env fenv k =
   match cs with
