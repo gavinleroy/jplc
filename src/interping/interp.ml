@@ -6,14 +6,20 @@
 open Typing.Ast
 open Ast_utils
 
+type ret_cps =
+  | IntIT of int
+  | FloatIT of float
+  | BoolIT of bool
+  | ListIT of ret_cps list
+
 (* NOTE this indicates a type checking error *)
 exception Unbound_symbol
 
 (* type rets =
- *   [> `List of rets list
- *   | `Int of int
- *   | `Float of float
- *   | `Bool of bool ] *)
+ *   [> ListIT of rets list
+ *   | IntIT of int
+ *   | FloatIT of float
+ *   | BoolIT of bool ] *)
 
 let empty_env _ = raise Unbound_symbol
 
@@ -29,45 +35,46 @@ let bind env sym v =
  * ~ the program should already be type safe *)
 
 let exp_int = function
-  | `Int i -> i
+  | IntIT i -> (i : int)
   | _ -> assert false
 
 let exp_float = function
-  | `Float f -> f
+  | FloatIT f -> (f : float)
   | _ -> assert false
 
 let exp_bool = function
-  | `Bool b -> b
+  | BoolIT b -> (b : bool)
   | _ -> assert false
 
 let exp_list = function
-  | `List l -> l
+  | ListIT l -> l
   | _ -> assert false
 
-let bind_with_type env ty sym v =
-  bind env sym (match ty with
-      | Unit -> assert false
-      | IntT -> exp_int v
-      | BoolT -> exp_bool v
-      | FloatT -> exp_float v
-      | ArrayT (_base_t, _r) -> assert false
-      | CrossT (_ts) -> assert false
-      | ArrowT (_rt, _ts) -> assert false)
+(* let bind_with_type (env : Varname.t -> 'a) ty sym v : (Varname.t -> 'a) =
+ *   match ty, v with
+ *   | Unit, _ -> assert false
+ *   | IntT, IntIT i -> bind env sym i
+ *   | FloatT, FloatIT f -> bind env sym f
+ *   | BoolT, BoolIT b -> bind env sym b
+ *   | ArrayT (_base_t, _r), _ -> assert false
+ *   | CrossT (_ts), _ -> assert false
+ *   | ArrowT (_rt, _ts), _ -> assert false
+ *   | _ -> assert false *)
 
-let rec interp_expr e env fenv k =
+let rec interp_expr e env fenv k : ret_cps =
   match e with
   | IntE i ->
     (* FIXME integers need to stay 64 bits *)
     let i = Int64.to_int i in
-    k env fenv (`Int i)
+    k env fenv (IntIT i)
   | FloatE f ->
-    k env fenv (`Float f)
+    k env fenv (FloatIT f)
   | TrueE ->
-    k env fenv (`Bool true)
+    k env fenv (BoolIT true)
   | FalseE ->
-    k env fenv (`Bool false)
+    k env fenv (BoolIT false)
   | VarE (_,vn) ->
-    k env fenv (`Int (env vn))
+    k env fenv (env vn)
   | CrossE (_,_) ->
     assert false
   | ArrayCE (_,_) ->
@@ -76,29 +83,29 @@ let rec interp_expr e env fenv k =
     interp_expr lhs env fenv (fun env fenv lv ->
         interp_expr rhs env fenv (fun env fenv rv ->
             k env fenv (match lv, rv, o with
-                | `Int il, `Int ir, `Lt -> `Bool (il < ir)
-                | `Int il, `Int ir, `Gt -> `Bool (il > ir)
-                | `Int il, `Int ir, `Cmp -> `Bool (Int.equal il ir)
-                | `Int il, `Int ir, `Lte -> `Bool (il <= ir)
-                | `Int il, `Int ir, `Gte -> `Bool (il >= ir)
-                | `Int il, `Int ir, `Neq -> `Bool (il <> ir)
-                | `Int il, `Int ir, `Mul -> `Int (il * ir)
-                | `Int il, `Int ir, `Div -> `Int (il / ir)
-                | `Int il, `Int ir, `Mod -> `Int (Int.rem il ir)
-                | `Int il, `Int ir, `Plus -> `Int (il + ir)
-                | `Int il, `Int ir, `Minus -> `Int (il - ir)
+                | IntIT il, IntIT ir, `Lt -> BoolIT (il < ir)
+                | IntIT il, IntIT ir, `Gt -> BoolIT (il > ir)
+                | IntIT il, IntIT ir, `Cmp -> BoolIT (Int.equal il ir)
+                | IntIT il, IntIT ir, `Lte -> BoolIT (il <= ir)
+                | IntIT il, IntIT ir, `Gte -> BoolIT (il >= ir)
+                | IntIT il, IntIT ir, `Neq -> BoolIT (il <> ir)
+                | IntIT il, IntIT ir, `Mul -> IntIT (il * ir)
+                | IntIT il, IntIT ir, `Div -> IntIT (il / ir)
+                | IntIT il, IntIT ir, `Mod -> IntIT (Int.rem il ir)
+                | IntIT il, IntIT ir, `Plus -> IntIT (il + ir)
+                | IntIT il, IntIT ir, `Minus -> IntIT (il - ir)
 
-                | `Float fl, `Float fr, `Lt -> `Bool (fl < fr)
-                | `Float fl, `Float fr, `Gt -> `Bool (fl > fr)
-                | `Float fl, `Float fr, `Cmp -> `Bool (Float.equal fl fr)
-                | `Float fl, `Float fr, `Lte -> `Bool (fl <= fr)
-                | `Float fl, `Float fr, `Gte -> `Bool (fl >= fr)
-                | `Float fl, `Float fr, `Neq -> `Bool (fl <> fr)
-                | `Float fl, `Float fr, `Mul -> `Float (fl *. fr)
-                | `Float fl, `Float fr, `Div -> `Float (fl /. fr)
-                | `Float fl, `Float fr, `Mod -> `Float (Float.rem fl fr)
-                | `Float fl, `Float fr, `Plus -> `Float (fl +. fr)
-                | `Float fl, `Float fr, `Minus -> `Float (fl -. fr)
+                | FloatIT fl, FloatIT fr, `Lt -> BoolIT (fl < fr)
+                | FloatIT fl, FloatIT fr, `Gt -> BoolIT (fl > fr)
+                | FloatIT fl, FloatIT fr, `Cmp -> BoolIT (Float.equal fl fr)
+                | FloatIT fl, FloatIT fr, `Lte -> BoolIT (fl <= fr)
+                | FloatIT fl, FloatIT fr, `Gte -> BoolIT (fl >= fr)
+                | FloatIT fl, FloatIT fr, `Neq -> BoolIT (fl <> fr)
+                | FloatIT fl, FloatIT fr, `Mul -> FloatIT (fl *. fr)
+                | FloatIT fl, FloatIT fr, `Div -> FloatIT (fl /. fr)
+                | FloatIT fl, FloatIT fr, `Mod -> FloatIT (Float.rem fl fr)
+                | FloatIT fl, FloatIT fr, `Plus -> FloatIT (fl +. fr)
+                | FloatIT fl, FloatIT fr, `Minus -> FloatIT (fl -. fr)
                 (* NOTE indicates a bad typechecker *)
                 | _, _, _ -> assert false)))
   | UnopE (_,_,_) ->
@@ -107,9 +114,9 @@ let rec interp_expr e env fenv k =
     interp_expr e env fenv (fun _ _ v ->
         k env fenv (match t, t' with
             | IntT, FloatT ->
-              `Float (Int.to_float (exp_int v))
+              FloatIT (Int.to_float (exp_int v))
             | FloatT, IntT ->
-              `Int (Float.to_int (exp_float v))
+              IntIT (Float.to_int (exp_float v))
             | _, _ -> assert false))
 
   | CrossidxE (_,_,_) ->
@@ -133,7 +140,7 @@ let rec interp_expr e env fenv k =
 
 and interp_expr_list vs es env fenv k =
   match es with
-  | [] -> k env fenv (`List (List.rev vs))
+  | [] -> k env fenv (ListIT (List.rev vs))
   | e :: es' ->
     interp_expr e env fenv (fun env fenv v ->
         interp_expr_list (v :: vs) es' env fenv k)
@@ -200,7 +207,7 @@ and interp_cmd c env fenv k =
   | ShowC e ->
     interp_expr e env fenv (fun _ _ v ->
         Printf.printf "SHOW : %d\n" (exp_int v);
-        k env fenv (`Int 0))
+        k env fenv (IntIT 0))
 
   | TimeC _ ->
     assert false
@@ -216,34 +223,36 @@ and interp_cmd c env fenv k =
       else fun x -> f (repeat (n - 1) f x)
     in
 
-    let rec bind_list env bs vs =
-      match bs, vs with
-      | [], [] -> env
-      | b :: bs', v :: vs' ->
-        (match b with
-         | ArgB (_, a) ->
-           (match a with
-            | VarA (t, vn) ->
-              bind_list
-                (bind_with_type env t vn v)
-                bs' vs'
-            | ArraybindA (_t, _vn, _vns) ->
-              assert false)
-         | CrossbindB (_t, _bs) ->
-           assert false)
-      (* NOTE this indicates a typechecker error *)
-      | _, _ -> assert false
+    let bind_list env bs v =
+      let rec loop env bs vs =
+        match bs, vs with
+        | [], [] -> env
+        | b :: bs', v :: vs' ->
+          (match b with
+           | ArgB (_, a) ->
+             (match a with
+              | VarA (_, vn) ->
+                loop (bind env vn v) bs' vs'
+              | ArraybindA (_t, _vn, _vns) ->
+                assert false)
+           | CrossbindB (_t, _bs) ->
+             assert false)
+        (* NOTE this indicates a typechecker error *)
+        | _, _ -> assert false
+      in loop env bs (exp_list v)
     in
 
     let rec func x =
-      (let body cf x (* NOTE x is a list of values*) =
+      ignore x;
+      (let body cf x
+      (* NOTE x is a list of values*) =
          interp_fn_body ss
            (* bind all arguments to the environment *)
            (bind_list env bs x)
            (bind fenv name cf)
            initial_k
        in repeat 1 body (fun y -> func y) x)
-    in k env (bind fenv name func) (`Int 0 (* dummy value *))
+    in k env (bind fenv name func) (IntIT 0 (* dummy value *))
 
 and interp_cmd_list (cs : cmd list) env fenv k =
   match cs with
@@ -262,7 +271,8 @@ and initial_k = (fun _ _ x -> x)
 
 and interp_prog (p : prog) =
   Ok (interp_cmd_list p empty_env empty_f_env initial_k
-      |> exp_int (* |> Runnative.run *))
+      |> exp_int
+
 (* let string_of_code c =
  *   let () = Codelib.print_code Format.str_formatter c in
  *   Format.flush_str_formatter ()

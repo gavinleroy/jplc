@@ -1,10 +1,18 @@
 
 /* start of prog */
 
-fn ident(x : int) : int {
-   return x;
+fn gcd(a : int, b : int) : int {
+   return if b == 0 then
+            a
+          else gcd( b, a % b );
 }
 
-show ident(3);
+show gcd( 6, 42 );
+show gcd( 7, 42 );
+show gcd( 11, 42 );
+
+show gcd( 42, 6 );
+show gcd( 42, 7 );
+show gcd( 42, 11 );
 
 /* end of prog */
