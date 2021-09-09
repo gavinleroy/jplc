@@ -6,11 +6,11 @@
 open Typing.Ast
 open Ast_utils
 
-type ret_cps =
+type ret_cps_t =
   | IntIT of int
   | FloatIT of float
   | BoolIT of bool
-  | ListIT of ret_cps list
+  | ListIT of ret_cps_t list
 
 (* NOTE this indicates a type checking error *)
 exception Unbound_symbol
@@ -61,7 +61,7 @@ let exp_list = function
  *   | ArrowT (_rt, _ts), _ -> assert false
  *   | _ -> assert false *)
 
-let rec interp_expr e env fenv k : ret_cps =
+let rec interp_expr e env fenv k =
   match e with
   | IntE i ->
     (* FIXME integers need to stay 64 bits *)
@@ -271,7 +271,7 @@ and initial_k = (fun _ _ x -> x)
 
 and interp_prog (p : prog) =
   Ok (interp_cmd_list p empty_env empty_f_env initial_k
-      |> exp_int
+      |> exp_int)
 
 (* let string_of_code c =
  *   let () = Codelib.print_code Format.str_formatter c in
