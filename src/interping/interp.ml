@@ -6,11 +6,15 @@
 open Typing.Ast
 open Ast_utils
 
-type ret_cps_t =
+type 'a ret_cps_t =
   | IntIT of int
   | FloatIT of float
   | BoolIT of bool
-  | ListIT of ret_cps_t list
+  | ListIT of 'a ret_cps_t list
+  | ArrayIT of 'a Array.t
+
+let dummy_value =
+  IntIT 0
 
 (* NOTE this indicates a type checking error *)
 exception Unbound_symbol
@@ -64,7 +68,7 @@ let exp_list = function
 let rec interp_expr e env fenv k =
   match e with
   | IntE i ->
-    (* FIXME integers need to stay 64 bits *)
+    (* FIXME HACK : integers need to stay 64 bits *)
     let i = Int64.to_int i in
     k env fenv (IntIT i)
   | FloatE f ->
@@ -123,7 +127,6 @@ let rec interp_expr e env fenv k =
             | FloatT, IntT ->
               IntIT (Float.to_int (exp_float v))
             | _, _ -> assert false))
-
   | CrossidxE (_,_,_) ->
     assert false
   | ArrayidxE (_,_,_) ->
@@ -137,18 +140,22 @@ let rec interp_expr e env fenv k =
     assert false
   | SumLE (_,_,_) ->
     assert false
-
   | AppE (_t , fn, es) ->
-    interp_expr_list [] es env fenv
+    interp_expr_list es env fenv
       (fun _env _fenv v ->
          k env fenv (fenv fn v))
 
-and interp_expr_list vs es env fenv k =
-  match es with
-  | [] -> k env fenv (ListIT (List.rev vs))
-  | e :: es' ->
-    interp_expr e env fenv (fun env fenv v ->
-        interp_expr_list (v :: vs) es' env fenv k)
+and interp_expr_list es env fenv k =
+  (* NOTE we don't pass the new environments into
+   * the loop because they should not change when
+   * 'interping' expressions. *)
+  let rec loop vs es =
+    match es with
+    | [] -> k env fenv (ListIT (List.rev vs))
+    | e :: es' ->
+      interp_expr e env fenv (fun _env _fenv v ->
+          loop (v :: vs) es')
+  in loop [] es
 
 (* and interp_binding = function
  *   | ArgB (_,_) ->
@@ -181,8 +188,9 @@ and interp_fn_body ss env fenv k =
 
 and interp_stmt s env fenv k =
   match s with
-  | LetS (ArgLV(_t, VarA(__t, _vn)), _e) ->
-    assert false
+  | LetS (ArgLV(_t, VarA(__t, vn)), e) ->
+    interp_expr e env fenv (fun env fenv v ->
+        k (bind env vn v) fenv dummy_value)
   | LetS (ArgLV(_t, ArraybindA(__t, _vn, _vns)), _e) ->
     assert false
   (* | LetS (CrossbindLV(_t, _lvs), _e) ->
@@ -207,27 +215,21 @@ and interp_cmd c env fenv k =
     assert false
   | PrintC _ ->
     assert false
-
-  (* FIXME *)
+  | TimeC _ ->
+    assert false
+  (* FIXME use the runtime library for show *)
   | ShowC e ->
     interp_expr e env fenv (fun _ _ v ->
         Printf.printf "SHOW : %d\n" (exp_int v);
-        k env fenv (IntIT 0))
-
-  | TimeC _ ->
-    assert false
+        k env fenv dummy_value)
   | StmtC s ->
     interp_stmt s env fenv k
-
-  (* temporary test FnC
-   * FIXME this will not allow for recursive definitions *)
   | FnC (_t, name, bs, _rt, ss) ->
     let rec repeat n f =
       if Int.equal n 0 then
         f
       else fun x -> f (repeat (n - 1) f x)
     in
-
     let bind_list env bs v =
       let rec loop env bs vs =
         match bs, vs with
@@ -246,20 +248,18 @@ and interp_cmd c env fenv k =
         | _, _ -> assert false
       in loop env bs (exp_list v)
     in
-
     let rec func x =
-      ignore x;
-      (let body cf x
+      let body cf x
       (* NOTE x is a list of values*) =
-         interp_fn_body ss
-           (* bind all arguments to the environment *)
-           (bind_list env bs x)
-           (bind fenv name cf)
-           initial_k
-       in repeat 1 body (fun y -> func y) x)
-    in k env (bind fenv name func) (IntIT 0 (* dummy value *))
+        interp_fn_body ss
+          (* bind all arguments to the environment *)
+          (bind_list env bs x)
+          (bind fenv name cf)
+          initial_k
+      in repeat 1 body (fun y -> func y) x
+    in k env (bind fenv name func) dummy_value
 
-and interp_cmd_list (cs : cmd list) env fenv k =
+and interp_cmd_list cs env fenv k =
   match cs with
   (* this shouldn't happen *)
   | [] -> assert false
