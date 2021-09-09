@@ -108,8 +108,13 @@ let rec interp_expr e env fenv k =
                 | FloatIT fl, FloatIT fr, `Minus -> FloatIT (fl -. fr)
                 (* NOTE indicates a bad typechecker *)
                 | _, _, _ -> assert false)))
-  | UnopE (_,_,_) ->
-    assert false
+  | UnopE (_t, o, e) ->
+    interp_expr e env fenv (fun env fenv v ->
+        k env fenv (match o, v with
+            | `Bang, BoolIT b -> BoolIT (not b)
+            | `Neg, IntIT i -> IntIT (- i)
+            | `Neg, FloatIT f -> FloatIT (-. f)
+            | _, _ -> assert false))
   | CastE (t, e, t') ->
     interp_expr e env fenv (fun _ _ v ->
         k env fenv (match t, t' with
