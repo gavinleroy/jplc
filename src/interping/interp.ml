@@ -11,23 +11,19 @@ open Ast_utils
  *   Format.flush_str_formatter () *)
 
 type 'a ret_cps_t =
+  | UnitIT
   | IntIT of int
   | FloatIT of float
   | BoolIT of bool
   | ListIT of 'a ret_cps_t list
   | ArrayIT of 'a ret_cps_t Array.t
 
-let dummy_value =
-  IntIT 0
+let dummy_value = UnitIT
 
 (* NOTE this indicates a type checking error *)
 exception Unbound_symbol
 
-(* type rets =
- *   [> ListIT of rets list
- *   | IntIT of int
- *   | FloatIT of float
- *   | BoolIT of bool ] *)
+(* simple environment *)
 
 let empty_env _ = raise Unbound_symbol
 
@@ -66,6 +62,9 @@ let exp_tuple = function
   | ArrayIT a -> a
   | _ -> assert false
 
+let tuple_idx tup i =
+  tup.(i)
+
 let rec interp_expr e env fenv k =
   match e with
   | IntE i ->
@@ -80,12 +79,12 @@ let rec interp_expr e env fenv k =
     k env fenv (BoolIT false)
   | VarE (_,vn) ->
     k env fenv (env vn)
-
   (* we can use an array to represents tuples because everything
    * is wrapped in the 'a ret_cps_t type *)
-  | CrossE (_t, _es) ->
-    assert false
-
+  | CrossE (_t, es) ->
+    interp_expr_list es env fenv (fun env fenv vs ->
+        k env fenv (ArrayIT (exp_list vs
+                             |> Array.of_list)))
   | ArrayCE (_t, es) ->
     interp_expr_list es env fenv (fun env fenv v ->
         k env fenv (ArrayIT (exp_list v
@@ -134,9 +133,10 @@ let rec interp_expr e env fenv k =
             | FloatT, IntT ->
               IntIT (Float.to_int (exp_float v))
             | _, _ -> assert false))
-  | CrossidxE (_t, _e, _idx) ->
-    assert false
-
+  | CrossidxE (_t, e, idx) ->
+    interp_expr e env fenv (fun env fenv v ->
+        k env fenv (exp_tuple v
+                    |> fun t -> tuple_idx t idx))
   | ArrayidxE (_t, e, es) ->
     interp_expr e env fenv (fun env fenv v ->
         interp_expr_list es env fenv (fun env fenv vs ->
@@ -146,16 +146,17 @@ let rec interp_expr e env fenv k =
                 make_loop (exp_array acc
                            |> fun a -> a.(exp_int c)) cs
             in k env fenv (make_loop v (exp_list vs))))
-
   | IteE (_t, cnd, ie, ee) ->
     interp_expr cnd env fenv (fun env fenv v ->
         interp_expr (if (exp_bool v) then
                        ie
                      else ee) env fenv k)
+
   | ArrayLE (_,_,_) ->
     assert false
   | SumLE (_,_,_) ->
     assert false
+
   | AppE (_t , fn, es) ->
     interp_expr_list es env fenv
       (fun _env _fenv v ->
@@ -173,23 +174,29 @@ and interp_expr_list es env fenv k =
           loop (v :: vs) es')
   in loop [] es
 
-(* and interp_binding = function
- *   | ArgB (_,_) ->
- *     assert false
- *   | CrossbindB (_,_) ->
- *     assert false *)
+and bind_list env bs vs =
+  List.fold_left2 unify_binding env vs bs
 
-(* and interp_arg = function
- *   | VarA (_,_) ->
- *     assert false
- *   | ArraybindA (_,_,_) ->
- *     assert false *)
+and unify_binding env v = function
+  | ArgB (_, a) ->
+    unify_arg env v a
+  | CrossbindB (_t, bs) ->
+    let cross_vs = exp_tuple v
+                   |> Array.to_list in
+    bind_list env bs cross_vs
 
-(* and interp_lvalue = function
- *   | ArgLV (_, _) ->
- *     assert false
- *   | CrossbindLV (_, _) ->
- *     assert false *)
+and unify_arg env v = function
+  | VarA (_, vn) ->
+    bind env vn v
+  | ArraybindA (_t, _vn, _vns) ->
+    assert false
+
+and unify_lvalue env v = function
+  | ArgLV (_t, a) ->
+    unify_arg env v a
+  | CrossbindLV (_t, lvs) ->
+    List.fold_left2 unify_lvalue env (exp_tuple v
+                                      |> Array.to_list) lvs
 
 and interp_fn_body ss env fenv k =
   match ss with
@@ -204,17 +211,19 @@ and interp_fn_body ss env fenv k =
 
 and interp_stmt s env fenv k =
   match s with
-  | LetS (ArgLV(_t, VarA(__t, vn)), e) ->
+  | LetS (lv, e) ->
     interp_expr e env fenv (fun env fenv v ->
-        k (bind env vn v) fenv dummy_value)
-  | LetS (ArgLV(_t, ArraybindA(__t, _vn, _vns)), _e) ->
-    assert false
-  (* | LetS (CrossbindLV(_t, _lvs), _e) ->
-   *   assert false *)
-  | LetS (_lv, _e) ->
-    assert false
-  | AssertS (_, _) ->
-    assert false
+        k (unify_lvalue env v lv) fenv dummy_value)
+  | AssertS (e, s) ->
+    interp_expr e env fenv (fun env fenv v ->
+        if (exp_bool v) then
+          k env fenv dummy_value
+        else
+          begin
+            Printf.printf "~~~ Assertion Failure ~~~\n%s\n\n" s;
+            (* FIXME this and other false assertions should be changed into proper errors *)
+            assert false
+          end)
   | ReturnS(_, e) ->
     interp_expr e env fenv k
 
@@ -246,30 +255,12 @@ and interp_cmd c env fenv k =
         f
       else fun x -> f (repeat (n - 1) f x)
     in
-    let bind_list env bs v =
-      let rec loop env bs vs =
-        match bs, vs with
-        | [], [] -> env
-        | b :: bs', v :: vs' ->
-          (match b with
-           | ArgB (_, a) ->
-             (match a with
-              | VarA (_, vn) ->
-                loop (bind env vn v) bs' vs'
-              | ArraybindA (_t, _vn, _vns) ->
-                assert false)
-           | CrossbindB (_t, _bs) ->
-             assert false)
-        (* NOTE this indicates a typechecker error *)
-        | _, _ -> assert false
-      in loop env bs (exp_list v)
-    in
     let rec func x =
       let body cf x
       (* NOTE x is a list of values*) =
         interp_fn_body ss
           (* bind all arguments to the environment *)
-          (bind_list env bs x)
+          (bind_list env bs (exp_list x))
           (bind fenv name cf)
           initial_k
       in repeat 1 body (fun y -> func y) x
