@@ -20,12 +20,13 @@ type 'a ret_cps_t =
 
 let dummy_value = UnitIT
 
-(* NOTE this indicates a type checking error *)
-exception Unbound_symbol
+exception Typechecking_error
 
 (* simple environment *)
 
-let empty_env _ = raise Unbound_symbol
+let empty_env s =
+  Printf.printf "Couldn't find symbol '%s'!\n" (Varname.to_string s);
+  raise Typechecking_error
 
 let empty_f_env = empty_env
 
@@ -35,35 +36,46 @@ let bind env sym v =
     v
   else env y
 
-(* expect type functions
- * ~ the program should already be type safe *)
-
 let exp_int = function
-  | IntIT i -> (i : int)
-  | _ -> assert false
+  | IntIT i -> i
+  | _ -> raise Typechecking_error
 
 let exp_float = function
-  | FloatIT f -> (f : float)
-  | _ -> assert false
+  | FloatIT f -> f
+  | _ -> raise Typechecking_error
 
 let exp_bool = function
-  | BoolIT b -> (b : bool)
-  | _ -> assert false
+  | BoolIT b -> b
+  | _ -> raise Typechecking_error
 
 let exp_list = function
   | ListIT l -> l
-  | _ -> assert false
+  | _ -> raise Typechecking_error
 
 let exp_array = function
   | ArrayIT a -> a
-  | _ -> assert false
+  | _ -> raise Typechecking_error
 
 let exp_tuple = function
   | ArrayIT a -> a
-  | _ -> assert false
+  | _ -> raise Typechecking_error
 
 let tuple_idx tup i =
   tup.(i)
+
+let rec interp_list f ls env fenv k =
+  match ls with
+  (* this shouldn't happen *)
+  | [] -> raise Typechecking_error
+  (* last command /should be a return stmt/ *)
+  | [ x ] ->
+    f x env fenv k
+  | s :: ss' ->
+    f s env fenv (fun env fenv _v ->
+        interp_list f ss' env fenv k)
+
+let initial_k =
+  fun _ _ x -> x
 
 let rec interp_expr e env fenv k =
   match e with
@@ -117,14 +129,14 @@ let rec interp_expr e env fenv k =
                 | FloatIT fl, FloatIT fr, `Plus -> FloatIT (fl +. fr)
                 | FloatIT fl, FloatIT fr, `Minus -> FloatIT (fl -. fr)
                 (* NOTE indicates a bad typechecker *)
-                | _, _, _ -> assert false)))
+                | _, _, _ -> raise Typechecking_error)))
   | UnopE (_t, o, e) ->
     interp_expr e env fenv (fun env fenv v ->
         k env fenv (match o, v with
             | `Bang, BoolIT b -> BoolIT (not b)
             | `Neg, IntIT i -> IntIT (- i)
             | `Neg, FloatIT f -> FloatIT (-. f)
-            | _, _ -> assert false))
+            | _, _ -> raise Typechecking_error))
   | CastE (t, e, t') ->
     interp_expr e env fenv (fun _ _ v ->
         k env fenv (match t, t' with
@@ -132,7 +144,7 @@ let rec interp_expr e env fenv k =
               FloatIT (Int.to_float (exp_int v))
             | FloatT, IntT ->
               IntIT (Float.to_int (exp_float v))
-            | _, _ -> assert false))
+            | _, _ -> raise Typechecking_error))
   | CrossidxE (_t, e, idx) ->
     interp_expr e env fenv (fun env fenv v ->
         k env fenv (exp_tuple v
@@ -198,16 +210,11 @@ and unify_lvalue env v = function
     List.fold_left2 unify_lvalue env (exp_tuple v
                                       |> Array.to_list) lvs
 
-and interp_fn_body ss env fenv k =
-  match ss with
-  (* this shouldn't happen *)
-  | [] -> assert false
-  (* last command /should be a return stmt/ *)
-  | [ x ] ->
-    interp_stmt x env fenv k
-  | s :: ss' ->
-    interp_stmt s env fenv (fun env _fenv _v ->
-        interp_fn_body ss' env fenv k)
+and interp_stmts ss env fenv k =
+  interp_list interp_stmt ss env fenv k
+
+and interp_cmds  cs env fenv k =
+  interp_list interp_cmd cs env fenv k
 
 and interp_stmt s env fenv k =
   match s with
@@ -258,7 +265,7 @@ and interp_cmd c env fenv k =
     let rec func x =
       let body cf x
       (* NOTE x is a list of values*) =
-        interp_fn_body ss
+        interp_stmts ss
           (* bind all arguments to the environment *)
           (bind_list env bs (exp_list x))
           (bind fenv name cf)
@@ -266,30 +273,11 @@ and interp_cmd c env fenv k =
       in repeat 1 body (fun y -> func y) x
     in k env (bind fenv name func) dummy_value
 
-and interp_cmd_list cs env fenv k =
-  match cs with
-  (* this shouldn't happen *)
-  | [] -> assert false
-  (* last command /should be a return stmt/ *)
-  | [ x ] ->
-    interp_cmd x env fenv k
-  | c :: cs' ->
-    interp_cmd c env fenv (fun env fenv v ->
-        ignore v; (* we ignore the return value of all commands except:
-                   * ~ the last return StmtCommand *)
-        interp_cmd_list cs' env fenv k)
-
-and initial_k = (fun _ _ x -> x)
-
 and interp_prog (p : prog) =
-  Ok (interp_cmd_list p empty_env empty_f_env initial_k
+  Ok (interp_cmds p empty_env empty_f_env initial_k
       |> exp_int)
 
-(* let string_of_code c =
- *   let () = Codelib.print_code Format.str_formatter c in
- *   Format.flush_str_formatter ()
- * in
- * interp_cmd_list p empty_env empty_f_env initial_k
+(* interp_cmd_list p empty_env empty_f_env initial_k
  * |> (fun c ->
  *     Printf.printf "~~~ running code ~~~ \n%s\n" (string_of_code c);
  *     Ok (Runnative.run c)) *)
