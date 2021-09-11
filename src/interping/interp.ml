@@ -6,12 +6,16 @@
 open Typing.Ast
 open Ast_utils
 
+(* let string_of_code c = (\* TODO remove me *\)
+ *   let () = Codelib.print_code Format.str_formatter c in
+ *   Format.flush_str_formatter () *)
+
 type 'a ret_cps_t =
   | IntIT of int
   | FloatIT of float
   | BoolIT of bool
   | ListIT of 'a ret_cps_t list
-  | ArrayIT of 'a Array.t
+  | ArrayIT of 'a ret_cps_t Array.t
 
 let dummy_value =
   IntIT 0
@@ -54,16 +58,13 @@ let exp_list = function
   | ListIT l -> l
   | _ -> assert false
 
-(* let bind_with_type (env : Varname.t -> 'a) ty sym v : (Varname.t -> 'a) =
- *   match ty, v with
- *   | Unit, _ -> assert false
- *   | IntT, IntIT i -> bind env sym i
- *   | FloatT, FloatIT f -> bind env sym f
- *   | BoolT, BoolIT b -> bind env sym b
- *   | ArrayT (_base_t, _r), _ -> assert false
- *   | CrossT (_ts), _ -> assert false
- *   | ArrowT (_rt, _ts), _ -> assert false
- *   | _ -> assert false *)
+let exp_array = function
+  | ArrayIT a -> a
+  | _ -> assert false
+
+let exp_tuple = function
+  | ArrayIT a -> a
+  | _ -> assert false
 
 let rec interp_expr e env fenv k =
   match e with
@@ -79,10 +80,16 @@ let rec interp_expr e env fenv k =
     k env fenv (BoolIT false)
   | VarE (_,vn) ->
     k env fenv (env vn)
-  | CrossE (_,_) ->
+
+  (* we can use an array to represents tuples because everything
+   * is wrapped in the 'a ret_cps_t type *)
+  | CrossE (_t, _es) ->
     assert false
-  | ArrayCE (_,_) ->
-    assert false
+
+  | ArrayCE (_t, es) ->
+    interp_expr_list es env fenv (fun env fenv v ->
+        k env fenv (ArrayIT (exp_list v
+                             |> Array.of_list)))
   | BinopE (_te, lhs, o, rhs) ->
     interp_expr lhs env fenv (fun env fenv lv ->
         interp_expr rhs env fenv (fun env fenv rv ->
@@ -127,10 +134,19 @@ let rec interp_expr e env fenv k =
             | FloatT, IntT ->
               IntIT (Float.to_int (exp_float v))
             | _, _ -> assert false))
-  | CrossidxE (_,_,_) ->
+  | CrossidxE (_t, _e, _idx) ->
     assert false
-  | ArrayidxE (_,_,_) ->
-    assert false
+
+  | ArrayidxE (_t, e, es) ->
+    interp_expr e env fenv (fun env fenv v ->
+        interp_expr_list es env fenv (fun env fenv vs ->
+            let rec make_loop acc = function
+              | [] -> acc
+              | c :: cs ->
+                make_loop (exp_array acc
+                           |> fun a -> a.(exp_int c)) cs
+            in k env fenv (make_loop v (exp_list vs))))
+
   | IteE (_t, cnd, ie, ee) ->
     interp_expr cnd env fenv (fun env fenv v ->
         interp_expr (if (exp_bool v) then

@@ -2,7 +2,7 @@
  (name interping)
  (libraries
    ;; libraries for using MetaOCaml
-   dynlink metaocaml genlet
+   dynlink metaocaml
 
    typing)
  (preprocess (pps ppx_jane)))
