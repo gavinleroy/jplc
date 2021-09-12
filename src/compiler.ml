@@ -72,7 +72,7 @@ let compile_prog
   let interp_cont (prog : Typing.Ast.prog) =
     match Interping.Interp.interp_prog prog with
     | Ok i ->
-      Printf.printf "Exit Code : %d\n" i
+      exit i
     | Error m -> print_error_msg m
   in
 

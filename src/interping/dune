@@ -4,5 +4,5 @@
    ;; libraries for using MetaOCaml
    dynlink metaocaml
 
-   typing runtime)
+   typing runtime fmt)
  (preprocess (pps ppx_jane)))

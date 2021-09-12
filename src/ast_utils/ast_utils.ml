@@ -147,11 +147,11 @@ let rec code_of_type t =
     let i = Int64.to_int i in
     sprintf "%s[%s]" (code_of_type rt) (repeat "," (i - 1))
   | CrossT (rts) ->
-    sprintf "{ %s }" (List.map code_of_type rts
-                      |> concat_with ", ")
+    sprintf "{%s}" (List.map code_of_type rts
+                    |> concat_with ", ")
   | ArrowT (rt, rts) ->
-    sprintf "( %s )" (List.map code_of_type (rts @ [rt])
-                      |> concat_with " -> ")
+    sprintf "(%s)" (List.map code_of_type (rts @ [rt])
+                    |> concat_with " -> ")
 
 let type_to_s = code_of_type
 

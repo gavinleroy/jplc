@@ -1,13 +1,12 @@
 
 /* start of prog */
 
-fn fac( x : int ) : int {
-   assert x >= 0, "Negative argument";
-   return if x == 0 then
-            1
-          else x * fac( x - 1 );
-}
+show 10;
 
-return fac(5);
+show [1, 2, 3];
+
+let { a, b, c } = { 1, 2, 4 };
+
+show { false, 3., c / b };
 
 /* end of prog */

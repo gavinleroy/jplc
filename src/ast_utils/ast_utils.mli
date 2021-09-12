@@ -67,3 +67,5 @@ val pp_binop: Format.formatter ->
   | `Minus ] -> unit
 
 val pp_unop: Format.formatter -> [< `Bang | `Neg ] -> unit
+
+val code_of_type: type_expr -> string

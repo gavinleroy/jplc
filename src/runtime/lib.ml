@@ -5,3 +5,6 @@ open Foreign
 
 let get_time =
   foreign "get_time" (void @-> returning double)
+
+let show =
+  foreign "show" (string @-> ptr void @-> returning int32_t)

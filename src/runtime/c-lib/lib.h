@@ -13,5 +13,6 @@ void _writePNG(int64_t H, int64_t W, double *data, const char *fn);
 /* struct pict read_image(char *filename); */
 /* void write_image(struct pict input, char *filename); */
 double get_time(void);
+int32_t show(char *type_str, void *data);
 
 #endif // RUNTIME_H_

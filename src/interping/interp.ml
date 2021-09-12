@@ -5,18 +5,11 @@
 
 open Typing.Ast
 open Ast_utils
+open Ty
 
 (* let string_of_code c = (\* TODO remove me *\)
  *   let () = Codelib.print_code Format.str_formatter c in
  *   Format.flush_str_formatter () *)
-
-type 'a ret_cps_t =
-  | UnitIT
-  | IntIT of int
-  | FloatIT of float
-  | BoolIT of bool
-  | ListIT of 'a ret_cps_t list
-  | ArrayIT of 'a ret_cps_t Array.t
 
 let dummy_value = UnitIT
 
@@ -57,7 +50,7 @@ let exp_array = function
   | _ -> raise Typechecking_error
 
 let exp_tuple = function
-  | ArrayIT a -> a
+  | TupleIT t -> t
   | _ -> raise Typechecking_error
 
 let tuple_idx tup i =
@@ -91,11 +84,9 @@ let rec interp_expr e env fenv k =
     k env fenv (BoolIT false)
   | VarE (_,vn) ->
     k env fenv (env vn)
-  (* we can use an array to represents tuples because everything
-   * is wrapped in the 'a ret_cps_t type *)
   | CrossE (_t, es) ->
     interp_expr_list es env fenv (fun env fenv vs ->
-        k env fenv (ArrayIT (exp_list vs
+        k env fenv (TupleIT (exp_list vs
                              |> Array.of_list)))
   | ArrayCE (_t, es) ->
     interp_expr_list es env fenv (fun env fenv v ->
@@ -249,11 +240,14 @@ and interp_cmd c env fenv k =
     assert false
   | TimeC _ ->
     assert false
-  (* FIXME use the runtime library for show *)
   | ShowC e ->
     interp_expr e env fenv (fun _ _ v ->
-        Printf.printf "SHOW : %d\n" (exp_int v);
-        k env fenv dummy_value)
+        begin
+          (* NOTE using the runtime 'show' method would be more
+           * work than writing an OCaml module *)
+          Show.show v;
+          k env fenv dummy_value
+        end)
   | StmtC s ->
     interp_stmt s env fenv k
   | FnC (_t, name, bs, _rt, ss) ->
@@ -276,8 +270,3 @@ and interp_cmd c env fenv k =
 and interp_prog (p : prog) =
   Ok (interp_cmds p empty_env empty_f_env initial_k
       |> exp_int)
-
-(* interp_cmd_list p empty_env empty_f_env initial_k
- * |> (fun c ->
- *     Printf.printf "~~~ running code ~~~ \n%s\n" (string_of_code c);
- *     Ok (Runnative.run c)) *)
