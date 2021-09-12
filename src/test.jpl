@@ -9,4 +9,6 @@ let { a, b, c } = { 1, 2, 4 };
 
 show { false, 3., c / b };
 
+print "Hello, World!";
+
 /* end of prog */

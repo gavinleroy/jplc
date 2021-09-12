@@ -8,3 +8,6 @@ let get_time =
 
 let show =
   foreign "show" (string @-> ptr void @-> returning int32_t)
+
+let print =
+  foreign "print" (string @-> returning void)

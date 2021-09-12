@@ -228,18 +228,28 @@ and interp_stmt s env fenv k =
 (* NOTE all commands have type UNIT except the function command *)
 and interp_cmd c env fenv k =
   match c with
+
   | ReadimgC (_, _) ->
     assert false
-  | ReadvidC (_, _) ->
-    assert false
+
   | WriteimgC (_,_) ->
+    assert false
+
+  (* currently unsupported *)
+  | ReadvidC (_, _) ->
     assert false
   | WritevidC (_, _) ->
     assert false
-  | PrintC _ ->
-    assert false
+  (*************************)
+  | PrintC str ->
+    begin
+      Runtime.Lib.print (str ^ "\n");
+      k env fenv dummy_value
+    end
+
   | TimeC _ ->
     assert false
+
   | ShowC e ->
     interp_expr e env fenv (fun _ _ v ->
         begin
