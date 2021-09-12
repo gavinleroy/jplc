@@ -1,18 +1,13 @@
 
 /* start of prog */
 
-fn gcd(a : int, b : int) : int {
-   return if b == 0 then
-            a
-          else gcd( b, a % b );
+fn fac( x : int ) : int {
+   assert x >= 0, "Negative argument";
+   return if x == 0 then
+            1
+          else x * fac( x - 1 );
 }
 
-show gcd( 6, 42 );
-show gcd( 7, 42 );
-show gcd( 11, 42 );
-
-show gcd( 42, 6 );
-show gcd( 42, 7 );
-show gcd( 42, 11 );
+return fac(5);
 
 /* end of prog */

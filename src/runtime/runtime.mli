@@ -3,6 +3,8 @@
 (*       06.2021        *)
 (************************)
 
+module Lib = Lib
+
 type runtime_type =
   | UnitRT | BoolRT
   | IntRT

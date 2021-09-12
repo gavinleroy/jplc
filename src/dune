@@ -1,10 +1,11 @@
 (executable
- (name jplc)
- (modules jplc)
- (libraries
-   parsing utils compiler)
- (preprocess (pps ppx_jane))
- (modes exe))
+  (name jplc)
+  (modules jplc)
+  (libraries
+    parsing utils compiler)
+  ;; (flags :standard -cclib -lrlib)
+  (preprocess (pps ppx_jane))
+  (modes exe))
 
 ;; while trying to untie the libraries from the core_kernal
 ;; dep simply ignore the 'jir' and 'codegen' libs until I
@@ -13,35 +14,35 @@
 (dirs :standard \ jir codegen)
 
 (library
- (name compiler)
- (modules compiler)
- (libraries
-   ;; ocaml libs
-   cmdliner ANSITerminal
+  (name compiler)
+  (modules compiler)
+  (libraries
+    ;; ocaml libs
+    cmdliner ANSITerminal
 
-   ;; my libs
-   utils
+    ;; my libs
+    utils
 
-   ;; Parsing library to create the initial AST
-   parsing
+    ;; Parsing library to create the initial AST
+    parsing
 
-   ;; Typing library to transform a parse AST to a type AST
-   typing
+    ;; Typing library to transform a parse AST to a type AST
+    typing
 
-   ;; Staged Intepreter library for porting JPL to MetaOCaml
-   interping
+    ;; Staged Intepreter library for porting JPL to MetaOCaml
+    interping
 
-   ;; Optimizing librar to come XXX
-   ;; this will most likely be easier at some other level of IR (LLVM or custom)
+    ;; Optimizing librar to come XXX
+    ;; this will most likely be easier at some other level of IR (LLVM or custom)
 
-   ;; the new CFG based IR for a simpler LLVM transformation
-   ;; jir
+    ;; the new CFG based IR for a simpler LLVM transformation
+    ;; jir
 
-   ;; Flatten the type AST to a SSA module of all functions (top level included in `main`)
-   ; flattening
+    ;; Flatten the type AST to a SSA module of all functions (top level included in `main`)
+    ; flattening
 
-   ;; Code Generation library to take a flattened AST and transorm this into LLVM IR
-   ;; XXX additional optimizations should be done here (e.g. vectorization, ...)
-   ;; codegen
-   )
- (preprocess (pps ppx_jane)))
+    ;; Code Generation library to take a flattened AST and transorm this into LLVM IR
+    ;; XXX additional optimizations should be done here (e.g. vectorization, ...)
+    ;; codegen
+    )
+  (preprocess (pps ppx_jane)))

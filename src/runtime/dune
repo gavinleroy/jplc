@@ -1,4 +1,18 @@
+(data_only_dirs c-lib)
+
 (library
- (name runtime)
- (libraries ast_utils)
- (preprocess (pps ppx_jane)))
+  (name runtime)
+  (libraries ast_utils ctypes ctypes.foreign)
+  (foreign_archives clib)
+  (flags (:standard -cclib -lpng -cclib -all_load))
+  (preprocess (pps ppx_jane)))
+
+(rule
+  (deps (source_tree c-lib))
+  (targets dllclib.so libclib.a)
+  (action
+    (no-infer
+    (progn
+      (chdir c-lib (run make))
+      (copy c-lib/clib.so dllclib.so)
+      (copy c-lib/clib.a libclib.a)))))
