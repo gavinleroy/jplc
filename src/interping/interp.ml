@@ -243,13 +243,20 @@ and interp_cmd c env fenv k =
   (*************************)
   | PrintC str ->
     begin
-      Runtime.Lib.print (str ^ "\n");
+      (* NOTE print_endline is much faster than
+       * running a FFI *)
+      print_endline str;
       k env fenv dummy_value
     end
-
-  | TimeC _ ->
-    assert false
-
+  | TimeC c ->
+    let t0 = Runtime.Lib.get_time () in
+    interp_cmd c env fenv (fun env fenv v ->
+        begin
+          ignore v; (* NOTE ignore the return value of commands *)
+          let t1 = Runtime.Lib.get_time () in
+          Printf.printf "time: %f\n" (t1 -. t0);
+          k env fenv dummy_value
+        end)
   | ShowC e ->
     interp_expr e env fenv (fun _ _ v ->
         begin

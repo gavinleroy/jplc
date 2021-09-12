@@ -1,14 +1,6 @@
 
 /* start of prog */
 
-show 10;
-
-show [1, 2, 3];
-
-let { a, b, c } = { 1, 2, 4 };
-
-show { false, 3., c / b };
-
-print "Hello, World!";
+time return 1;
 
 /* end of prog */

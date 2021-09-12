@@ -18,5 +18,5 @@ and show_value fmt = function
   | ArrayIT arr -> fprintf fmt "[@ %a@ ]" pp_list (Array.to_list arr)
 
 let show v =
-  fprintf std_formatter "@[SHOW@ :@ %a@]@\n@?"
+  fprintf std_formatter "@[%a@]@\n@?"
     show_value v
