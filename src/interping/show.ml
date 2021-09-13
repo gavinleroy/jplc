@@ -16,6 +16,7 @@ and show_value fmt = function
   | ListIT ls -> fprintf fmt "%a" pp_list ls
   | TupleIT arr -> fprintf fmt "{@ %a@ }" pp_list (Array.to_list arr)
   | ArrayIT arr -> fprintf fmt "[@ %a@ ]" pp_list (Array.to_list arr)
+  | PictIT _p -> assert false
 
 let show v =
   fprintf std_formatter "@[%a@]@\n@?"

@@ -1,6 +1,8 @@
 
 /* start of prog */
 
-time return 1;
+read image "ash-pika.png" to img;
+
+write image img to "ap.png";
 
 /* end of prog */

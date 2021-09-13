@@ -53,6 +53,10 @@ let exp_tuple = function
   | TupleIT t -> t
   | _ -> raise Typechecking_error
 
+let exp_pict = function
+  | PictIT p -> p
+  | _ -> raise Typechecking_error
+
 let tuple_idx tup i =
   tup.(i)
 
@@ -229,11 +233,18 @@ and interp_stmt s env fenv k =
 and interp_cmd c env fenv k =
   match c with
 
-  | ReadimgC (_, _) ->
-    assert false
+  | ReadimgC (fn, arg) ->
+    Runtime.Lib.read_image fn
+    |> (fun p -> PictIT p)
+    |> (fun p -> unify_arg env p arg)
+    |> (fun env -> k env fenv dummy_value)
 
-  | WriteimgC (_,_) ->
-    assert false
+  | WriteimgC (e, fn) ->
+    interp_expr e env fenv (fun env fenv v ->
+        begin
+          Runtime.Lib.write_image (exp_pict v) fn;
+          k env fenv dummy_value
+        end)
 
   (* currently unsupported *)
   | ReadvidC (_, _) ->
