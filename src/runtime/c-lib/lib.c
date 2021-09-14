@@ -566,9 +566,6 @@ struct pict _crop(struct pict p, int x1, int y1, int x2, int y2) {
   return crop(p, x1, y1, x2, y2);
 }
 
-/* CAMLprim value caml_read_image_c(value string) { return read_image(filename);
- * } */
-
 struct pict read_image(char *filename) {
   struct pict out;
   _readPNG(&out.rows, &out.cols, &out.data, filename);
