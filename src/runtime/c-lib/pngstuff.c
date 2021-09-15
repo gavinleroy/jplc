@@ -221,7 +221,6 @@ void _readPNG(int64_t *_H, int64_t *_W, double **_data, const char *fn) {
 
 void _writePNG(int64_t H, int64_t W, double *data, const char *fn) {
   struct jpl_pixel *pp = (struct jpl_pixel *)data;
-
   png_bytep row_pointers[H];
   int pixel_size = PNG_IMAGE_PIXEL_SIZE(PNG_FORMAT_RGBA);
   assert(pixel_size == 4);

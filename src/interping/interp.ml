@@ -53,10 +53,6 @@ let exp_tuple = function
   | TupleIT t -> t
   | _ -> raise Typechecking_error
 
-(* let exp_pict = function
- *   | PictIT p -> p
- *   | _ -> raise Typechecking_error *)
-
 let tuple_idx tup i =
   tup.(i)
 
@@ -116,8 +112,8 @@ let cstruct_from_array = function
               | _ -> assert false) (Array.to_list arr) in
           ll
         | _ -> assert false) (Array.to_list arr) in
-    let data = Ctypes.CArray.of_list (Ctypes_static.float) l in
-    let cols = Ctypes.CArray.length data / 4 (* because float4 *) / rows in
+    let data = Ctypes.CArray.of_list Ctypes.double l in
+    let cols = (Ctypes.CArray.length data) / (4 *  (* because float4 *) rows) in
     let p = Ctypes.make Runtime.Lib.pict in
     begin
       Ctypes.setf p Runtime.Lib.rows (Int64.of_int rows);
@@ -127,9 +123,10 @@ let cstruct_from_array = function
     end
   | _ -> assert false
 
-let array_from_cstruct (cs : (Runtime.Lib.pict, [ `Struct ]) Ctypes.structured) : 'a ret_cps_t =
+let array_from_cstruct cs =
   let open Runtime.Lib in
   let open Ctypes in
+  let wrap v = ArrayIT (Array.of_list v) in
   let (r, c) = getf cs rows |> Signed.Int64.to_int
              , getf cs cols |> Signed.Int64.to_int in
   let d = getf cs data |> (fun p -> CArray.from_ptr p (r * c * 4)) in
@@ -141,8 +138,8 @@ let array_from_cstruct (cs : (Runtime.Lib.pict, [ `Struct ]) Ctypes.structured) 
           | [f0; f1; f2; f3] ->
             TupleIT [| FloatIT f0; FloatIT f1; FloatIT f2; FloatIT f3|]
           | _ -> assert false)
-      |> (fun v -> ArrayIT (Array.of_list v)))
-  |> (fun v -> ArrayIT (Array.of_list v))
+      |> wrap)
+  |> wrap
 
 let rec interp_expr e env fenv k =
   match e with
@@ -313,6 +310,7 @@ and interp_cmd c env fenv k =
         cstruct_from_array v
         |> (fun cs ->
             begin
+              Printf.printf "finished conversion\n%!";
               Runtime.Lib.write_image cs fn;
               k env fenv dummy_value
             end))
