@@ -56,20 +56,6 @@ let exp_tuple = function
 let tuple_idx tup i =
   tup.(i)
 
-let rec interp_list f ls env fenv k =
-  match ls with
-  (* this shouldn't happen *)
-  | [] -> raise Typechecking_error
-  (* last command /should be a return stmt/ *)
-  | [ x ] ->
-    f x env fenv k
-  | s :: ss' ->
-    f s env fenv (fun env fenv _v ->
-        interp_list f ss' env fenv k)
-
-let initial_k =
-  fun _ _ x -> x
-
 (* conversion functions *)
 
 let list_drop c ls =
@@ -97,9 +83,9 @@ let list_chunk chunk ls =
       list_take chunk ls :: (loop (list_drop chunk ls))
   in loop ls
 
-(* NOTE FIXME HACK
+(* TODO FIXME HACK
  * These conversions to and from the CArray will make image reading/writing much slower
- * than it already is. *)
+ * than it needs to be *)
 
 let cstruct_from_array = function
   | ArrayIT arr ->
@@ -140,6 +126,19 @@ let array_from_cstruct cs =
           | _ -> assert false)
       |> wrap)
   |> wrap
+
+(* interp functions *)
+
+let rec interp_list f ls env fenv k =
+  match ls with
+  (* this shouldn't happen *)
+  | [] -> raise Typechecking_error
+  (* last command /should be a return stmt/ *)
+  | [ x ] ->
+    f x env fenv k
+  | s :: ss' ->
+    f s env fenv (fun env fenv _v ->
+        interp_list f ss' env fenv k)
 
 let rec interp_expr e env fenv k =
   match e with
@@ -359,10 +358,10 @@ and interp_cmd c env fenv k =
           (* bind all arguments to the environment *)
           (bind_list env bs (exp_list x))
           (bind fenv name cf)
-          initial_k
+          (fun _ _ x -> x)
       in repeat 1 body (fun y -> func y) x
     in k env (bind fenv name func) dummy_value
 
 and interp_prog (p : prog) =
-  Ok (interp_cmds p empty_env empty_f_env initial_k
+  Ok (interp_cmds p empty_env empty_f_env (fun _ _ x -> x)
       |> exp_int)
