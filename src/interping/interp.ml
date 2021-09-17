@@ -23,8 +23,7 @@ let empty_env s =
 
 let empty_f_env = empty_env
 
-let bind env sym v =
-  fun y ->
+let bind env sym v = fun y ->
   if Varname.(=) sym y then
     v
   else env y
@@ -232,8 +231,21 @@ let rec interp_expr e env fenv k =
                        ie
                      else ee) env fenv k)
 
-  | ArrayLE (_t, _lbs, _e) ->
-    assert false
+  | ArrayLE (_t, lbs, e) ->
+    let es = List.map snd lbs in
+    interp_expr_list es env fenv (fun env_o fenv vs ->
+        let bs = List.map2 (fun (a, _) c -> (a, c))  lbs (exp_list vs) in
+        let rec loop env = function
+          | [] ->
+            interp_expr e env fenv ident_k
+          | ( vn, v ) :: vs' ->
+            let maxn = exp_int v in
+            ArrayIT (Array.init maxn (fun i ->
+                loop (bind env vn (IntIT i)) vs'))
+
+        in
+        k env fenv (loop env_o bs))
+
 
   (* could definitely be optimized
    * or written in cps *)
@@ -330,7 +342,6 @@ and interp_cmd c env fenv k =
         cstruct_from_array v
         |> (fun cs ->
             begin
-              Printf.printf "finished conversion\n%!";
               Runtime.Lib.write_image cs fn;
               k env fenv dummy_value
             end))
@@ -384,5 +395,11 @@ and interp_cmd c env fenv k =
     in k env (bind fenv name func) dummy_value
 
 and interp_prog (p : prog) =
-  Ok (interp_cmds p empty_env empty_f_env ident_k
-      |> exp_int)
+  try
+    Ok (interp_cmds p empty_env empty_f_env ident_k
+        |> exp_int)
+  with
+  | Division_by_zero ->
+    Error "division by zero"
+  | Invalid_argument m ->
+    Error m

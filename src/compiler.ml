@@ -6,7 +6,10 @@
 open Utils
 
 let print_error_msg m =
-  ANSITerminal.(eprintf [red; Bold] "%s\n%!" m)
+  ANSITerminal.(eprintf [red; Bold]
+                  "~~~~~~ ERROR ~~~~~~
+> %s
+~~~~~~~~~~~~~~~~~~~\n%!" m)
 
 (* this function is a HACK it would be better to know
  * when we bailed early or whether a read error occured.
