@@ -6,6 +6,7 @@
 open Utils
 
 let print_error_msg m =
+  (* HACK fixme later *)
   ANSITerminal.(eprintf [red; Bold]
                   "~~~~~~ ERROR ~~~~~~
 > %s
