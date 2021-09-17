@@ -4,4 +4,4 @@ test-images
 *.conflicts
 *.swp
 *.org
-test.jpl
+src/test.jpl
