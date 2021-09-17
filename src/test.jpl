@@ -1,8 +1,0 @@
-
-/* start of prog */
-
-read image "ash-pika.png" to img;
-
-write image img to "ap.png";
-
-/* end of prog */
