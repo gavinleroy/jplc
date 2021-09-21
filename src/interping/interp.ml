@@ -95,10 +95,8 @@ let cstruct_from_array = function
         | ArrayIT arr ->
           let ll = List.concat_map (function
               | TupleIT [| FloatIT f0; FloatIT f1; FloatIT f2; FloatIT f3|] ->
-                [f0; f1; f2; f3]
-              | _ -> assert false) (Array.to_list arr) in
-          ll
-        | _ -> assert false) (Array.to_list arr) in
+                [f0; f1; f2; f3]) (Array.to_list arr) in
+          ll) (Array.to_list arr) in
     let data = Ctypes.CArray.of_list Ctypes.double l in
     let cols = (Ctypes.CArray.length data) / (4 *  (* because float4 *) rows) in
     let p = Ctypes.make Runtime.Lib.pict in
@@ -108,7 +106,6 @@ let cstruct_from_array = function
       Ctypes.setf p Runtime.Lib.data (Ctypes.CArray.start data);
       p
     end
-  | _ -> assert false
 
 let array_from_cstruct cs =
   let open Runtime.Lib in
@@ -123,8 +120,7 @@ let array_from_cstruct cs =
       list_chunk 4 l
       |> List.map (function
           | [f0; f1; f2; f3] ->
-            TupleIT [| FloatIT f0; FloatIT f1; FloatIT f2; FloatIT f3|]
-          | _ -> assert false)
+            TupleIT [| FloatIT f0; FloatIT f1; FloatIT f2; FloatIT f3|])
       |> wrap)
   |> wrap
 
@@ -142,7 +138,9 @@ let rec interp_list f ls env fenv k =
 let rec interp_expr e env fenv k =
   match e with
   | IntE i ->
-    (* FIXME HACK : integers need to stay 64 bits *)
+    (* FIXME HACK * : integers need to stay 64 bits
+     * this was changed to support MetaOCaml which I am not using yet :(
+     **)
     let i = Int64.to_int i in
     k env fenv (IntIT i)
   | FloatE f ->
@@ -276,8 +274,22 @@ and unify_binding env v = function
 and unify_arg env v = function
   | VarA (_, vn) ->
     bind env vn v
-  | ArraybindA (_t, _vn, _vns) ->
-    assert false
+  | ArraybindA (_t, vn, vns) ->
+    let rec bind_dims env idxs v =
+      match idxs with
+      | [] -> env
+      | idx_vn :: idxs' ->
+        let (ArrayIT arr) = v in
+        begin
+          (* NOTE to make sure we aren't making zero dimension arrays *)
+          assert (Array.length arr >= 0);
+          bind_dims
+            (bind env idx_vn (IntIT (Array.length arr)))
+            idxs' arr.(0)
+        end
+    in bind_dims (bind env vn v) vns v
+
+
 
 and unify_lvalue env v = function
   | ArgLV (_t, a) ->
