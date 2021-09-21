@@ -7,13 +7,20 @@ open Typing.Ast
 open Ast_utils
 open Ty
 
-(* let string_of_code c = (\* TODO remove me *\)
- *   let () = Codelib.print_code Format.str_formatter c in
- *   Format.flush_str_formatter () *)
+(* NOTE after typechecking, we don't need all of the exhaustive
+ * patter matching. On Match_failure, we print out that there is
+ * an error in the typechecker *)
+[@@@ warning "-8"] (* HACK this seems excessive *)
+
+let string_of_code c = (* TODO remove me *)
+  let () = Codelib.print_code Format.str_formatter c in
+  Format.flush_str_formatter ()
 
 let dummy_value = UnitIT
 
 exception Typechecking_error
+
+exception Jpl_assert_fail of string
 
 (* simple environment *)
 
@@ -28,34 +35,22 @@ let bind env sym v = fun y ->
     v
   else env y
 
-let exp_int = function
-  | IntIT i -> i
-  | _ -> raise Typechecking_error
+let exp_int (IntIT i) = i
 
-let exp_float = function
-  | FloatIT f -> f
-  | _ -> raise Typechecking_error
+let exp_float (FloatIT f) = f
 
-let exp_bool = function
-  | BoolIT b -> b
-  | _ -> raise Typechecking_error
+let exp_bool (BoolIT b) = b
 
-let exp_list = function
-  | ListIT l -> l
-  | _ -> raise Typechecking_error
+let exp_list (ListIT l) = l
 
-let exp_array = function
-  | ArrayIT a -> a
-  | _ -> raise Typechecking_error
+let exp_array (ArrayIT a) = a
 
-let exp_tuple = function
-  | TupleIT t -> t
-  | _ -> raise Typechecking_error
+let exp_tuple (TupleIT t) = t
 
 let tuple_idx tup i =
   tup.(i)
 
-(* conversion functions *)
+(* utility functions *)
 
 let list_drop c ls =
   let rec loop c = function
@@ -82,15 +77,16 @@ let list_chunk chunk ls =
       list_take chunk ls :: (loop (list_drop chunk ls))
   in loop ls
 
-let add_intit a b =
-  let (a, b) = exp_int a, exp_int b in
+let add_intit (IntIT a) (IntIT b) =
   IntIT (a + b)
 
 let ident_k = fun _ _ v -> v
 
+(* conversion functions *)
+
 (* TODO FIXME HACK
- * These conversions to and from the CArray will make image reading/writing much slower
- * than it needs to be *)
+ * These conversions to and from the CArray will make image
+ * reading/writing much slower than it needs to be *)
 
 let cstruct_from_array = function
   | ArrayIT arr ->
@@ -136,8 +132,6 @@ let array_from_cstruct cs =
 
 let rec interp_list f ls env fenv k =
   match ls with
-  (* this shouldn't happen *)
-  | [] -> raise Typechecking_error
   (* last command /should be a return stmt/ *)
   | [ x ] ->
     f x env fenv k
@@ -160,14 +154,11 @@ let rec interp_expr e env fenv k =
   | VarE (_,vn) ->
     k env fenv (env vn)
   | CrossE (_t, es) ->
-    interp_expr_list es env fenv (fun env fenv vs ->
-        k env fenv (TupleIT (exp_list vs
-                             |> Array.of_list)))
-  | ArrayCE (_t, es) ->
-    interp_expr_list es env fenv (fun env fenv v ->
-        k env fenv
-          (ArrayIT (exp_list v
-                    |> Array.of_list)))
+    interp_expr_list es env fenv (fun env fenv (ListIT vs) ->
+        k env fenv (TupleIT (vs |> Array.of_list)))
+  | ArrayCE (ArrayT(base_t, _), es) ->
+    interp_expr_list es env fenv (fun env fenv (ListIT vs) ->
+        k env fenv (ArrayIT (vs |> Array.of_list)))
   | BinopE (_te, lhs, o, rhs) ->
     interp_expr lhs env fenv (fun env fenv lv ->
         interp_expr rhs env fenv (fun env fenv rv ->
@@ -194,76 +185,64 @@ let rec interp_expr e env fenv k =
                 | FloatIT fl, FloatIT fr, `Div -> FloatIT (fl /. fr)
                 | FloatIT fl, FloatIT fr, `Mod -> FloatIT (Float.rem fl fr)
                 | FloatIT fl, FloatIT fr, `Plus -> FloatIT (fl +. fr)
-                | FloatIT fl, FloatIT fr, `Minus -> FloatIT (fl -. fr)
-                (* NOTE indicates a bad typechecker *)
-                | _, _, _ -> raise Typechecking_error)))
+                | FloatIT fl, FloatIT fr, `Minus -> FloatIT (fl -. fr))))
   | UnopE (_t, o, e) ->
     interp_expr e env fenv (fun env fenv v ->
         k env fenv (match o, v with
             | `Bang, BoolIT b -> BoolIT (not b)
             | `Neg, IntIT i -> IntIT (- i)
-            | `Neg, FloatIT f -> FloatIT (-. f)
-            | _, _ -> raise Typechecking_error))
+            | `Neg, FloatIT f -> FloatIT (-. f)))
   | CastE (t, e, t') ->
     interp_expr e env fenv (fun _ _ v ->
-        k env fenv (match t, t' with
-            | IntT, FloatT ->
-              FloatIT (Int.to_float (exp_int v))
-            | FloatT, IntT ->
-              IntIT (Float.to_int (exp_float v))
-            | _, _ -> raise Typechecking_error))
-  | CrossidxE (_t, e, idx) ->
-    interp_expr e env fenv (fun env fenv v ->
-        k env fenv (exp_tuple v
-                    |> fun t -> tuple_idx t idx))
+        k env fenv (match t, t', v with
+            | IntT, FloatT, IntIT ic ->
+              FloatIT (Int.to_float ic)
+            | FloatT, IntT, FloatIT fc ->
+              IntIT (Float.to_int fc)))
+  | CrossidxE (t, e, idx) ->
+    interp_expr e env fenv (fun env fenv (TupleIT v) ->
+        k env fenv (tuple_idx v idx))
   | ArrayidxE (_t, e, es) ->
     interp_expr e env fenv (fun env fenv v ->
-        interp_expr_list es env fenv (fun env fenv vs ->
+        interp_expr_list es env fenv (fun env fenv (ListIT vs) ->
             let rec make_loop acc = function
               | [] -> acc
-              | c :: cs ->
-                make_loop (exp_array acc
-                           |> fun a -> a.(exp_int c)) cs
-            in k env fenv (make_loop v (exp_list vs))))
+              | (IntIT c) :: cs ->
+                let (ArrayIT acc) = acc in
+                make_loop acc.(c) cs
+            in k env fenv (make_loop v vs)))
   | IteE (_t, cnd, ie, ee) ->
-    interp_expr cnd env fenv (fun env fenv v ->
-        interp_expr (if (exp_bool v) then
+    interp_expr cnd env fenv (fun env fenv (BoolIT cnd) ->
+        interp_expr (if cnd then
                        ie
                      else ee) env fenv k)
-
   | ArrayLE (_t, lbs, e) ->
     let es = List.map snd lbs in
-    interp_expr_list es env fenv (fun env_o fenv vs ->
-        let bs = List.map2 (fun (a, _) c -> (a, c))  lbs (exp_list vs) in
+    interp_expr_list es env fenv (fun env_o fenv (ListIT vs) ->
+        let bs = List.map2 (fun (a, _) c -> (a, c))  lbs vs in
         let rec loop env = function
           | [] ->
             interp_expr e env fenv ident_k
-          | ( vn, v ) :: vs' ->
-            let maxn = exp_int v in
+          | ( vn, (IntIT maxn) ) :: vs' ->
             ArrayIT (Array.init maxn (fun i ->
                 loop (bind env vn (IntIT i)) vs'))
-
         in
         k env fenv (loop env_o bs))
-
-
   (* could definitely be optimized
    * or written in cps *)
   | SumLE (_t, lbs, e) ->
     let es = List.map snd lbs in
-    interp_expr_list es env fenv (fun env_o fenv vs ->
-        let bs = List.map2 (fun (a, _) c -> (a, c))  lbs (exp_list vs) in
+    interp_expr_list es env fenv (fun env_o fenv (ListIT vs) ->
+        let bs = List.map2 (fun (a, _) c -> (a, c))  lbs vs in
         let rec loop env = function
           | [] ->
             interp_expr e env fenv ident_k
-          | ( vn, v ) :: vs' ->
-            let maxn = exp_int v in
+          | ( vn, (IntIT maxn) ) :: vs' ->
             Array.init maxn (fun i ->
                 loop (bind env vn (IntIT i)) vs')
             |> Array.fold_left add_intit (IntIT 0)
         in
         k env fenv (loop env_o bs))
-
   | AppE (_t , fn, es) ->
     interp_expr_list es env fenv
       (fun _env _fenv v ->
@@ -275,7 +254,9 @@ and interp_expr_list es env fenv k =
    * 'interping' expressions. *)
   let rec loop vs es =
     match es with
-    | [] -> k env fenv (ListIT (List.rev vs))
+    | [] ->
+      let vs = List.rev vs in
+      k env fenv (ListIT vs)
     | e :: es' ->
       interp_expr e env fenv (fun _env _fenv v ->
           loop (v :: vs) es')
@@ -317,15 +298,11 @@ and interp_stmt s env fenv k =
     interp_expr e env fenv (fun env fenv v ->
         k (unify_lvalue env v lv) fenv dummy_value)
   | AssertS (e, s) ->
-    interp_expr e env fenv (fun env fenv v ->
-        if (exp_bool v) then
+    interp_expr e env fenv (fun env fenv (BoolIT cnd) ->
+        if cnd then
           k env fenv dummy_value
         else
-          begin
-            Printf.printf "~~~ Assertion Failure ~~~\n%s\n\n" s;
-            (* FIXME this and other false assertions should be changed into proper errors *)
-            assert false
-          end)
+          raise (Jpl_assert_fail (Printf.sprintf "Failed Assertion> %s" s)))
   | ReturnS(_, e) ->
     interp_expr e env fenv k
 
@@ -384,11 +361,10 @@ and interp_cmd c env fenv k =
       else fun x -> f (repeat (n - 1) f x)
     in
     let rec func x =
-      let body cf x
-      (* NOTE x is a list of values*) =
+      let body cf (ListIT x) =
         interp_stmts ss
           (* bind all arguments to the environment *)
-          (bind_list env bs (exp_list x))
+          (bind_list env bs x)
           (bind fenv name cf)
           (fun _ _ x -> x)
       in repeat 1 body (fun y -> func y) x
@@ -399,7 +375,17 @@ and interp_prog (p : prog) =
     Ok (interp_cmds p empty_env empty_f_env ident_k
         |> exp_int)
   with
+  | Jpl_assert_fail msg ->
+    Error msg
   | Division_by_zero ->
     Error "division by zero"
   | Invalid_argument m ->
     Error m
+  | Match_failure (s, i, j) ->
+    begin
+      Printf.printf "MATCH ERROR => \"%s\" [ %d : %d ]\n" s i j;
+      raise Typechecking_error
+    end
+
+(* go back to exhaustive pattern matching checks *)
+[@@@ warning "+8"] (* HACK this seems excessive *)

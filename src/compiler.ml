@@ -77,7 +77,8 @@ let compile_prog
     match Interping.Interp.interp_prog prog with
     | Ok i ->
       exit i
-    | Error m -> print_error_msg m
+    | Error m ->
+      print_error_msg m
   in
 
   try let open Functional.Or_error in

@@ -5,4 +5,5 @@
    dynlink metaocaml
 
    typing runtime fmt)
+  (flags (:standard -w -27 -w -32))
  (preprocess (pps ppx_jane)))
