@@ -5,5 +5,5 @@
    dynlink metaocaml
 
    typing runtime fmt)
-  (flags (:standard -w -27 -w -32))
+  (flags (:standard -w -27 -w -32)) ;; TODO remove me
  (preprocess (pps ppx_jane)))
