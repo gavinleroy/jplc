@@ -108,6 +108,37 @@ let print_info    =
  *   ; params        = [StringRT] } *)
 
 
+(* Runtime primitives *)
+
+type value_primitive =
+  (* arithmetic primtiives *)
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Mod
+
+  (* bitwise primitives *)
+  | ShiftLeft
+  | ShiftRight
+  | And
+  | Or
+  | XOr
+
+  (* IO primitives *)
+  | ByteRead
+  | ByteWrite
+
+(* FFI primitives *)
+(* TODO *)
+
+(* TODO primitives for heap interaction *)
+
+type test_primitive =
+  | Lt
+  | Le
+  | Eq
+
 (****************************)
 (* Full C Library Interface *)
 (****************************)

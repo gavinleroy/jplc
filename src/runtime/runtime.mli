@@ -39,3 +39,34 @@ val write_img_info: interface_function
 val print_info: interface_function
 
 val get_time_info: interface_function
+
+(* Runtime primitives *)
+
+type value_primitive =
+  (* arithmetic primtiives *)
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Mod
+
+  (* bitwise primitives *)
+  | ShiftLeft
+  | ShiftRight
+  | And
+  | Or
+  | XOr
+
+  (* IO primitives *)
+  | ByteRead
+  | ByteWrite
+
+(* FFI primitives *)
+(* TODO *)
+
+(* TODO primitives for heap interaction *)
+
+type test_primitive =
+  | Lt
+  | Le
+  | Eq

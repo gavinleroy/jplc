@@ -11,7 +11,7 @@
 ;; dep simply ignore the 'jir' and 'codegen' libs until I
 ;; get to them.
 ;; Full LLVM support wasn't ready anyways
-(dirs :standard \ jir codegen)
+(dirs :standard \ codegen)
 
 (library
   (name compiler)
