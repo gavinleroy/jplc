@@ -19,7 +19,7 @@ module type CPSIR = sig
     | LetC of { cnts : cnt list; body: tree }
     | LetF of { funs: lambda list }
     | AppC of { cnt: name; args: atom list; }
-    | AppF of { lambda: atom; retc: name; args: atom list }
+    | AppF of { lambda: atom; ret_c: name; args: atom list }
     | If of { cond: test_primitive; args: atom list; then_c: name; else_c: name }
     | Halt of atom
 
@@ -66,7 +66,7 @@ module Jir_high = struct
     | LetC of { cnts : cnt list; body: tree }
     | LetF of { funs: lambda list }
     | AppC of { cnt: name; args: atom list; }
-    | AppF of { lambda: atom; retc: name; args: atom list }
+    | AppF of { lambda: atom; ret_c: name; args: atom list }
     | If of { cond: test_primitive; args: atom list; then_c: name; else_c: name }
     | Halt of atom
 

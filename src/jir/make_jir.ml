@@ -11,6 +11,17 @@ module AU = Ast_utils
 module C = Jir_high
 module TA = Typing.Ast
 
+let vn_to_symbol vn =
+  AU.Varname.to_string vn
+  |> Symbol.of_string
+
+let rec jir_of_seq ?(ts = []) transformer vs ctx  =
+  match vs with
+  | [] -> ctx (List.rev ts)
+  | hd :: tl ->
+    transformer hd (fun v_i ->
+        jir_of_seq ~ts:(v_i :: ts) transformer tl ctx)
+
 let rec jir_of_expr expr ctx = match expr with
   | TA.IntE i ->
     ctx (C.AtomL (IntLit i))
@@ -21,29 +32,69 @@ let rec jir_of_expr expr ctx = match expr with
   | TA.FalseE ->
     ctx (C.AtomL (BoolLit false))
   | TA.VarE (te, vn) ->
-    ctx (C.AtomN (Symbol.of_string (AU.Varname.to_string vn)))
+    ctx (C.AtomN (vn_to_symbol vn))
+
   | TA.CrossE (te, es)
     -> assert false
   | TA.ArrayCE (te, es)
     -> assert false
-  | TA.BinopE (te, lhs, op, rhs)
+
+  | TA.BinopE (te, lhs, `Lt, rhs)
     -> assert false
-  | TA.UnopE (te, op, e)
+  | TA.BinopE (te, lhs, `Gt, rhs)
     -> assert false
+  | TA.BinopE (te, lhs, `Cmp, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Lte, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Gte, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Neq, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Mul, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Div, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Mod, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Plus, rhs)
+    -> assert false
+  | TA.BinopE (te, lhs, `Minus, rhs)
+    -> assert false
+
+  | TA.UnopE (te, `Bang, e)
+    -> assert false
+  | TA.UnopE (te, `Neg, e)
+    -> assert false
+
   | TA.CastE (te_from, e, te_to) (* TODO check this *)
     -> assert false
   | TA.CrossidxE (te, e, i)
     -> assert false
+
   | TA.ArrayidxE (te, e, es)
     -> assert false
+
   | TA.IteE (te, cnd, if_e, else_e)
     -> assert false
+
   | TA.ArrayLE (te, vnes, e)
     -> assert false
+
   | TA.SumLE (te, vnes, e)
     -> assert false
-  | TA.AppE (te, vn, params)
-    -> assert false
+
+  | TA.AppE (te, vn, params) ->
+    let fname = vn_to_symbol vn in
+    jir_of_seq jir_of_expr params (fun args ->
+        let k = Symbol.fresh ~stem:"k" ()
+        and r = Symbol.fresh ~stem:"atom" () in
+        C.LetC { cnts = [ { name = k
+                          ; args = [ r ]
+                          ; body = ctx (C.AtomN r) } ];
+                 body = C.AppF { lambda = C.AtomN(fname)
+                               ; ret_c = k
+                               ; args = args }})
 
 and jir_of_arg arg = match arg with
   | TA.VarA (te, vn)
@@ -73,43 +124,29 @@ and jir_of_stmt stmt = match stmt with
 
 
 and jir_of_cmds cmds ctx =
-
-  let jir_of_cmd cmd body = match cmd with
-    | TA.ReadimgC (fn, arg)
-      -> assert false
-    | TA.ReadvidC (fn, arg)
-      -> assert false
-    | TA.WriteimgC (expr, fn)
-      -> assert false
-    | TA.WritevidC (expr, fn)
-      -> assert false
-    | TA.PrintC str
-      -> assert false
-    | TA.ShowC expr
-      -> assert false
-    | TA.TimeC c
-      -> assert false
-    | TA.FnC (te, vn, bnds, ret_te, stmts)
-      -> assert false
-    | TA.StmtC stmt
-      -> assert false
-  in
-
   match cmds with
-  | cmd :: cmds ->
-    jir_of_cmd cmd (jir_of_cmds cmds)
+  | TA.ReadimgC (fn, arg) :: cmds
+    -> assert false
+  | TA.ReadvidC (fn, arg) :: cmds
+    -> assert false
+  | TA.WriteimgC (expr, fn) :: cmds
+    -> assert false
+  | TA.WritevidC (expr, fn) :: cmds
+    -> assert false
+  | TA.PrintC str :: cmds
+    -> assert false
+  | TA.ShowC expr :: cmds
+    -> assert false
+  | TA.TimeC c :: cmds
+    -> assert false
+  | TA.FnC (te, vn, bnds, ret_te, stmts) :: cmds
+    -> assert false
+  | TA.StmtC stmt :: cmds
+    -> assert false
   | [] ->
-    assert false
-(* C.Halt (C.AtomL 0) *)
+    C.Halt (C.AtomL (IntLit 0L))
 
-let jir_of_ty (_p : TA.prog) : C.tree =
-  C.Halt (C.AtomL (IntLit 0L))
-
-(* exec_state (map_m p ~f:flatten_cmd) (Env.mempty ())
- * |> fun env ->
- * let (main_fn, glbls) = Env.make_main env in
- * Ok { main = main_fn
- *    ; globals = glbls
- *    ; prog = env.fns } *)
+let jir_of_ty (p : TA.prog) : C.tree =
+  jir_of_cmds p (fun _ -> C.Halt (C.AtomL (IntLit 0L)))
 
 [@@@warning "+27"]
